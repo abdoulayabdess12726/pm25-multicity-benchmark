@@ -1,0 +1,14 @@
+{
+  "model": "XGBoost",
+  "MAE_mean": 13.72,
+  "MAE_std": 0.02,
+  "RMSE_mean": 17.7,
+  "RMSE_std": 0.01,
+  "R2_mean": 0.6045,
+  "n_test": 5260,
+  "seeds": [
+    42,
+    123,
+    777
+  ]
+}

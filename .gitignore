@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+*.pt
+*.pth
+model_framework.pt
+beijing+multi+site+air+quality+data/
+data/PRSA_Data_*.csv
+.DS_Store
+*.ipynb_checkpoints
