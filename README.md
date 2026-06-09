@@ -44,6 +44,12 @@ python solution_A_multinode_gcn.py \
   --data_dir beijing+multi+site+air+quality+data/PRSA_Data_20130301-20170228
 ```
 
+## Data Availability
+
+See [DATA_AVAILABILITY.md](DATA_AVAILABILITY.md). All data are openly available
+from public sources: Beijing (UCI #501), London (LAQN API), Madrid (OpenAQ API),
+and weather (Open-Meteo Historical API).
+
 ## Hardware
 
 Apple M1 (MPS) — PyTorch 2.11 — Python 3.13
