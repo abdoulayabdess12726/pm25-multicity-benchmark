@@ -1,0 +1,153 @@
+{
+  "per_city": [
+    {
+      "city": "beijing",
+      "n_stations": 12,
+      "h_index": 0.497,
+      "tests": [
+        {
+          "topology": "distance",
+          "delta_r2_aggregate_mean": -0.019808439286744806,
+          "delta_r2_aggregate_std": 0.000747137531304228,
+          "delta_r2_perstation_mean": -0.020628046257336784,
+          "delta_r2_perstation_ci95_lo": -0.03117049447807405,
+          "delta_r2_perstation_ci95_hi": -0.012330433310764277,
+          "wilcoxon_r2_pvalue": 0.000244140625,
+          "wilcoxon_r2_stat": 0.0,
+          "wilcoxon_rmse_pvalue": 0.000244140625,
+          "cohens_d": -1.2075037801840787,
+          "n_stations_gcn_worse": 12,
+          "n_stations_total": 12
+        },
+        {
+          "topology": "correlation",
+          "delta_r2_aggregate_mean": -0.04006275058889527,
+          "delta_r2_aggregate_std": 0.0009027851788782828,
+          "delta_r2_perstation_mean": -0.04286846656602462,
+          "delta_r2_perstation_ci95_lo": -0.06459960146496743,
+          "delta_r2_perstation_ci95_hi": -0.024226827407829853,
+          "wilcoxon_r2_pvalue": 0.000244140625,
+          "wilcoxon_r2_stat": 0.0,
+          "wilcoxon_rmse_pvalue": 0.000244140625,
+          "cohens_d": -1.1863096935107145,
+          "n_stations_gcn_worse": 12,
+          "n_stations_total": 12
+        }
+      ]
+    },
+    {
+      "city": "london",
+      "n_stations": 8,
+      "h_index": 0.656,
+      "tests": [
+        {
+          "topology": "distance",
+          "delta_r2_aggregate_mean": -0.3812879464805379,
+          "delta_r2_aggregate_std": 0.01824036514516215,
+          "delta_r2_perstation_mean": -0.7477067445763173,
+          "delta_r2_perstation_ci95_lo": -1.3072302322838627,
+          "delta_r2_perstation_ci95_hi": -0.3246137557967916,
+          "wilcoxon_r2_pvalue": 0.00390625,
+          "wilcoxon_r2_stat": 0.0,
+          "wilcoxon_rmse_pvalue": 0.00390625,
+          "cohens_d": -1.025455925354339,
+          "n_stations_gcn_worse": 8,
+          "n_stations_total": 8
+        },
+        {
+          "topology": "correlation",
+          "delta_r2_aggregate_mean": -0.4128604701257715,
+          "delta_r2_aggregate_std": 0.011670728808661325,
+          "delta_r2_perstation_mean": -0.8295940453931985,
+          "delta_r2_perstation_ci95_lo": -1.3355129453060046,
+          "delta_r2_perstation_ci95_hi": -0.43472680662673796,
+          "wilcoxon_r2_pvalue": 0.00390625,
+          "wilcoxon_r2_stat": 0.0,
+          "wilcoxon_rmse_pvalue": 0.00390625,
+          "cohens_d": -1.267429084673171,
+          "n_stations_gcn_worse": 8,
+          "n_stations_total": 8
+        }
+      ]
+    },
+    {
+      "city": "madrid",
+      "n_stations": 7,
+      "h_index": 0.728,
+      "tests": [
+        {
+          "topology": "distance",
+          "delta_r2_aggregate_mean": -0.4013691385158498,
+          "delta_r2_aggregate_std": 0.014406721409471112,
+          "delta_r2_perstation_mean": -0.35638060523497844,
+          "delta_r2_perstation_ci95_lo": -0.47337490313889996,
+          "delta_r2_perstation_ci95_hi": -0.2450579440645432,
+          "wilcoxon_r2_pvalue": 0.0078125,
+          "wilcoxon_r2_stat": 0.0,
+          "wilcoxon_rmse_pvalue": 0.0078125,
+          "cohens_d": -2.311912910695562,
+          "n_stations_gcn_worse": 7,
+          "n_stations_total": 7
+        },
+        {
+          "topology": "correlation",
+          "delta_r2_aggregate_mean": -0.33358325473542366,
+          "delta_r2_aggregate_std": 0.003227802743695896,
+          "delta_r2_perstation_mean": -0.3535585350670738,
+          "delta_r2_perstation_ci95_lo": -0.5877733600896569,
+          "delta_r2_perstation_ci95_hi": -0.1641731404849059,
+          "wilcoxon_r2_pvalue": 0.0078125,
+          "wilcoxon_r2_stat": 0.0,
+          "wilcoxon_rmse_pvalue": 0.0078125,
+          "cohens_d": -1.2360605645552811,
+          "n_stations_gcn_worse": 7,
+          "n_stations_total": 7
+        }
+      ]
+    }
+  ],
+  "holm_bonferroni": [
+    {
+      "city": "beijing",
+      "topology": "distance",
+      "pvalue_raw": 0.000244140625,
+      "pvalue_corrected": 0.00146484375,
+      "significant_005": true
+    },
+    {
+      "city": "beijing",
+      "topology": "correlation",
+      "pvalue_raw": 0.000244140625,
+      "pvalue_corrected": 0.001220703125,
+      "significant_005": true
+    },
+    {
+      "city": "london",
+      "topology": "distance",
+      "pvalue_raw": 0.00390625,
+      "pvalue_corrected": 0.015625,
+      "significant_005": true
+    },
+    {
+      "city": "london",
+      "topology": "correlation",
+      "pvalue_raw": 0.00390625,
+      "pvalue_corrected": 0.01171875,
+      "significant_005": true
+    },
+    {
+      "city": "madrid",
+      "topology": "distance",
+      "pvalue_raw": 0.0078125,
+      "pvalue_corrected": 0.015625,
+      "significant_005": true
+    },
+    {
+      "city": "madrid",
+      "topology": "correlation",
+      "pvalue_raw": 0.0078125,
+      "pvalue_corrected": 0.0078125,
+      "significant_005": true
+    }
+  ]
+}

@@ -8,3 +8,10 @@ beijing+multi+site+air+quality+data/
 data/PRSA_Data_*.csv
 .DS_Store
 *.ipynb_checkpoints
+
+# working backups / logs (not part of the benchmark)
+*.bak
+*.bak[0-9]
+*_BACKUP_*.py
+results_backup_*/
+logs/

@@ -1,0 +1,11 @@
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+requests
+torch>=2.0
+torch-geometric
+# spatial heterogeneity index (05_compute_heterogeneity_v2.py)
+libpysal
+esda

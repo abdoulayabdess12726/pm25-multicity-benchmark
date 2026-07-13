@@ -1,0 +1,5 @@
+City,Topology,Delta R2 (mean),95% CI,Wilcoxon p (raw),Wilcoxon p (Holm-Bonf),Cohen's d,GCN worse / total
+Beijing,Distance,-0.0206,"[-0.0312, -0.0123]",2.441e-04,9.766e-04,-1.21,12/12
+Beijing,Correlation,-0.0429,"[-0.0646, -0.0242]",2.441e-04,7.324e-04,-1.19,12/12
+London,Distance,-0.7477,"[-1.3072, -0.3246]",3.906e-03,7.812e-03,-1.03,8/8
+London,Correlation,-0.8296,"[-1.3355, -0.4347]",3.906e-03,3.906e-03,-1.27,8/8

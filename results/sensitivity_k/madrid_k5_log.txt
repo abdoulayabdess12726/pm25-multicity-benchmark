@@ -1,0 +1,127 @@
+Device : Apple MPS
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+[Mode --quick activé]
+
+Graphe DISTANCE : 7 nœuds, 35 edges
+
+Graphe CORRÉLATION sur train...
+
+  Matrice de corrélation PM2.5 entre stations :
+  CASA D  CASTEL  CUATRO  ESCUEL  MENDEZ  PLAZA   PLAZA 
+  CASA DE CAMP   ---     0.546   0.470   0.447    ---     0.332   0.515
+  CASTELLANA    0.546    ---     0.554   0.444    ---     0.498   0.620
+  CUATRO CAMIN  0.470   0.554    ---     0.452    ---     0.404   0.468
+  ESCUELAS AGU  0.447   0.444   0.452    ---      ---     0.421   0.473
+  MENDEZ ALVAR   ---      ---      ---      ---      ---      ---      ---  
+  PLAZA CASTIL  0.332   0.498   0.404   0.421    ---      ---     0.532
+  PLAZA ELÍPTI  0.515   0.620   0.468   0.473    ---     0.532    ---  
+
+  Graphe corrélation : 7 nœuds, 24 edges (k=5, seuil=0.0)
+
+Features : ['PM2.5', 'TEMP', 'PRES', 'DEWP', 'WSPM']
+SEQ_LEN=12h | BATCH=128 | D_MODEL=32 | HEADS=2 | LAYERS=1
+
+############################################################
+  TOPOLOGIE : DISTANCE
+############################################################
+
+=======================================================
+  Modèle : GCN+Transformer
+=======================================================
+  -> Seed 42...
+     epoch   5 | val_loss=0.01027
+   Early stop epoch 9 (val_loss=0.00922)
+     MAE=4.87  RMSE=7.80  R2=0.4700
+
+=======================================================
+  Modèle : Linear+Transformer
+=======================================================
+  -> Seed 42...
+     epoch   5 | val_loss=0.00272
+   Early stop epoch 7 (val_loss=0.00268)
+     MAE=2.92  RMSE=4.63  R2=0.8133
+
+=================================================================
+  TABLEAU 1 -- Résultats globaux (moyenne +/- SD)
+=================================================================
+  Modèle                         MAE       RMSE         R2
+-----------------------------------------------------------------
+  GCN+Transformer             4.87+/-0.00     7.80+/-0.00  0.4700+/-0.0000
+  Linear+Transformer          2.92+/-0.00     4.63+/-0.00  0.8133+/-0.0000
+
+=================================================================
+  TABLEAU 2 -- Résultats par station (seed primaire)
+=================================================================
+  Station                 GCN R2    Lin R2    Delta
+-----------------------------------------------------------------
+  CASA DE CAMPO          0.4687    0.6511  -0.1824 Lin+
+  CASTELLANA             0.2774    0.8887  -0.6113 Lin+
+  CUATRO CAMINOS-PABLO   0.5444    0.8307  -0.2863 Lin+
+  ESCUELAS AGUIRRE       0.4615    0.7496  -0.2881 Lin+
+  MENDEZ ALVARO          0.6169    0.7938  -0.1768 Lin+
+  PLAZA CASTILLA-CANAL   0.5276    0.7688  -0.2411 Lin+
+  PLAZA ELÍPTICA         0.4596    0.7366  -0.2770 Lin+
+-----------------------------------------------------------------
+  GCN supérieur sur 0/7 stations
+  Delta R2 moyen = -0.2947
+=================================================================
+
+############################################################
+  TOPOLOGIE : CORRELATION
+############################################################
+
+=======================================================
+  Modèle : GCN+Transformer
+=======================================================
+  -> Seed 42...
+     epoch   5 | val_loss=0.00965
+   Early stop epoch 9 (val_loss=0.00866)
+     MAE=5.10  RMSE=8.03  R2=0.4378
+
+=======================================================
+  Modèle : Linear+Transformer
+=======================================================
+  -> Seed 42...
+     epoch   5 | val_loss=0.00272
+   Early stop epoch 7 (val_loss=0.00268)
+     MAE=2.92  RMSE=4.63  R2=0.8133
+
+=================================================================
+  TABLEAU 1 -- Résultats globaux (moyenne +/- SD)
+=================================================================
+  Modèle                         MAE       RMSE         R2
+-----------------------------------------------------------------
+  GCN+Transformer             5.10+/-0.00     8.03+/-0.00  0.4378+/-0.0000
+  Linear+Transformer          2.92+/-0.00     4.63+/-0.00  0.8133+/-0.0000
+
+=================================================================
+  TABLEAU 2 -- Résultats par station (seed primaire)
+=================================================================
+  Station                 GCN R2    Lin R2    Delta
+-----------------------------------------------------------------
+  CASA DE CAMPO          0.0199    0.6511  -0.6312 Lin+
+  CASTELLANA             0.2494    0.8887  -0.6393 Lin+
+  CUATRO CAMINOS-PABLO   0.5378    0.8307  -0.2930 Lin+
+  ESCUELAS AGUIRRE       0.5039    0.7496  -0.2457 Lin+
+  MENDEZ ALVARO          0.6908    0.7938  -0.1030 Lin+
+  PLAZA CASTILLA-CANAL   0.5071    0.7688  -0.2617 Lin+
+  PLAZA ELÍPTICA         0.3357    0.7366  -0.4009 Lin+
+-----------------------------------------------------------------
+  GCN supérieur sur 0/7 stations
+  Delta R2 moyen = -0.3678
+=================================================================
+
+Temps total : 2.9 min
+
+======================================================================
+  TABLEAU COMPARATIF -- GCN selon topologie vs Linear+Transformer
+======================================================================
+  Topologie                   MAE GCN    R2 GCN     R2 Lin    Delta
+----------------------------------------------------------------------
+  distance                      4.87    0.4700    0.8133  -0.3434  Lin+
+  correlation                   5.10    0.4378    0.8133  -0.3756  Lin+
+======================================================================
+
+Résultats sauvegardés : results/madrid/multistation_results.json
+
+--STDERR--
