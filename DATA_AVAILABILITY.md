@@ -3,7 +3,7 @@
 The data presented in this study are openly available from third-party public
 repositories and APIs, as listed below. The code used to download, preprocess,
 train, and evaluate all models is publicly available in this repository:
-<https://github.com/abdoulayabdess12726/pm25-beijing-benchmark>.
+<https://github.com/abdoulayabdess12726/pm25-multicity-benchmark>.
 
 ## Air quality monitoring data
 
