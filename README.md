@@ -1,60 +1,133 @@
-# PM₂.₅ Urban Air Quality Forecasting — Reproducible Benchmark
+# Spatial Graph Encoding for AI-Based PM2.5 Forecasting in IoT Smart Cities — Three-City Benchmark
 
-Supplementary code for:
+Supplementary code and data for:
 
-> **Badouch A., Belhoucine K.** — *Reproducible Benchmark for IoT 
-> Urban Air Quality Forecasting: Transformer Superiority and GCN 
-> Redundancy Under Spatially Homogeneous Conditions*  
-> IJACSA, 2025 (under review)
+> A. Badouch and K. Belhoucine, "Spatial Graph Encoding for AI-Based PM2.5
+> Forecasting in IoT Smart Cities," *International Journal of Intelligent
+> Engineering and Systems (IJIES)*, under review (Paper ID 20264131).
+
+Companion single-city (Beijing) study: Badouch & Krit, *IJACSA*, 2026,
+DOI [10.14569/IJACSA.2026.0170595](https://doi.org/10.14569/IJACSA.2026.0170595)
+— code at [pm25-beijing-benchmark](https://github.com/abdoulayabdess12726/pm25-beijing-benchmark).
 
 ---
 
-## Results Summary
+## What this repository contains
 
-| Model | MAE | RMSE | R² |
+A reproducible three-city benchmark (Beijing, London, Madrid) comparing a
+two-layer GCN-Transformer against a temporal-only Linear-Transformer for
+1-hour-ahead PM2.5 forecasting, together with a composite spatial heterogeneity
+index *h(D)*.
+
+The central finding is a **negative result**: the GCN-Transformer underperforms
+the Linear-Transformer at 26 of 27 stations (distance topology, primary seed;
+53 of 54 station–topology pairs), and the magnitude of underperformance is
+broadly associated with network heterogeneity.
+
+## Key results (paper Tables 1 and 3)
+
+**Spatial heterogeneity index:**
+
+| City | Stations | h(D) | Regime |
 |---|---|---|---|
-| ARIMA | 4.17 ±1.2 | 6.51 ±0.8 | 0.973 |
-| XGBoost | 6.35 ±0.22 | 11.67 ±0.35 | 0.963 |
-| LSTM | 12.00 ±0.10 | 23.81 ±0.48 | 0.847 |
-| CNN-LSTM | 21.10 ±4.82 | 33.04 ±5.37 | 0.698 |
-| **GCN+Transformer** | **8.17 ±1.00** | **15.07 ±0.67** | **0.939** |
+| Beijing | 12 | 0.497 | homogeneous (basin-bound) |
+| London | 8 | 0.656 | moderately heterogeneous |
+| Madrid | 7 | 0.728 | highly heterogeneous (traffic-dominated) |
 
-## Dataset
+**Aggregate ΔR² = GCN − Linear** (3 seeds); *p* Wilcoxon, Holm–Bonferroni
+corrected; Cohen's *d* on per-station differences:
 
-Beijing Multi-site Air Quality Dataset — UCI #501  
-→ https://archive.ics.uci.edu/dataset/501  
-Download and place CSV files in `beijing+multi+site+air+quality+data/`
+| City | Topology | ΔR² (3 seeds) | p (Holm) | d |
+|---|---|---|---|---|
+| Beijing | Distance | −0.017 ± 0.0001 | 0.0024 | −1.02 |
+| Beijing | Correlation | −0.038 ± 0.0007 | 0.0015 | −1.15 |
+| London | Distance | −0.375 ± 0.021 | 0.0156 | −1.17 |
+| London | Correlation | −0.401 ± 0.005 | 0.0117 | −1.26 |
+| Madrid | Distance | −0.321 ± 0.005 | 0.0156 | −2.42 |
+| Madrid | Correlation | −0.380 ± 0.014 | 0.0078 | −2.17 |
 
-## Usage
+All six per-city tests are significant at the corrected 0.05 level; the
+aggregate gap is ≈18.9× (distance) and ≈10.0× (correlation) larger in Madrid
+than in Beijing.
+
+## Datasets
+
+- **Beijing** — UCI Multi-Site Air-Quality Data Set (#501), 12 stations, 2013–2017
+- **London** — London Air Quality Network (LAQN) + Open-Meteo Historical Weather, 8 stations after quality filtering, 2020–2023
+- **Madrid** — OpenAQ API v3 + Open-Meteo Historical Weather, 7 stations after quality filtering
+
+See [DATA_AVAILABILITY.md](DATA_AVAILABILITY.md) for sources, licenses, and access details.
+
+## Pipeline
 
 ```bash
 pip install -r requirements.txt
 
-# 1. Benchmark all models (Table III)
-python 02_train_all_models.py
+# 1. Data acquisition and preprocessing
+python 01_download_beijing.py             # UCI #501
+python 01b_download_london.py             # LAQN
+python 01d_download_london_weather.py     # Open-Meteo covariates
+python 01c_preprocess_london.py
+python 01e_download_madrid.py             # OpenAQ v3
+python 01f_download_madrid_weather.py     # Open-Meteo covariates
+python 01g_preprocess_madrid.py
 
-# 2. Per-station Dongsi (Table IV)  
-python 04_dongsi_experiment.py
+# 2. Heterogeneity index (paper Table 1)
+python 05_compute_heterogeneity_v2.py
 
-# 3. Component ablation (Table V)
-python 03_ablation_real.py
+# 3. Full benchmark: 3 cities x 2 topologies x 2 models x 3 seeds (Tables 2, 5)
+python 06_train_multistation.py --seeds 42 123 777
 
-# 4. Multi-node topology ablation (Table VI)
-python solution_A_multinode_gcn.py \
-  --data_dir beijing+multi+site+air+quality+data/PRSA_Data_20130301-20170228
+# 4. Statistical tests: Wilcoxon + Holm-Bonferroni, bootstrap CIs, Cohen's d (Table 3)
+python 07_statistical_analysis.py
+
+# 5. Graph-density sensitivity, k in {3, 5, 8} capped at N-1 (Table 6)
+python 08_sensitivity_k.py
+
+# 6. Over-smoothing controls: 1-layer GCN, GAT, Dirichlet energy (Table 7)
+python oversmoothing_gat_control.py
 ```
 
-## Data Availability
+## Reproducing the paper's tables
 
-See [DATA_AVAILABILITY.md](DATA_AVAILABILITY.md). All data are openly available
-from public sources: Beijing (UCI #501), London (LAQN API), Madrid (OpenAQ API),
-and weather (Open-Meteo Historical API).
+| Paper table | Script |
+|---|---|
+| Table 1 — h(D) components per city | `05_compute_heterogeneity_v2.py` |
+| Tables 2, 5 — per-city / per-station benchmark | `06_train_multistation.py` |
+| Table 3 — statistical tests | `07_statistical_analysis.py` |
+| Table 6 — k-sensitivity | `08_sensitivity_k.py` |
+| Table 7 — over-smoothing controls | `oversmoothing_gat_control.py` |
 
-## Hardware
+Per-station benchmark results are written per city to
+`results/{beijing,london,madrid}/multistation_results.json`
+(27 stations × 3 seeds × 2 topologies). Statistical summaries used in the paper:
+`results/statistical_analysis/summary_for_paper_3cities.csv`.
 
-Apple M1 (MPS) — PyTorch 2.11 — Python 3.13
+## Graph construction details
 
-## Seeds
+- Neighbours are other stations; self-loops are not counted in neighbour selection.
+- k is capped at N−1: nominal k = 8 yields fully connected graphs for London (7 effective neighbours) and Madrid (6).
+- **Distance topology:** inverse Haversine edge weights (min-max normalized).
+- **Correlation topology:** training-period PM2.5 Pearson correlation (clipped, normalized).
 
-All experiments use seeds {42, 123, 777}.  
-Results reported as mean ± SD across 3 seeds.
+## Reproducibility
+
+- Random seeds: 42 (primary), 123, 777
+- Chronological splits; SEQ_LEN = 24 h, horizon = 1 h, BATCH = 64, D_MODEL = 64, MAX_EPOCHS = 50, PATIENCE = 8
+- Hardware: Apple M1 (MPS backend), Python 3.13, PyTorch 2.11; full benchmark ≈5.5 h wall-clock
+
+## License
+
+Code: MIT. Data: per the licenses of the original providers (see [DATA_AVAILABILITY.md](DATA_AVAILABILITY.md)).
+
+## Citation
+
+```bibtex
+@article{badouch2026multicity,
+  author  = {Badouch, Abdessamad and Belhoucine, Kaoutar},
+  title   = {Spatial Graph Encoding for {AI}-Based {PM2.5} Forecasting in {IoT} Smart Cities},
+  journal = {International Journal of Intelligent Engineering and Systems},
+  year    = {2026},
+  note    = {Under review, Paper ID 20264131}
+}
+```
