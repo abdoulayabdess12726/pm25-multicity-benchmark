@@ -15,3 +15,6 @@ data/PRSA_Data_*.csv
 *_BACKUP_*.py
 results_backup_*/
 logs/
+
+# plan de révision interne — ne pas publier
+CLAUDE.md
