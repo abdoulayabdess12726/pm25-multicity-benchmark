@@ -692,7 +692,8 @@ def run_experiment(data, edge_index, edge_weight, device, variants=None):
     train_d, val_d, test_d, scaler = split_and_scale(data)
 
     results = {name: [] for name, _ in variants}
-    per_station_results = {}
+    per_station_results = {}                 # seed primaire (SEEDS[0]) — pour les prints
+    per_station_all = {}                     # {model: {seed: {station: metrics}}} — persisté
     dirichlet_results = {}
 
     for model_name, enc_type in variants:
@@ -730,6 +731,8 @@ def run_experiment(data, edge_index, edge_weight, device, variants=None):
             print(f"     MAE={mae:.2f}  RMSE={rmse:.2f}  R2={r2:.4f}")
             seed_metrics.append((mae, rmse, r2))
 
+            per_station_all.setdefault(model_name, {})[seed] = per_st
+
             if seed == SEEDS[0]:
                 per_station_results[model_name] = per_st
                 if enc_type in ('gcn1', 'gcn2', 'gat'):
@@ -740,7 +743,7 @@ def run_experiment(data, edge_index, edge_weight, device, variants=None):
 
         results[model_name] = seed_metrics
 
-    return results, per_station_results, scaler, dirichlet_results
+    return results, per_station_results, scaler, dirichlet_results, per_station_all
 
 
 def print_results_table(results, per_station_results):
@@ -913,11 +916,12 @@ def main():
         print(f"\n{'#'*60}")
         print(f"  TOPOLOGIE : {graph_name.upper()}")
         print(f"{'#'*60}")
-        results, per_station_results, scaler, dirichlet_results = run_experiment(
+        results, per_station_results, scaler, dirichlet_results, per_station_all = run_experiment(
             data, ei_dev, ew_dev, device, variants=variants)
         all_graph_results[graph_name] = {
             'results': results,
             'per_station': per_station_results,
+            'per_station_all': per_station_all,
             'dirichlet': dirichlet_results,
         }
         print_results_table(results, per_station_results)
@@ -981,6 +985,7 @@ def main():
                 'R2_std':    float(np.std([m[2] for m in seed_metrics])),
             }
         json_results['graphs'][gname]['per_station'] = gdata['per_station']
+        json_results['graphs'][gname]['per_station_all_seeds'] = gdata.get('per_station_all', {})
         json_results['graphs'][gname]['dirichlet'] = gdata.get('dirichlet', {})
 
     out_file = out_dir / "multistation_results.json"
