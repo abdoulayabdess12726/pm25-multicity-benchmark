@@ -11,9 +11,16 @@ ARIMA / XGBoost / LSTM sous le PROTOCOLE IDENTIQUE à 06_train_multistation.py :
   - seeds 42/123/777 pour le LSTM ; XGBoost seed fixe 42 ; ARIMA déterministe
 
 Baselines :
+  - Persistence (prévision naïve PM2.5[t] = PM2.5[t-1] ; calcul direct, aucun modèle)
   - ARIMA (statsmodels, per-station, PM2.5 univarié, 1-step-ahead sans refit)
   - XGBoost (per-station : lags 1..24 de PM2.5 + 4 covariables météo à t-1)
   - LSTM (2 couches, hidden 64, temporel poolé par nœud, early-stopping de 06)
+
+MENDEZ ALVARO (Madrid) : PM2.5 constant sur le train, h_i indéfini -> station
+exclue de TOUTES les expériences (Expérience A et baselines E1). Écartée du
+per-station et de l'agrégat via EXCLUDE ci-dessous ; l'agrégat Madrid porte
+donc sur 6 stations. Les modèles restent entraînés sur toutes les stations
+(pooling) ; seule l'ÉVALUATION exclut la station.
 
 Sortie : results/external_baselines.csv (ARIMA/XGBoost/LSTM, per-station + agrégat)
          + tableau markdown par ville (ARIMA/XGBoost/LSTM/Linear-Tr/GCN-Tr).
@@ -49,6 +56,7 @@ ROOT = Path(__file__).resolve().parent
 SEQ_LEN = 24
 SEEDS = [42, 123, 777]
 ARIMA_ORDER = (2, 1, 2)          # ordre fixe per-station (fallback plus bas)
+EXCLUDE = {"madrid": {"MENDEZ ALVARO"}}   # PM2.5 constant sur le train -> exclue partout
 CSV = ROOT / "results" / "external_baselines.csv"
 
 
@@ -90,15 +98,18 @@ def get_city(b, city):
 #  Métriques (per-station + agrégat global, dénormalisé) — identiques à 06
 # --------------------------------------------------------------------------- #
 def metrics_rows(city, model, seed, names, Y, P):
-    """Y, P : (n_targets, n_stations) dénormalisés. Renvoie lignes tidy."""
+    """Y, P : (n_targets, n_stations) dénormalisés. Renvoie lignes tidy.
+    Les stations de EXCLUDE[city] sont écartées du per-station ET de l'agrégat."""
+    excl = EXCLUDE.get(city, set())
+    keep = [i for i, name in enumerate(names) if name not in excl]
     rows = []
-    for i, name in enumerate(names):
+    for i in keep:
         yt, pt = Y[:, i], P[:, i]
-        rows.append(dict(city=city, model=model, station=name, seed=seed,
+        rows.append(dict(city=city, model=model, station=names[i], seed=seed,
                          MAE=mean_absolute_error(yt, pt),
                          RMSE=float(np.sqrt(mean_squared_error(yt, pt))),
                          R2=r2_score(yt, pt)))
-    yf, pf = Y.reshape(-1), P.reshape(-1)                # agrégat global (comme evaluate)
+    yf, pf = Y[:, keep].reshape(-1), P[:, keep].reshape(-1)   # agrégat global (comme evaluate)
     rows.append(dict(city=city, model=model, station="__aggregate__", seed=seed,
                      MAE=mean_absolute_error(yf, pf),
                      RMSE=float(np.sqrt(mean_squared_error(yf, pf))),
@@ -109,6 +120,13 @@ def metrics_rows(city, model, seed, names, Y, P):
 def true_targets(c):
     """Cibles test dénormalisées, alignées SEQ_LEN:  (n, n_stations)."""
     return c["raw"]["test"][SEQ_LEN:, :, c["pm"]]
+
+
+def run_persistence(c):
+    """Prévision naïve PM2.5[t] = PM2.5[t-1] : calcul direct, aucun modèle."""
+    Y = true_targets(c)
+    P = c["raw"]["test"][SEQ_LEN - 1:-1, :, c["pm"]]      # décalage d'un pas
+    return metrics_rows(c["city"], "Persistence", "-", c["names"], Y, P)
 
 
 # --------------------------------------------------------------------------- #
@@ -291,33 +309,53 @@ def agg_from_rows(df, city, model):
             for m in ("MAE", "RMSE", "R2")}
 
 
-def agg_from_json(city, model_key):
+def agg_from_json(city, model_key, c):
+    """Agrégat Transformer reconstruit sur les stations CONSERVÉES (exclusion
+    appliquée) : SS_res = Σ RMSE_s²·n (per-station JSON), SS_tot depuis les
+    données. Identique au flatten sur les stations gardées, par seed puis moy±SD."""
     p = ROOT / f"results/{city}/multistation_results.json"
     if not p.exists():
         return None
     g = json.loads(p.read_text())["graphs"]
     topo = "distance" if "distance" in g else list(g)[0]
-    d = g[topo].get(model_key)
-    if not d:
+    psa = g[topo].get("per_station_all_seeds", {}).get(model_key)
+    if not psa:
         return None
-    return {m: (float(np.mean(d[m])), float(np.std(d[m]))) for m in ("MAE", "RMSE", "R2")}
+    excl = EXCLUDE.get(city, set())
+    names, Y = c["names"], true_targets(c)
+    keep = [i for i, s in enumerate(names) if s not in excl]
+    n = Y.shape[0]; Yk = Y[:, keep]; SS_tot = float(((Yk - Yk.mean()) ** 2).sum())
+    res = {"MAE": [], "RMSE": [], "R2": []}
+    for _, perst in psa.items():
+        rmse = {s: perst[s]["RMSE"] for s in perst if names.index(s) in keep}
+        mae = {s: perst[s]["MAE"] for s in perst if names.index(s) in keep}
+        ss_res = sum(rmse[s] ** 2 * n for s in rmse)
+        res["R2"].append(1 - ss_res / SS_tot)
+        res["RMSE"].append(np.sqrt(ss_res / (len(rmse) * n)))
+        res["MAE"].append(np.mean(list(mae.values())))
+    return {m: (float(np.mean(v)), float(np.std(v))) for m, v in res.items()}
 
 
-def markdown_table(city, df):
+def markdown_table(city, df, c):
     def cell(a, m):
         return "—" if a is None else f"{a[m][0]:.3f} ± {a[m][1]:.3f}"
-    order = [("ARIMA", lambda: agg_from_rows(df, city, "ARIMA")),
+    order = [("Persistence (t−1)", lambda: agg_from_rows(df, city, "Persistence")),
+             ("ARIMA", lambda: agg_from_rows(df, city, "ARIMA")),
              ("XGBoost", lambda: agg_from_rows(df, city, "XGBoost")),
              ("LSTM", lambda: agg_from_rows(df, city, "LSTM")),
-             ("Linear-Transformer", lambda: agg_from_json(city, "Linear+Transformer")),
-             ("GCN-Transformer", lambda: agg_from_json(city, "GCN+Transformer"))]
-    lines = [f"\n### {city.capitalize()} — agrégat (test, dénormalisé, moyenne ± SD)",
+             ("Linear-Transformer", lambda: agg_from_json(city, "Linear+Transformer", c)),
+             ("GCN-Transformer", lambda: agg_from_json(city, "GCN+Transformer", c))]
+    excl = EXCLUDE.get(city, set())
+    ncol = len(c["names"]) - len(excl)
+    suffix = (f" — {ncol} stations (MENDEZ ALVARO exclue)" if excl
+              else f" — agrégat {ncol} stations")
+    lines = [f"\n### {city.capitalize()}{suffix} (test, dénormalisé, moyenne ± SD)",
              "| Model | MAE | RMSE | R² |", "|---|---|---|---|"]
     for name, fn in order:
         a = fn()
         lines.append(f"| {name} | {cell(a,'MAE')} | {cell(a,'RMSE')} | {cell(a,'R2')} |")
-    lines.append("\n_GCN-Transformer: topologie distance. Linear-Transformer: "
-                 "temporel pur (identique aux 2 topologies)._")
+    lines.append("\n_Persistence (t−1) : PM2.5[t]=PM2.5[t−1]. GCN-Transformer: topologie "
+                 "distance. Linear-Transformer: temporel pur (identique aux 2 topologies)._")
     return "\n".join(lines)
 
 
@@ -331,9 +369,11 @@ def main():
     b = load_bench()
 
     all_rows = []
+    cities_c = {}
     for city in args.cities:
         print(f"\n[{city}] baselines externes (device={device})...", file=sys.stderr)
-        c = get_city(b, city)
+        c = get_city(b, city); cities_c[city] = c
+        print(f"  Persistence...", file=sys.stderr); all_rows += run_persistence(c)
         print(f"  ARIMA...", file=sys.stderr);   all_rows += run_arima(c)
         print(f"  XGBoost...", file=sys.stderr); all_rows += run_xgboost(c)
         print(f"  LSTM (3 seeds)...", file=sys.stderr); all_rows += run_lstm(c, device)
@@ -351,7 +391,7 @@ def main():
     print(f"\nCSV : {CSV}  ({len(full)} lignes ; +{len(new)} cette exécution)")
 
     for city in args.cities:
-        print(markdown_table(city, new))
+        print(markdown_table(city, new, cities_c[city]))
 
 
 if __name__ == "__main__":
