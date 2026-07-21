@@ -1,0 +1,8 @@
+city,k,k_eff,topology,gcn_r2_mean,gcn_r2_std,lin_r2_mean,delta_r2_mean,delta_r2_std,n_seeds,source
+beijing,3,3,distance,0.9359,,0.9493,-0.0134,0.0005,3,recompute canonique
+beijing,5,5,correlation,0.9118,0.0007,0.9493,-0.0375,0.0007,3,json(k5 canonique)
+beijing,5,5,distance,0.9321,0.0005,0.9493,-0.0172,0.0001,3,json(k5 canonique)
+london,5,5,correlation,0.4408,0.003,0.8422,-0.4014,0.005,3,json(k5 canonique)
+london,5,5,distance,0.4668,0.0202,0.8422,-0.3754,0.0211,3,json(k5 canonique)
+madrid,5,5,correlation,0.4345,0.0137,0.814,-0.3795,0.0143,3,json(k5 canonique)
+madrid,5,5,distance,0.4927,0.0052,0.814,-0.3213,0.005,3,json(k5 canonique)
