@@ -1,0 +1,123 @@
+[beijing/distance/k=3/seed=42] device=cpu edges=36 R2_gcn=0.9364 ΔR²=-0.0131 [archive(seed42)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.40 CSV_LIGNES=19
+[beijing/distance/k=3/seed=123] device=cpu edges=36 R2_gcn=0.9335 ΔR²=-0.0162 [recompute]
+DUREE_S=1835 DUREE_MIN=30.6 RSS_GB=0.68 CSV_LIGNES=20
+[beijing/distance/k=3/seed=777] device=cpu edges=36 R2_gcn=0.9363 ΔR²=-0.0122 [recompute]
+DUREE_S=12051 DUREE_MIN=200.8 RSS_GB=0.78 CSV_LIGNES=21
+[beijing/distance/k=5/seed=42] device=cpu edges=60 R2_gcn=0.9324 ΔR²=-0.0171 [json(k5)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.32 CSV_LIGNES=21
+[beijing/distance/k=5/seed=123] device=cpu edges=60 R2_gcn=0.9324 ΔR²=-0.0173 [json(k5)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.45 CSV_LIGNES=22
+[beijing/distance/k=5/seed=777] device=cpu edges=60 R2_gcn=0.9314 ΔR²=-0.0171 [json(k5)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.40 CSV_LIGNES=23
+[beijing/distance/k=8/seed=42] device=cpu edges=96 R2_gcn=0.9298 ΔR²=-0.0197 [archive(seed42)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.38 CSV_LIGNES=23
+[beijing/distance/k=8/seed=123] device=cpu edges=96 R2_gcn=0.9270 ΔR²=-0.0227 [recompute]
+DUREE_S=10472 DUREE_MIN=174.5 RSS_GB=0.70 CSV_LIGNES=24
+[beijing/distance/k=8/seed=777] device=cpu edges=96 R2_gcn=0.9293 ΔR²=-0.0193 [recompute]
+DUREE_S=7604 DUREE_MIN=126.7 RSS_GB=0.77 CSV_LIGNES=25
+[beijing/correlation/k=3/seed=42] device=cpu edges=36 R2_gcn=0.9215 ΔR²=-0.0280 [archive(seed42)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.41 CSV_LIGNES=25
+[beijing/correlation/k=3/seed=123] device=cpu edges=36 R2_gcn=0.9178 ΔR²=-0.0320 [recompute]
+DUREE_S=1812 DUREE_MIN=30.2 RSS_GB=0.71 CSV_LIGNES=26
+[beijing/correlation/k=3/seed=777] device=cpu edges=36 R2_gcn=0.9219 ΔR²=-0.0267 [recompute]
+DUREE_S=5250 DUREE_MIN=87.5 RSS_GB=0.72 CSV_LIGNES=27
+[beijing/correlation/k=5/seed=42] device=cpu edges=60 R2_gcn=0.9127 ΔR²=-0.0368 [json(k5)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.40 CSV_LIGNES=27
+[beijing/correlation/k=5/seed=123] device=cpu edges=60 R2_gcn=0.9113 ΔR²=-0.0384 [json(k5)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.39 CSV_LIGNES=28
+[beijing/correlation/k=5/seed=777] device=cpu edges=60 R2_gcn=0.9112 ΔR²=-0.0373 [json(k5)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.41 CSV_LIGNES=29
+[beijing/correlation/k=8/seed=42] device=cpu edges=96 R2_gcn=0.8934 ΔR²=-0.0561 [archive(seed42)]
+DUREE_S=1 DUREE_MIN=0.0 RSS_GB=0.38 CSV_LIGNES=29
+[beijing/correlation/k=8/seed=123] device=cpu edges=96 R2_gcn=0.8940 ΔR²=-0.0558 [recompute]
+DUREE_S=2996 DUREE_MIN=49.9 RSS_GB=0.78 CSV_LIGNES=30
+[beijing/correlation/k=8/seed=777] device=cpu edges=96 R2_gcn=0.8946 ΔR²=-0.0540 [recompute]
+DUREE_S=5218 DUREE_MIN=87.0 RSS_GB=0.87 CSV_LIGNES=31
+[london/distance/k=3/seed=42] device=cpu edges=24 R2_gcn=0.5080 ΔR²=-0.3371 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=31
+[london/distance/k=3/seed=123] device=cpu edges=24 R2_gcn=0.5229 ΔR²=-0.3148 [recompute]
+DUREE_S=808 DUREE_MIN=13.5 RSS_GB=0.70 CSV_LIGNES=32
+[london/distance/k=3/seed=777] device=cpu edges=24 R2_gcn=0.5072 ΔR²=-0.3368 [recompute]
+DUREE_S=780 DUREE_MIN=13.0 RSS_GB=0.67 CSV_LIGNES=33
+[london/distance/k=5/seed=42] device=cpu edges=40 R2_gcn=0.4854 ΔR²=-0.3596 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=33
+[london/distance/k=5/seed=123] device=cpu edges=40 R2_gcn=0.4763 ΔR²=-0.3614 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=34
+[london/distance/k=5/seed=777] device=cpu edges=40 R2_gcn=0.4388 ΔR²=-0.4052 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=35
+[london/distance/k=8/seed=42] device=cpu edges=56 R2_gcn=0.4494 ΔR²=-0.3957 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=35
+[london/distance/k=8/seed=123] device=cpu edges=56 R2_gcn=0.4583 ΔR²=-0.3793 [recompute]
+DUREE_S=3726 DUREE_MIN=62.1 RSS_GB=0.70 CSV_LIGNES=36
+[london/distance/k=8/seed=777] device=cpu edges=56 R2_gcn=0.4358 ΔR²=-0.4082 [recompute]
+DUREE_S=6244 DUREE_MIN=104.1 RSS_GB=0.64 CSV_LIGNES=37
+[london/correlation/k=3/seed=42] device=cpu edges=24 R2_gcn=0.5046 ΔR²=-0.3405 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=37
+[london/correlation/k=3/seed=123] device=cpu edges=24 R2_gcn=0.4740 ΔR²=-0.3637 [recompute]
+DUREE_S=1844 DUREE_MIN=30.7 RSS_GB=0.65 CSV_LIGNES=38
+[london/correlation/k=3/seed=777] device=cpu edges=24 R2_gcn=0.5068 ΔR²=-0.3372 [recompute]
+DUREE_S=2292 DUREE_MIN=38.2 RSS_GB=0.65 CSV_LIGNES=39
+[london/correlation/k=5/seed=42] device=cpu edges=40 R2_gcn=0.4435 ΔR²=-0.4016 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=39
+[london/correlation/k=5/seed=123] device=cpu edges=40 R2_gcn=0.4424 ΔR²=-0.3953 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=40
+[london/correlation/k=5/seed=777] device=cpu edges=40 R2_gcn=0.4366 ΔR²=-0.4074 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=41
+[london/correlation/k=8/seed=42] device=cpu edges=56 R2_gcn=0.3287 ΔR²=-0.5164 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=41
+[london/correlation/k=8/seed=123] device=cpu edges=56 R2_gcn=0.3097 ΔR²=-0.5280 [recompute]
+DUREE_S=2415 DUREE_MIN=40.3 RSS_GB=0.67 CSV_LIGNES=42
+[london/correlation/k=8/seed=777] device=cpu edges=56 R2_gcn=0.3706 ΔR²=-0.4734 [recompute]
+DUREE_S=2176 DUREE_MIN=36.3 RSS_GB=0.66 CSV_LIGNES=43
+[madrid/distance/k=3/seed=42] device=cpu edges=21 R2_gcn=0.4908 ΔR²=-0.3254 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=43
+[madrid/distance/k=3/seed=123] device=cpu edges=21 R2_gcn=0.5314 ΔR²=-0.2865 [recompute]
+DUREE_S=4028 DUREE_MIN=67.1 RSS_GB=0.66 CSV_LIGNES=44
+[madrid/distance/k=3/seed=777] device=cpu edges=21 R2_gcn=0.5140 ΔR²=-0.3016 [recompute]
+DUREE_S=7065 DUREE_MIN=117.8 RSS_GB=0.67 CSV_LIGNES=45
+[madrid/distance/k=5/seed=42] device=cpu edges=35 R2_gcn=0.4647 ΔR²=-0.3515 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.36 CSV_LIGNES=45
+[madrid/distance/k=5/seed=123] device=cpu edges=35 R2_gcn=0.4756 ΔR²=-0.3424 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.38 CSV_LIGNES=45
+[madrid/distance/k=5/seed=777] device=cpu edges=35 R2_gcn=0.4746 ΔR²=-0.3410 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.32 CSV_LIGNES=46
+[madrid/distance/k=8/seed=42] device=cpu edges=42 R2_gcn=0.4408 ΔR²=-0.3754 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.39 CSV_LIGNES=46
+[madrid/distance/k=8/seed=123] device=cpu edges=42 R2_gcn=0.4512 ΔR²=-0.3667 [recompute]
+DUREE_S=4609 DUREE_MIN=76.8 RSS_GB=0.63 CSV_LIGNES=47
+[madrid/distance/k=8/seed=777] device=cpu edges=42 R2_gcn=0.4444 ΔR²=-0.3712 [recompute]
+DUREE_S=1420 DUREE_MIN=23.7 RSS_GB=0.65 CSV_LIGNES=48
+[madrid/correlation/k=3/seed=42] device=cpu edges=12 R2_gcn=0.4636 ΔR²=-0.3526 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.37 CSV_LIGNES=48
+[madrid/correlation/k=3/seed=123] device=cpu edges=12 R2_gcn=0.4729 ΔR²=-0.3451 [recompute]
+DUREE_S=6670 DUREE_MIN=111.2 RSS_GB=0.63 CSV_LIGNES=49
+[madrid/correlation/k=3/seed=777] device=cpu edges=12 R2_gcn=0.4745 ΔR²=-0.3411 [recompute]
+DUREE_S=1581 DUREE_MIN=26.4 RSS_GB=0.66 CSV_LIGNES=50
+[madrid/correlation/k=5/seed=42] device=cpu edges=24 R2_gcn=0.3894 ΔR²=-0.4269 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.36 CSV_LIGNES=50
+[madrid/correlation/k=5/seed=123] device=cpu edges=24 R2_gcn=0.3960 ΔR²=-0.4220 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.38 CSV_LIGNES=51
+[madrid/correlation/k=5/seed=777] device=cpu edges=24 R2_gcn=0.4203 ΔR²=-0.3953 [json(k5)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.35 CSV_LIGNES=52
+[madrid/correlation/k=8/seed=42] device=cpu edges=30 R2_gcn=0.3304 ΔR²=-0.4858 [archive(seed42)]
+DUREE_S=0 DUREE_MIN=0.0 RSS_GB=0.35 CSV_LIGNES=52
+[madrid/correlation/k=8/seed=123] device=cpu edges=30 R2_gcn=0.3924 ΔR²=-0.4256 [recompute]
+DUREE_S=31595 DUREE_MIN=526.6 RSS_GB=0.67 CSV_LIGNES=53
+[madrid/correlation/k=8/seed=777] device=cpu edges=30 R2_gcn=0.3573 ΔR²=-0.4583 [recompute]
+DUREE_S=37823 DUREE_MIN=630.4 RSS_GB=0.63 CSV_LIGNES=54
+TOTAL_DUREE_S=162483 TOTAL_DUREE_MIN=2708
+
+### Table 7 — ΔR² (GCN − Linear) vs k, mean±std sur 3 seeds (42/123/777)
+
+| City | Topology | k=3 | k=5 | k=8 |
+|---|---|---|---|---|
+| Beijing | correlation | -0.0289±0.0028 | -0.0375±0.0008 | -0.0553±0.0011 |
+| Beijing | distance | -0.0138±0.0021 | -0.0172±0.0001 | -0.0206±0.0019 |
+| London | correlation | -0.3471±0.0144 | -0.4014±0.0061 | -0.5059±0.0288 |
+| London | distance | -0.3296±0.0128 | -0.3754±0.0258 | -0.3944±0.0145 |
+| Madrid | correlation | -0.3463±0.0058 | -0.4147±0.0170 | -0.4566±0.0301 |
+| Madrid | distance | -0.3045±0.0196 | -0.3450±0.0057 | -0.3711±0.0044 |
+
+CSV complet : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/e6_k_sensitivity.csv (54 lignes)
+Table 7     : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/table7_k_sensitivity.csv (18 lignes)
