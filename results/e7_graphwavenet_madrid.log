@@ -1,0 +1,8 @@
+[madrid/graphwavenet/seed=42] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=24 isolated=1 R2=0.8184 Linear_ref=0.8135  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=2552 DUREE_MIN=42.5 RSS_GB=0.55 CSV_LIGNES=6
+     epoch   5 | val_loss=0.00272
+     epoch  10 | val_loss=0.00284
+     epoch  15 | val_loss=0.00261
+     epoch  20 | val_loss=0.00261
+     epoch  25 | val_loss=0.00257
+   Early stop epoch 29 (val_loss=0.00257)

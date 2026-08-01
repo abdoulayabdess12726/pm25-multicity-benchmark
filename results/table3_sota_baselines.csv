@@ -1,0 +1,7 @@
+city,model,seed,R2_aggregate,r2_linear_ref,beats_linear,n_edges,n_isolated_nodes
+beijing,graphwavenet,42,0.9609,0.9495,True,60,0
+beijing,stgcn,42,0.9598,0.9495,True,60,0
+london,graphwavenet,42,0.8396,0.8451,False,40,0
+london,stgcn,42,0.8479,0.8451,True,40,0
+madrid,graphwavenet,42,0.8184,0.8135,True,24,1
+madrid,stgcn,42,0.7882,0.8135,False,24,1

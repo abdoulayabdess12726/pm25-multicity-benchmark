@@ -1,0 +1,7 @@
+[madrid/stgcn/seed=42] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=24 isolated=1 R2=0.7882 Linear_ref=0.8135
+DUREE_S=1815 DUREE_MIN=30.3 RSS_GB=0.51 CSV_LIGNES=3
+     epoch   5 | val_loss=0.00276
+     epoch  10 | val_loss=0.00316
+     epoch  15 | val_loss=0.00278
+     epoch  20 | val_loss=0.00262
+   Early stop epoch 22 (val_loss=0.00257)

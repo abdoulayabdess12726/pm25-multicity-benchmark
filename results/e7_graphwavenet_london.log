@@ -1,0 +1,5 @@
+[london/graphwavenet/seed=42] device=cpu n_nodes=8 (MENDEZ ALVARO n/a) edges=40 isolated=0 R2=0.8396 Linear_ref=0.8451
+DUREE_S=861 DUREE_MIN=14.3 RSS_GB=0.61 CSV_LIGNES=5
+     epoch   5 | val_loss=0.00172
+     epoch  10 | val_loss=0.00184
+   Early stop epoch 10 (val_loss=0.00166)

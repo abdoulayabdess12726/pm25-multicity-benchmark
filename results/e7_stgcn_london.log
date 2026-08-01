@@ -1,0 +1,8 @@
+[london/stgcn/seed=42] device=cpu n_nodes=8 (MENDEZ ALVARO n/a) edges=40 isolated=0 R2=0.8479 Linear_ref=0.8451  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=985 DUREE_MIN=16.4 RSS_GB=0.58 CSV_LIGNES=2
+     epoch   5 | val_loss=0.00192
+     epoch  10 | val_loss=0.00442
+     epoch  15 | val_loss=0.00169
+     epoch  20 | val_loss=0.00191
+     epoch  25 | val_loss=0.00177
+   Early stop epoch 25 (val_loss=0.00163)
