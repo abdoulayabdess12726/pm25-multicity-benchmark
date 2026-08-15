@@ -7,10 +7,14 @@ Computes:
 - Spearman correlation between h(D) and Delta R-squared (across cities)
 """
 import json
+import sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from scipy import stats
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
 
 OUT = Path("results/statistical_analysis")
 OUT.mkdir(parents=True, exist_ok=True)
@@ -33,6 +37,10 @@ def bootstrap_ci(data, n_bootstrap=10000, ci=0.95, seed=42):
     return np.percentile(boot_means, [100*alpha, 100*(1-alpha)])
 
 def cohens_d(a, b):
+    # Hors périmètre ddof=1 inter-seeds (REVISION_BRIEF.md) : dispersion
+    # inter-STATIONS (effect size standardisé), pas un agrégat sur 3 seeds —
+    # volontairement non touché par ce correctif, ne pas router vers
+    # agg_mean_std.
     diff = np.array(a) - np.array(b)
     return diff.mean() / diff.std() if diff.std() > 0 else 0.0
 
@@ -77,13 +85,14 @@ def analyze_city(json_path, city_name):
         # Cohen's d
         d = cohens_d(gcn_r2_per_station, lin_r2_per_station)
         
-        # Aggregate Delta R-squared (across 3 seeds)
+        # Aggregate Delta R-squared (across 3 seeds), ddof=1 (agg_mean_std)
         delta_r2_seeds = np.array(gcn["R2"]) - np.array(lin["R2"])
-        
+        delta_r2_agg_mean, delta_r2_agg_std = agg_mean_std(delta_r2_seeds)
+
         result = {
             "topology": topology,
-            "delta_r2_aggregate_mean": float(delta_r2_seeds.mean()),  # the value reported in the paper
-            "delta_r2_aggregate_std": float(delta_r2_seeds.std()),
+            "delta_r2_aggregate_mean": delta_r2_agg_mean,  # the value reported in the paper
+            "delta_r2_aggregate_std": delta_r2_agg_std,
             "delta_r2_perstation_mean": float(delta_r2_per_st.mean()),
             "delta_r2_perstation_ci95_lo": float(ci_lo),
             "delta_r2_perstation_ci95_hi": float(ci_hi),

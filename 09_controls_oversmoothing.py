@@ -35,7 +35,8 @@ Outputs a results table per run; aggregate the printed mean +/- std into Table V
 ============================================================
 """
 
-import argparse, math, random
+import argparse, math, random, sys
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
@@ -43,6 +44,9 @@ import torch.nn as nn
 from torch_geometric.nn import GCNConv, GATConv
 from scipy.stats import wilcoxon
 from sklearn.metrics import r2_score
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
 from sklearn.preprocessing import MinMaxScaler
 
 FEATURES = ["PM2.5", "TEMP", "PRES", "DEWP", "WSPM"]   # harmonized 5-feature set
@@ -334,7 +338,7 @@ def main():
             r2_per, dir_e = run(args.city, args.topology, kind, nl, s, device)
             per_seed.append(r2_per.mean())
         name = f"{kind}{nl}L"
-        agg[name] = (np.mean(per_seed), np.std(per_seed), r2_per, dir_e)
+        agg[name] = (*agg_mean_std(per_seed), r2_per, dir_e)
 
     lin = agg["linear1L"][0]
     print(f"\n{'variant':14s} {'R2(mean+/-std)':20s} {'dR2 vs Linear':14s} {'Dirichlet(per layer)'}")

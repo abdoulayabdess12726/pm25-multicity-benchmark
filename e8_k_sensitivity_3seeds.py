@@ -57,6 +57,7 @@ from sklearn.metrics import r2_score
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
 
 SEEDS_ALL = [42, 123, 777]
 SEEDS_NEW = [123, 777]
@@ -255,10 +256,15 @@ def aggregate():
                 if sorted(sub.seed.tolist()) != SEEDS_ALL:
                     raise RuntimeError(f"{city}/{topo}/k={k}: seeds {sorted(sub.seed.tolist())} != {SEEDS_ALL}")
 
-    table7 = (df.groupby(["city", "topology", "k"])["delta_R2"]
-                .agg(delta_R2_mean="mean", delta_R2_std="std")
-                .round(4).reset_index()
-                .sort_values(["city", "topology", "k"]))
+    # ddof=1 explicite via agg_mean_std (pas .agg("std") pandas : ne pas
+    # délègue à un défaut de librairie, même quand il coïncide déjà avec la
+    # convention retenue — cf. REVISION_BRIEF.md).
+    rows7 = []
+    for (city, topo, k), sub in df.groupby(["city", "topology", "k"]):
+        mean, std = agg_mean_std(sub["delta_R2"].values)
+        rows7.append(dict(city=city, topology=topo, k=k,
+                          delta_R2_mean=round(mean, 4), delta_R2_std=round(std, 4)))
+    table7 = pd.DataFrame(rows7).sort_values(["city", "topology", "k"]).reset_index(drop=True)
     table7.to_csv(TABLE7_CSV, index=False)
 
     print("\n### Table 7 — ΔR² (GCN − Linear) vs k, mean±std sur 3 seeds (42/123/777)\n")

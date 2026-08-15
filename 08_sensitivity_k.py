@@ -7,7 +7,9 @@ Sensibilité à la densité du graphe (k voisins) sous le PROTOCOLE COMPLET de 0
 plein D_MODEL=64 — AUCUN --quick / schedule réduit). k ∈ {3,5,8} plafonné à N−1.
 
 ΔR² = R²(GCN-Transformer) − R²(Linear-Transformer), agrégat global (comme 06),
-moyenne ± SD sur les 3 seeds, format Table 6.
+moyenne ± SD sur les 3 seeds (ddof=1 via src.stats.agg_mean_std, cf.
+REVISION_BRIEF.md), format Table 7 (numérotation confirmée du cycle
+20265149 — anciennement « Table 6 » sous 20264131).
 
 Réutilise les résultats CANONIQUES déjà persistés dans
 results/{city}/multistation_results.json :
@@ -15,9 +17,9 @@ results/{city}/multistation_results.json :
   - GCN-Transformer à k=5 (le benchmark canonique).
 Recalcule uniquement le GCN à k=3 et k=8 (deux topologies, 3 seeds).
 
-NB : agrégat sur TOUTES les stations (7 pour Madrid), cohérent avec le k=5
-canonique et l'ancienne Table 6 (l'exclusion MENDEZ ALVARO de E1/Exp. A ne
-s'applique pas ici, pour garder Table 6 comparable en interne).
+NB : agrégat sur TOUTES les stations chargées par 06 (7 pour Madrid, MENDEZ
+ALVARO incluse — ce script n'a jamais eu de filtre d'exclusion, cf.
+AUDIT.md §1), cohérent avec le k=5 canonique et la Table 2.
 
 Sortie : results/sensitivity_k_canonical.csv
 Usage : python 08_sensitivity_k.py --cities beijing [--k 3 8]
@@ -34,6 +36,10 @@ from pathlib import Path
 import numpy as np
 import torch
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
+from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
 
 
 def _free_mps():
@@ -147,23 +153,18 @@ def main():
                 else:
                     continue
                 delta = gcn - lin[:len(gcn)]
+                gcn_m, gcn_s = agg_mean_std(gcn)
+                delta_m, delta_s = agg_mean_std(delta)
                 rows.append(dict(city=city, k=k, k_eff=k_eff, topology=topo,
-                                 gcn_r2_mean=gcn.mean(), gcn_r2_std=gcn.std(ddof=0),
+                                 gcn_r2_mean=gcn_m, gcn_r2_std=gcn_s,
                                  lin_r2_mean=lin.mean(),
-                                 delta_r2_mean=delta.mean(), delta_r2_std=delta.std(ddof=0),
+                                 delta_r2_mean=delta_m, delta_r2_std=delta_s,
                                  n_seeds=len(gcn), source=src))
-                print(f"  k={k} (eff {k_eff}) {topo:12s}: ΔR²={delta.mean():+.4f} "
-                      f"± {delta.std(ddof=0):.4f}  [{src}]", file=sys.stderr)
+                print(f"  k={k} (eff {k_eff}) {topo:12s}: ΔR²={delta_m:+.4f} "
+                      f"± {delta_s:.4f}  [{src}]", file=sys.stderr)
 
     new = pd.DataFrame(rows)
-    if CSV.exists():
-        old = pd.read_csv(CSV)
-        old = old[~old.city.isin(args.cities)]
-        full = pd.concat([old, new], ignore_index=True)
-    else:
-        full = new
-    full = full.sort_values(["city", "k", "topology"]).reset_index(drop=True)
-    full.to_csv(CSV, index=False)
+    full = upsert_rows(CSV, new, key_cols=["city", "k", "topology"])
     print(f"\nCSV : {CSV}  ({len(full)} lignes)", file=sys.stderr)
 
 

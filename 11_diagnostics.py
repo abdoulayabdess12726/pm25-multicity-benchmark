@@ -33,6 +33,9 @@ import torch
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
+
 SEED = 42
 TOPOS = ["distance", "correlation"]
 CSV = ROOT / "results" / "diagnostics.csv"
@@ -179,14 +182,7 @@ def main():
                   f"no-meteo={d_nm:+.4f}", file=sys.stderr)
 
     new = pd.DataFrame(rows)
-    if CSV.exists():
-        old = pd.read_csv(CSV)
-        old = old[~old.city.isin(args.cities)]
-        full = pd.concat([old, new], ignore_index=True)
-    else:
-        full = new
-    full = full.sort_values(["city", "topology", "experiment"]).reset_index(drop=True)
-    full.to_csv(CSV, index=False)
+    full = upsert_rows(CSV, new, key_cols=["city", "topology", "experiment", "seed"])
     print(f"\nCSV : {CSV}  ({len(full)} lignes)", file=sys.stderr)
 
 

@@ -54,6 +54,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
 
 LEVELS = [1.0, 0.75, 0.50, 0.25, 0.0]
 CSV = ROOT / "results" / "edge_pruning.csv"
@@ -180,13 +181,7 @@ def main():
 
     new = pd.DataFrame(all_rows, columns=["city", "keep_frac", "seed", "station",
                                           "MAE", "RMSE", "R2"])
-    if CSV.exists():
-        old = pd.read_csv(CSV)
-        old = old[~old.city.isin(args.cities)]
-        full = pd.concat([old, new], ignore_index=True)
-    else:
-        full = new
-    full.to_csv(CSV, index=False)
+    full = upsert_rows(CSV, new, key_cols=["city", "keep_frac", "seed", "station"])
     print(f"\nCSV : {CSV}  ({len(full)} lignes ; +{len(new)})", file=sys.stderr)
 
 

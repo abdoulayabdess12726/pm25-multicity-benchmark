@@ -66,6 +66,8 @@ warnings.filterwarnings("ignore")
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
+from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
 
 SEQ_LEN = 24
 SEEDS = [42, 123, 777]
@@ -319,8 +321,7 @@ def agg_from_rows(df, city, model):
     sub = df[(df.city == city) & (df.model == model) & (df.station == "__aggregate__")]
     if sub.empty:
         return None
-    return {m: (sub[m].mean(), sub[m].std(ddof=0) if len(sub) > 1 else 0.0)
-            for m in ("MAE", "RMSE", "R2")}
+    return {m: agg_mean_std(sub[m].astype(float).values) for m in ("MAE", "RMSE", "R2")}
 
 
 def agg_from_json(city, model_key, c, purpose="benchmark"):
@@ -350,7 +351,7 @@ def agg_from_json(city, model_key, c, purpose="benchmark"):
         res["R2"].append(1 - ss_res / SS_tot)
         res["RMSE"].append(np.sqrt(ss_res / (len(rmse) * n)))
         res["MAE"].append(np.mean(list(mae.values())))
-    return {m: (float(np.mean(v)), float(np.std(v))) for m, v in res.items()}
+    return {m: agg_mean_std(v) for m, v in res.items()}
 
 
 def markdown_table(city, df, c):
@@ -406,14 +407,7 @@ def main():
 
     new = pd.DataFrame(all_rows, columns=["city", "model", "station", "seed",
                                           "MAE", "RMSE", "R2"])
-    # append-merge : remplace uniquement les villes recalculées
-    if CSV.exists():
-        old = pd.read_csv(CSV)
-        old = old[~old.city.isin(args.cities)]
-        full = pd.concat([old, new], ignore_index=True)
-    else:
-        full = new
-    full.to_csv(CSV, index=False)
+    full = upsert_rows(CSV, new, key_cols=["city", "model", "station", "seed"])
     print(f"\nCSV : {CSV}  ({len(full)} lignes ; +{len(new)} cette exécution)")
 
     for city in args.cities:

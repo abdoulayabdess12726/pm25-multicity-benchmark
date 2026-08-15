@@ -23,6 +23,7 @@ Sorties:
 import argparse
 import os
 import json
+import sys
 import time
 import math
 import numpy as np
@@ -35,6 +36,9 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings("ignore")
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
 
 # ─────────────────────────────────────────────
 # 1. CONFIGURATION
@@ -757,10 +761,13 @@ def print_results_table(results, per_station_results):
         maes  = [m[0] for m in metrics]
         rmses = [m[1] for m in metrics]
         r2s   = [m[2] for m in metrics]
+        mae_m, mae_s = agg_mean_std(maes)
+        rmse_m, rmse_s = agg_mean_std(rmses)
+        r2_m, r2_s = agg_mean_std(r2s)
         print(f"  {name:<25} "
-              f"{np.mean(maes):6.2f}+/-{np.std(maes):.2f}  "
-              f"{np.mean(rmses):7.2f}+/-{np.std(rmses):.2f}  "
-              f"{np.mean(r2s):.4f}+/-{np.std(r2s):.4f}")
+              f"{mae_m:6.2f}+/-{mae_s:.2f}  "
+              f"{rmse_m:7.2f}+/-{rmse_s:.2f}  "
+              f"{r2_m:.4f}+/-{r2_s:.4f}")
 
     print("\n" + "="*65)
     print("  TABLEAU 2 -- Résultats par station (seed primaire)")
@@ -803,7 +810,7 @@ def print_control_summary(results, per_station, dirichlet):
     print("-"*72)
     for name, metrics in results.items():
         r2s = [m[2] for m in metrics]
-        m, sd = np.mean(r2s), np.std(r2s)
+        m, sd = agg_mean_std(r2s)
         d = "" if name == 'Linear+Transformer' else f"{m-lin_r2:+.3f}"
         de = dirichlet.get(name, [])
         de_s = ", ".join(f"{x:.2f}" for x in de) if de else "-"
@@ -973,16 +980,19 @@ def main():
     for gname, gdata in all_graph_results.items():
         json_results['graphs'][gname] = {}
         for model_name, seed_metrics in gdata['results'].items():
+            mae_m, mae_s = agg_mean_std([m[0] for m in seed_metrics])
+            rmse_m, rmse_s = agg_mean_std([m[1] for m in seed_metrics])
+            r2_m, r2_s = agg_mean_std([m[2] for m in seed_metrics])
             json_results['graphs'][gname][model_name] = {
                 'MAE':  [float(m[0]) for m in seed_metrics],
                 'RMSE': [float(m[1]) for m in seed_metrics],
                 'R2':   [float(m[2]) for m in seed_metrics],
-                'MAE_mean':  float(np.mean([m[0] for m in seed_metrics])),
-                'MAE_std':   float(np.std([m[0] for m in seed_metrics])),
-                'RMSE_mean': float(np.mean([m[1] for m in seed_metrics])),
-                'RMSE_std':  float(np.std([m[1] for m in seed_metrics])),
-                'R2_mean':   float(np.mean([m[2] for m in seed_metrics])),
-                'R2_std':    float(np.std([m[2] for m in seed_metrics])),
+                'MAE_mean':  mae_m,
+                'MAE_std':   mae_s,
+                'RMSE_mean': rmse_m,
+                'RMSE_std':  rmse_s,
+                'R2_mean':   r2_m,
+                'R2_std':    r2_s,
             }
         json_results['graphs'][gname]['per_station'] = gdata['per_station']
         json_results['graphs'][gname]['per_station_all_seeds'] = gdata.get('per_station_all', {})

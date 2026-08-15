@@ -8,7 +8,7 @@
         {
           "topology": "distance",
           "delta_r2_aggregate_mean": -0.017178270606751738,
-          "delta_r2_aggregate_std": 9.903448543058025e-05,
+          "delta_r2_aggregate_std": 0.00012129197812200821,
           "delta_r2_perstation_mean": -0.018132798962110053,
           "delta_r2_perstation_ci95_lo": -0.02914697002144848,
           "delta_r2_perstation_ci95_hi": -0.009506882526331795,
@@ -22,7 +22,7 @@
         {
           "topology": "correlation",
           "delta_r2_aggregate_mean": -0.037516592084568146,
-          "delta_r2_aggregate_std": 0.0006583219452946746,
+          "delta_r2_aggregate_std": 0.0008062764262241869,
           "delta_r2_perstation_mean": -0.04055957810544403,
           "delta_r2_perstation_ci95_lo": -0.06179498947490929,
           "delta_r2_perstation_ci95_hi": -0.02218826581470687,
@@ -43,7 +43,7 @@
         {
           "topology": "distance",
           "delta_r2_aggregate_mean": -0.37541234212355273,
-          "delta_r2_aggregate_std": 0.02107691419157083,
+          "delta_r2_aggregate_std": 0.025813842560886976,
           "delta_r2_perstation_mean": -0.7015505179532562,
           "delta_r2_perstation_ci95_lo": -1.1421957994396923,
           "delta_r2_perstation_ci95_hi": -0.33572871829075823,
@@ -57,7 +57,7 @@
         {
           "topology": "correlation",
           "delta_r2_aggregate_mean": -0.4014441789565537,
-          "delta_r2_aggregate_std": 0.004959483145816961,
+          "delta_r2_aggregate_std": 0.0060741015475923475,
           "delta_r2_perstation_mean": -0.8087616171082339,
           "delta_r2_perstation_ci95_lo": -1.29785571249289,
           "delta_r2_perstation_ci95_hi": -0.4176995840641484,
@@ -78,7 +78,7 @@
         {
           "topology": "distance",
           "delta_r2_aggregate_mean": -0.3212971941806523,
-          "delta_r2_aggregate_std": 0.004984681989976471,
+          "delta_r2_aggregate_std": 0.006104963702741703,
           "delta_r2_perstation_mean": -0.2908609459316805,
           "delta_r2_perstation_ci95_lo": -0.39064201910293256,
           "delta_r2_perstation_ci95_hi": -0.22057476238329274,
@@ -92,7 +92,7 @@
         {
           "topology": "correlation",
           "delta_r2_aggregate_mean": -0.37953787660453103,
-          "delta_r2_aggregate_std": 0.014281135363188055,
+          "delta_r2_aggregate_std": 0.017490747293713627,
           "delta_r2_perstation_mean": -0.3987773354324085,
           "delta_r2_perstation_ci95_lo": -0.536426770692032,
           "delta_r2_perstation_ci95_hi": -0.2671442491194707,

@@ -32,6 +32,10 @@ def heterogeneity(df_wide, coords_df, label=""):
     # 3. CORRECT Coefficient of Variation: std/mean PER STATION on raw values
     # (previous bug: z-scoring before CV computation forced CV=1.0)
     station_means = df_wide.mean(axis=0)
+    # Hors périmètre de la convention ddof=1 inter-seeds (REVISION_BRIEF.md) :
+    # dispersion temporelle intra-série sur des milliers d'observations
+    # (n grand), pas un agrégat sur 3 seeds — ddof n'a aucun effet numérique
+    # perceptible ici, volontairement non touché par ce correctif.
     station_stds  = df_wide.std(axis=0)
     # Avoid division by zero/near-zero means
     valid_mask = np.abs(station_means) > 1e-3
