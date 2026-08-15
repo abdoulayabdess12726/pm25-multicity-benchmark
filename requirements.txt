@@ -9,3 +9,5 @@ torch-geometric
 # spatial heterogeneity index (05_compute_heterogeneity_v2.py)
 libpysal
 esda
+# station config source of truth (configs/stations/*.yaml, src/stations.py)
+pyyaml

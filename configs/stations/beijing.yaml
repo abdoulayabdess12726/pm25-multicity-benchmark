@@ -1,0 +1,71 @@
+# Source unique pour la liste des stations Beijing — voir REVISION_BRIEF.md
+# et AUDIT.md §1. Ordre alphabétique : identique à l'ordre canonique produit
+# par 06_train_multistation.py::load_beijing_data (BEIJING_COORDS, déjà
+# alphabétique) — NE PAS RÉORDONNER, l'ordre détermine l'indexation des
+# nœuds du graphe.
+#
+# Aucune station Beijing n'est exclue de quoi que ce soit : 12/12 dans les
+# deux modes.
+city: beijing
+source: "UCI Multi-Site Air-Quality Data Set (#501), 2013-2017, post quality filtering"
+stations:
+  - name: Aotizhongxin
+    lat: 39.982
+    lon: 116.397
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Changping
+    lat: 40.218
+    lon: 116.231
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Dingling
+    lat: 40.292
+    lon: 116.220
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Dongsi
+    lat: 39.929
+    lon: 116.417
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Guanyuan
+    lat: 39.929
+    lon: 116.339
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Gucheng
+    lat: 39.914
+    lon: 116.184
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Huairou
+    lat: 40.328
+    lon: 116.628
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Nongzhanguan
+    lat: 39.937
+    lon: 116.461
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Shunyi
+    lat: 40.127
+    lon: 116.655
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Tiantan
+    lat: 39.886
+    lon: 116.407
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Wanliu
+    lat: 39.987
+    lon: 116.287
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: Wanshouxigong
+    lat: 39.878
+    lon: 116.352
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true

@@ -16,11 +16,22 @@ Baselines :
   - XGBoost (per-station : lags 1..24 de PM2.5 + 4 covariables météo à t-1)
   - LSTM (2 couches, hidden 64, temporel poolé par nœud, early-stopping de 06)
 
-MENDEZ ALVARO (Madrid) : PM2.5 constant sur le train, h_i indéfini -> station
-exclue de TOUTES les expériences (Expérience A et baselines E1). Écartée du
-per-station et de l'agrégat via EXCLUDE ci-dessous ; l'agrégat Madrid porte
-donc sur 6 stations. Les modèles restent entraînés sur toutes les stations
-(pooling) ; seule l'ÉVALUATION exclut la station.
+MENDEZ ALVARO (Madrid) : PM2.5 constant sur le TRAIN (h_i indéfini pour
+l'analyse d'hétérophilie station-level), mais CONSERVÉE dans le benchmark de
+prévision — manuscrit §3.3, cf. REVISION_BRIEF.md et AUDIT.md §1. La liste de
+stations à inclure par usage vient de `src.stations.load_stations` (source
+unique `configs/stations/{city}.yaml`), plus d'EXCLUDE local ici.
+
+Historique (ne concerne plus le code actuel, gardé pour mémoire) : jusqu'au
+cycle de révision précédent, ce script excluait MENDEZ ALVARO du per-station
+ET de l'agrégat via un dict EXCLUDE local — Madrid tournait donc à 6 stations
+dans `results/external_baselines.csv`. Les lignes Linear-Transformer /
+GCN-Transformer (`agg_from_json`) sont réparées ici (recalcul sur 7 stations
+depuis le JSON canonique, sans ré-entraînement). Les lignes Persistence /
+ARIMA / XGBoost / LSTM stockées dans `results/external_baselines.csv` restent
+en revanche calculées sous l'ANCIEN protocole (6 stations, MENDEZ ALVARO
+jamais évaluée) tant qu'elles n'ont pas été relancées — voir le rapport de
+tâche P1 pour le diagnostic MENDEZ ALVARO avant ce re-run.
 
 Sortie : results/external_baselines.csv (ARIMA/XGBoost/LSTM, per-station + agrégat)
          + tableau markdown par ville (ARIMA/XGBoost/LSTM/Linear-Tr/GCN-Tr).
@@ -53,10 +64,12 @@ torch.set_num_threads(1)
 
 warnings.filterwarnings("ignore")
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+
 SEQ_LEN = 24
 SEEDS = [42, 123, 777]
 ARIMA_ORDER = (2, 1, 2)          # ordre fixe per-station (fallback plus bas)
-EXCLUDE = {"madrid": {"MENDEZ ALVARO"}}   # PM2.5 constant sur le train -> exclue partout
 CSV = ROOT / "results" / "external_baselines.csv"
 
 
@@ -97,11 +110,12 @@ def get_city(b, city):
 # --------------------------------------------------------------------------- #
 #  Métriques (per-station + agrégat global, dénormalisé) — identiques à 06
 # --------------------------------------------------------------------------- #
-def metrics_rows(city, model, seed, names, Y, P):
+def metrics_rows(city, model, seed, names, Y, P, purpose="benchmark"):
     """Y, P : (n_targets, n_stations) dénormalisés. Renvoie lignes tidy.
-    Les stations de EXCLUDE[city] sont écartées du per-station ET de l'agrégat."""
-    excl = EXCLUDE.get(city, set())
-    keep = [i for i, name in enumerate(names) if name not in excl]
+    `purpose` sélectionne la liste de stations via src.stations.load_stations
+    (défaut "benchmark" : Madrid = 7 stations, MENDEZ ALVARO incluse)."""
+    allowed = set(load_stations(city, purpose))
+    keep = [i for i, name in enumerate(names) if name in allowed]
     rows = []
     for i in keep:
         yt, pt = Y[:, i], P[:, i]
@@ -309,10 +323,13 @@ def agg_from_rows(df, city, model):
             for m in ("MAE", "RMSE", "R2")}
 
 
-def agg_from_json(city, model_key, c):
-    """Agrégat Transformer reconstruit sur les stations CONSERVÉES (exclusion
-    appliquée) : SS_res = Σ RMSE_s²·n (per-station JSON), SS_tot depuis les
-    données. Identique au flatten sur les stations gardées, par seed puis moy±SD."""
+def agg_from_json(city, model_key, c, purpose="benchmark"):
+    """Agrégat Transformer reconstruit sur les stations retenues pour `purpose`
+    (défaut "benchmark" : Madrid = 7 stations, MENDEZ ALVARO incluse — c'est le
+    correctif de la cause racine n°1, cf. REVISION_BRIEF.md ; aucun
+    ré-entraînement requis, le JSON canonique a toujours eu les 7 stations) :
+    SS_res = Σ RMSE_s²·n (per-station JSON), SS_tot depuis les données.
+    Identique au flatten sur les stations gardées, par seed puis moy±SD."""
     p = ROOT / f"results/{city}/multistation_results.json"
     if not p.exists():
         return None
@@ -321,9 +338,9 @@ def agg_from_json(city, model_key, c):
     psa = g[topo].get("per_station_all_seeds", {}).get(model_key)
     if not psa:
         return None
-    excl = EXCLUDE.get(city, set())
+    allowed = set(load_stations(city, purpose))
     names, Y = c["names"], true_targets(c)
-    keep = [i for i, s in enumerate(names) if s not in excl]
+    keep = [i for i, s in enumerate(names) if s in allowed]
     n = Y.shape[0]; Yk = Y[:, keep]; SS_tot = float(((Yk - Yk.mean()) ** 2).sum())
     res = {"MAE": [], "RMSE": [], "R2": []}
     for _, perst in psa.items():
@@ -345,10 +362,8 @@ def markdown_table(city, df, c):
              ("LSTM", lambda: agg_from_rows(df, city, "LSTM")),
              ("Linear-Transformer", lambda: agg_from_json(city, "Linear+Transformer", c)),
              ("GCN-Transformer", lambda: agg_from_json(city, "GCN+Transformer", c))]
-    excl = EXCLUDE.get(city, set())
-    ncol = len(c["names"]) - len(excl)
-    suffix = (f" — {ncol} stations (MENDEZ ALVARO exclue)" if excl
-              else f" — agrégat {ncol} stations")
+    ncol = len(load_stations(city, "benchmark"))
+    suffix = f" — agrégat {ncol} stations (protocole benchmark)"
     lines = [f"\n### {city.capitalize()}{suffix} (test, dénormalisé, moyenne ± SD)",
              "| Model | MAE | RMSE | R² |", "|---|---|---|---|"]
     for name, fn in order:
@@ -356,6 +371,17 @@ def markdown_table(city, df, c):
         lines.append(f"| {name} | {cell(a,'MAE')} | {cell(a,'RMSE')} | {cell(a,'R2')} |")
     lines.append("\n_Persistence (t−1) : PM2.5[t]=PM2.5[t−1]. GCN-Transformer: topologie "
                  "distance. Linear-Transformer: temporel pur (identique aux 2 topologies)._")
+    if city == "madrid":
+        lines.append(
+            "\n**Provenance mixte tant que les baselines rapides n'ont pas été "
+            "relancées** : Linear-Transformer et GCN-Transformer ci-dessus sont "
+            "recalculés sur 7 stations (MENDEZ ALVARO incluse, sans "
+            "ré-entraînement). Persistence/ARIMA/XGBoost/LSTM proviennent en "
+            "revanche de `results/external_baselines.csv` tel qu'il a été "
+            "écrit par l'ancien code (6 stations, MENDEZ ALVARO jamais "
+            "évaluée) tant que ce fichier n'a pas été régénéré — voir "
+            "REVISION_BRIEF.md / rapport de tâche P1 (diagnostic MENDEZ "
+            "ALVARO avant re-run).")
     return "\n".join(lines)
 
 

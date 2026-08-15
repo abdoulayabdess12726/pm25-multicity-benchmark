@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-e6_k_sensitivity.py  —  R6 / Table 6 : robustesse de ΔR² au nombre de voisins k
+e6_k_sensitivity.py  —  R6 / Table 7 : robustesse de ΔR² au nombre de voisins k
+(Table 7 sous la numérotation confirmée du cycle 20265149 — anciennement
+« Table 6 » sous la numérotation du cycle 20264131 ; ne pas confondre avec
+l'actuelle Table 6 = ΔR² par station, cf. REVISION_BRIEF.md)
 ==========================================================================
 PÉRIMÈTRE STRICT : 3 villes × 2 topologies × k∈{3,8} × seed 42 = 12 entraînements
 GCN-Transformer. k=5 et Linear-Transformer NE SONT PAS ré-entraînés : réutilisés
@@ -8,10 +11,19 @@ depuis les résultats sauvegardés (results/{city}/multistation_results.json,
 per_station_all_seeds, seed 42).
 
 ΔR² = R²(GCN-Transformer) − R²(Linear-Transformer), agrégat global dénormalisé,
-station MENDEZ ALVARO exclue (Madrid → 6 stations). Protocole identique à la
-config principale (splits 70/15/15, 5 features, SEQ_LEN=24, MinMax train,
-cibles test[24:], d_model/heads/layers/batch/lr/epochs/early-stop inchangés).
-Le SEUL paramètre qui change est k.
+stations retenues via src.stations.load_stations(city, "benchmark") (source
+unique, cf. REVISION_BRIEF.md — Madrid = 7 stations, MENDEZ ALVARO incluse).
+Protocole identique à la config principale (splits 70/15/15, 5 features,
+SEQ_LEN=24, MinMax train, cibles test[24:], d_model/heads/layers/batch/lr/
+epochs/early-stop inchangés). Le SEUL paramètre qui change est k.
+
+⚠️ results/e6_k_sensitivity.csv EXISTANT (avant ce correctif) est marqué NON
+UTILISABLE pour Madrid : l'ancien code excluait MENDEZ ALVARO de `kept` avant
+même le calcul du R² agrégé, donc aucune métrique la concernant n'a jamais
+été calculée ni stockée — contrairement aux baselines externes, il n'y a rien
+à ré-agréger a posteriori. Un ré-entraînement complet (E9, cf.
+REVISION_BRIEF.md P5) est nécessaire ; ce script, une fois relancé pour
+Madrid, produira des lignes correctes (7 stations).
 
 Sortie : results/e6_k_sensitivity.csv (18 lignes) + tableau markdown + durée.
 
@@ -35,7 +47,9 @@ import pandas as pd
 from sklearn.metrics import r2_score
 
 ROOT = Path(__file__).resolve().parent
-EXCLUDE = {"madrid": {"MENDEZ ALVARO"}}
+sys.path.insert(0, str(ROOT))
+from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+
 SEED = 42
 KS = [3, 5, 8]
 RECOMPUTE = [3, 8]
@@ -73,11 +87,11 @@ def get_city(b, city):
     if js["station_names"] != names:                      # STOP : cohérence stations
         raise RuntimeError(f"{city}: stations JSON != loader {js['station_names']} vs {names}")
     pm = b.FEATURES.index("PM2.5")
-    kept = [i for i, s in enumerate(names) if s not in EXCLUDE.get(city, set())]
-    excl = EXCLUDE.get(city, set())
-    for s in excl:                                        # STOP : station à exclure présente ?
-        if s not in names:
-            raise RuntimeError(f"{city}: station à exclure '{s}' absente de {names}")
+    allowed = set(load_stations(city, "benchmark"))
+    kept = [i for i, s in enumerate(names) if s in allowed]
+    if len(kept) != len(allowed):                          # STOP : incohérence config/loader
+        raise RuntimeError(f"{city}: {len(allowed)} stations attendues (load_stations), "
+                           f"{len(kept)} retrouvées dans le loader {names}")
     Y = data[int(0.85 * len(data)):][b.SEQ_LEN:, :, pm]   # cibles test dénormalisées
     n = Y.shape[0]
     Yk = Y[:, kept]
@@ -226,7 +240,7 @@ def main():
 
     # tableau markdown compact : ligne = ville×topo, colonnes k=3/5/8 (ΔR²)
     piv = df.pivot_table(index=["city", "topology"], columns="k", values="delta_R2")
-    print("\n\n### Table 6 — ΔR² (GCN − Linear) vs k  [seed 42, MENDEZ ALVARO exclue]\n")
+    print("\n\n### Table 7 — ΔR² (GCN − Linear) vs k  [seed 42, stations via load_stations(city,'benchmark')]\n")
     print("| City | Topology | k=3 | k=5 | k=8 |")
     print("|---|---|---|---|---|")
     for (city, topo), r in piv.iterrows():

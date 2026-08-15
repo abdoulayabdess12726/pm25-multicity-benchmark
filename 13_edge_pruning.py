@@ -20,8 +20,21 @@ Niveaux d'arêtes conservées : 100 % (référence), 75 %, 50 %, 25 %, 0 % (vide
 
 Protocole IDENTIQUE à 06 : mêmes splits/scaling/features, mêmes hyperparamètres
 GCN-Transformer (gcn2), seeds 42/123/777, early-stopping de 06. Seul le graphe
-change entre les runs. MENDEZ ALVARO : dans le graphe (7 nœuds) mais EXCLUE de
-l'évaluation (agrégat Madrid sur 6 stations).
+change entre les runs. MENDEZ ALVARO : dans le graphe (7 nœuds), et depuis ce
+correctif également dans l'évaluation/l'agrégat (`purpose="benchmark"` via
+src.stations.load_stations — manuscrit §3.3, cf. REVISION_BRIEF.md).
+
+⚠️ results/edge_pruning.csv EXISTANT (avant ce correctif) est marqué
+NON UTILISABLE pour Madrid : sous l'ancien code, MENDEZ ALVARO était exclue de
+`metrics_rows` (boucle `for i in keep`), donc ses métriques par-station
+n'ont JAMAIS été calculées ni stockées pour aucun niveau/seed. Contrairement
+aux baselines externes (10_external_baselines.py), il n'y a ici aucune
+donnée à ré-agréger a posteriori : un ré-entraînement complet de Madrid est
+nécessaire (E10, cf. REVISION_BRIEF.md P5). Ce script, une fois relancé pour
+Madrid, produira des lignes correctes (7 stations) ; en attendant, les
+lignes Madrid actuelles de edge_pruning.csv doivent être traitées comme
+provenant de l'ancien protocole (6 stations) et ne pas être utilisées pour
+la Table 3/§6.2.1 sans re-run.
 
 Sorties : results/edge_pruning.csv (ville × niveau × seed, per-station + agrégat).
 Usage : python 13_edge_pruning.py --cities madrid [--seeds 42] [--levels 1.0 0.0]
@@ -39,7 +52,9 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 ROOT = Path(__file__).resolve().parent
-EXCLUDE = {"madrid": {"MENDEZ ALVARO"}}
+sys.path.insert(0, str(ROOT))
+from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+
 LEVELS = [1.0, 0.75, 0.50, 0.25, 0.0]
 CSV = ROOT / "results" / "edge_pruning.csv"
 
@@ -102,8 +117,8 @@ def predict_denorm(model, loader, ei, ew, scaler, pm, device):
 
 
 def metrics_rows(city, level, seed, names, Y, P):
-    excl = EXCLUDE.get(city, set())
-    keep = [i for i, n in enumerate(names) if n not in excl]
+    allowed = set(load_stations(city, "benchmark"))
+    keep = [i for i, n in enumerate(names) if n in allowed]
     rows = []
     for i in keep:
         rows.append(dict(city=city, keep_frac=level, seed=seed, station=names[i],

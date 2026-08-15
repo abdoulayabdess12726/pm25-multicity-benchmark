@@ -40,4 +40,5 @@ compléter la Table 6 : `python 08_sensitivity_k.py --cities beijing london madr
 k=3 : Beijing +0.213 / +0.147 ; London −0.325 / −0.349 ; Madrid −0.290 / −0.311.
 k=5 : Beijing −0.020 / −0.041 ; London −0.381 / −0.408 ; Madrid −0.343 / −0.376.
 k=8 : Beijing −0.011 / −0.047 ; London −0.398 / −0.483 ; Madrid −0.356 / −0.406.
-(distance / correlation ; source `results/sensitivity_k/summary.csv`.)
+(distance / correlation ; source `results/deprecated/sensitivity_k_quick_v1/summary.csv`
+— déplacé en quarantaine, cf. `results/deprecated/sensitivity_k_quick_v1/README.md`.)

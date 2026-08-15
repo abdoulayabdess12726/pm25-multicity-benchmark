@@ -10,9 +10,19 @@ tels quels.
 
 Protocole IDENTIQUE à E6 / 06_train_multistation.py : splits chronologiques
 70/15/15, 5 features, SEQ_LEN=24, horizon 1h, MinMax ajusté sur train, cibles
-test[24:], métriques dénormalisées, station MENDEZ ALVARO exclue (Madrid),
-seul k (et le seed, pour les runs nouveaux) change ; tous les autres
-hyperparamètres proviennent de 06 (b.MAX_EPOCHS, b.PATIENCE, b.D_MODEL, ...).
+test[24:], métriques dénormalisées, stations via src.stations.load_stations
+(city, "benchmark") — source unique, cf. REVISION_BRIEF.md — seul k (et le
+seed, pour les runs nouveaux) change ; tous les autres hyperparamètres
+proviennent de 06 (b.MAX_EPOCHS, b.PATIENCE, b.D_MODEL, ...).
+
+⚠️ results/e6_k_sensitivity.csv / results/table7_k_sensitivity.csv EXISTANTS
+(avant ce correctif) sont marqués NON UTILISABLES pour Madrid, y compris pour
+les 3 seeds : le seed 42 est PULL depuis l'archive
+`e6_k_sensitivity_seed42_only.csv`, elle-même produite par l'ancien E6
+(MENDEZ ALVARO jamais évaluée) ; les seeds 123/777 étaient calculés ici avec
+la même exclusion `EXCLUDE`/`kept`. Aucune métrique MENDEZ ALVARO n'a donc
+jamais existé pour aucun des 3 seeds Madrid — irréparable sans ré-entraîner
+les 18 cellules Madrid (E9, cf. REVISION_BRIEF.md P5).
 
 Modes d'exécution :
   --city --topology --k --seed [--cpu]   : UNE cellule (sous-processus frais).
@@ -45,7 +55,9 @@ import pandas as pd
 from sklearn.metrics import r2_score
 
 ROOT = Path(__file__).resolve().parent
-EXCLUDE = {"madrid": {"MENDEZ ALVARO"}}
+sys.path.insert(0, str(ROOT))
+from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+
 SEEDS_ALL = [42, 123, 777]
 SEEDS_NEW = [123, 777]
 KS = [3, 5, 8]
@@ -86,11 +98,11 @@ def get_city(b, city):
     if js["station_names"] != names:                      # STOP : cohérence stations
         raise RuntimeError(f"{city}: stations JSON != loader {js['station_names']} vs {names}")
     pm = b.FEATURES.index("PM2.5")
-    excl = EXCLUDE.get(city, set())
-    for s in excl:                                        # STOP : station à exclure présente ?
-        if s not in names:
-            raise RuntimeError(f"{city}: station à exclure '{s}' absente de {names}")
-    kept = [i for i, s in enumerate(names) if s not in excl]
+    allowed = set(load_stations(city, "benchmark"))
+    kept = [i for i, s in enumerate(names) if s in allowed]
+    if len(kept) != len(allowed):                          # STOP : incohérence config/loader
+        raise RuntimeError(f"{city}: {len(allowed)} stations attendues (load_stations), "
+                           f"{len(kept)} retrouvées dans le loader {names}")
     Y = data[int(0.85 * len(data)):][b.SEQ_LEN:, :, pm]   # cibles test dénormalisées
     n = Y.shape[0]
     Yk = Y[:, kept]

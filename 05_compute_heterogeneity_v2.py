@@ -1,26 +1,15 @@
 """Compute composite spatial heterogeneity index h(D) for multiple cities.
 v2: CORRECT CV computation (was buggy: z-score forced CV=1.0 by construction).
 """
+import sys
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from libpysal.weights import KNN
 from esda.moran import Moran
 
-BEIJING_COORDS = {
-    "Aotizhongxin":  (39.982, 116.397),
-    "Changping":     (40.218, 116.231),
-    "Dingling":      (40.292, 116.220),
-    "Dongsi":        (39.929, 116.417),
-    "Guanyuan":      (39.929, 116.339),
-    "Gucheng":       (39.914, 116.184),
-    "Huairou":       (40.328, 116.628),
-    "Nongzhanguan":  (39.937, 116.461),
-    "Shunyi":        (40.127, 116.655),
-    "Tiantan":       (39.886, 116.407),
-    "Wanliu":        (39.987, 116.287),
-    "Wanshouxigong": (39.878, 116.352),
-}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from src.stations import station_metadata  # noqa: E402 — source unique des listes de stations
 
 def heterogeneity(df_wide, coords_df, label=""):
     """df_wide: index=datetime, columns=stations
@@ -89,7 +78,8 @@ for csv in csv_files:
 beijing_wide = pd.concat(b_frames, axis=1).interpolate(limit=3)
 beijing_wide = beijing_wide.dropna(thresh=int(0.7 * len(beijing_wide.columns)))
 beijing_coords = pd.DataFrame([
-    {"station": k, "lat": v[0], "lon": v[1]} for k, v in BEIJING_COORDS.items()
+    {"station": s["name"], "lat": s["lat"], "lon": s["lon"]}
+    for s in station_metadata("beijing")
 ])
 
 h_beijing = heterogeneity(beijing_wide, beijing_coords, label="Beijing")

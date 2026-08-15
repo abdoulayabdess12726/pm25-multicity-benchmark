@@ -18,3 +18,4 @@ logs/
 
 # plan de révision interne — ne pas publier
 CLAUDE.md
+.pytest_cache/

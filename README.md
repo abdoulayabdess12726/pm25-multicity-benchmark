@@ -58,25 +58,61 @@ python 01g_preprocess_madrid.py
 # 2. Heterogeneity index (paper Table 1)
 python 05_compute_heterogeneity_v2.py
 
-# 3. Full benchmark: 3 cities x 2 topologies x 2 models x 3 seeds (Tables 2, 5)
+# 3. Full benchmark: 3 cities x 2 topologies x 2 models x 3 seeds (Table 2)
 python 06_train_multistation.py --seeds 42 123 777
 
-# 4. Statistical tests: Wilcoxon + Holm-Bonferroni, bootstrap CIs, Cohen's d (Table 3)
+# 4. External baselines: ARIMA, XGBoost, LSTM, STGCN, Graph WaveNet (Table 3)
+python 10_external_baselines.py
+python 14_sota_baselines.py
+
+# 5. Statistical tests: Wilcoxon + Holm-Bonferroni, bootstrap CIs, Cohen's d,
+#    and cross-city Spearman correlation h(D) vs delta-R2 (Tables 4, 5)
 python 07_statistical_analysis.py
 
-# 5. Graph-density sensitivity, k in {3, 5, 8} capped at N-1 (Table 6)
+# 6. Graph-density sensitivity, k in {3, 5, 8} capped at N-1 (Table 7)
 python 08_sensitivity_k.py
 ```
 
 ## Reproducing the paper's tables
 
-| Paper table | Script |
+**Numbering below is for Paper ID 20265149 (current revision cycle,
+confirmed against the submitted manuscript).** It differs from the table
+numbers used in this repo's history up to and including Paper ID 20264131
+— see the correspondence table further down if you are cross-referencing
+older commits, issues, or notes.
+
+| Paper table | Content | Script |
+|---|---|---|
+| Table 1 | h(D) components per city | `05_compute_heterogeneity_v2.py` |
+| Table 2 | Per-city benchmark (Linear/GCN-Transformer, 3 seeds) | `06_train_multistation.py` |
+| Table 3 | External baselines (ARIMA, XGBoost, LSTM, Persistence, STGCN, Graph WaveNet) | `10_external_baselines.py`, `14_sota_baselines.py` |
+| Table 4 | Statistical tests (Wilcoxon, Holm-Bonferroni, bootstrap CI, Cohen's d) | `07_statistical_analysis.py` |
+| Table 5 | Cross-city Spearman correlation, h(D) vs ΔR² | `07_statistical_analysis.py` |
+| Table 6 | ΔR² per station | `results/export_per_station.py` → `results/per_station_seed_topology.csv` |
+| Table 7 | k-sensitivity (k ∈ {3,5,8}) | `08_sensitivity_k.py` (canonical, currently incomplete — see `results/sensitivity_k_canonical_NOTE.md`) |
+| Table 8 | Over-smoothing controls (1-layer GCN, GAT, Dirichlet energy) | `09_controls_oversmoothing.py` |
+| Table 9 | Diagnostic controls (shuffled-graph, no-meteorology ablation) | `11_diagnostics.py` |
+
+### Correspondence with the previous numbering (Paper ID 20264131)
+
+Table 3 (external baselines) and Table 9 (diagnostic controls) were added
+during this revision cycle in response to reviewers and did not exist as
+numbered tables before; everything from the old Table 3 onward shifts by
++1. Table 5 (cross-city Spearman correlation) is the new number for
+content that existed in the prior manuscript but wasn't separately
+reproducible from this repo's README at the time.
+
+| Old table (20264131) | New table (20265149) |
 |---|---|
-| Table 1 — h(D) components per city | `05_compute_heterogeneity_v2.py` |
-| Tables 2, 5 — per-city / per-station benchmark | `06_train_multistation.py` |
-| Table 3 — statistical tests | `07_statistical_analysis.py` |
-| Table 6 — k-sensitivity | `08_sensitivity_k.py` |
-| Table 7 — over-smoothing controls (1-layer GCN, GAT, Dirichlet energy) | `09_controls_oversmoothing.py` |
+| Table 1 | Table 1 |
+| Table 2 | Table 2 |
+| — (new) | **Table 3** |
+| Table 3 | Table 4 |
+| — (new / split out) | **Table 5** |
+| Table 5 | Table 6 |
+| Table 6 | Table 7 |
+| Table 7 | Table 8 |
+| — (new) | **Table 9** |
 
 Full per-station results: [`results/per_station_seed_topology.csv`](results/) (27 stations × 3 seeds × 2 topologies = 162 rows). Adjacency matrices used in the paper: [`graphs/adjacency/`](graphs/) — `{city}_{topology}_k{3|5|8}.npy`.
 

@@ -1,0 +1,62 @@
+# Source unique pour la liste des stations Madrid — voir REVISION_BRIEF.md
+# et AUDIT.md §1. Ordre alphabétique : identique à l'ordre canonique produit
+# par 06_train_multistation.py::load_madrid_data (sorted(full_df['station'].unique()))
+# — NE PAS RÉORDONNER, l'ordre détermine l'indexation des nœuds du graphe.
+#
+# MENDEZ ALVARO : PM2.5 CONSTANT sur la période d'ENTRAÎNEMENT (variance
+# nulle, std=0.0) mais passe le filtre qualité car celui-ci porte sur la
+# variance de la période de TEST (qui, elle, varie normalement — cf.
+# diagnostic dans REVISION_BRIEF.md / rapport de tâche P1). Politique du
+# manuscrit (§3.3) : CONSERVÉE dans le benchmark de prévision (le graphe et
+# l'agrégat R² l'incluent, Madrid = 7 stations), EXCLUE uniquement de
+# l'analyse station-level d'hétérophilie (§5.5) car la corrélation locale
+# train-period y est indéfinie (NaN) pour une série constante.
+#
+# Cette politique est correcte et volontaire — NE PAS "corriger" en excluant
+# MENDEZ ALVARO du benchmark, ni en l'incluant dans l'analyse hétérophilie.
+city: madrid
+source: "OpenAQ API v3 + Open-Meteo Historical Weather, post quality filtering"
+stations:
+  - name: CASA DE CAMPO
+    lat: 40.42000000010348
+    lon: -3.7491666600869737
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: CASTELLANA
+    lat: 40.439722219952834
+    lon: -3.690277769621476
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: CUATRO CAMINOS-PABLO
+    lat: 40.44527776982108
+    lon: -3.7063888799689946
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: ESCUELAS AGUIRRE
+    lat: 40.42166665995589
+    lon: -3.682222219837608
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: MENDEZ ALVARO
+    lat: 40.39805555018832
+    lon: -3.6866666598586177
+    include_in_benchmark: true
+    include_in_heterophily_analysis: false
+    exclusion_reason: >
+      PM2.5 constant sur la période d'entraînement (variance nulle) ->
+      corrélation locale train indéfinie (NaN) -> indice d'hétérophilie
+      station-level h_i non calculable. Conservée dans le benchmark de
+      prévision (graphe à 7 nœuds, agrégat R² sur 7 stations). Exclue
+      uniquement du calcul de h_i et des analyses qui en dépendent
+      (Expérience A / Table 6 ΔR² par station vs h_i). Cf. manuscrit §3.3
+      et §5.5, REVISION_BRIEF.md.
+  - name: PLAZA CASTILLA-CANAL
+    lat: 40.465833329674865
+    lon: -3.688333330256388
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: PLAZA ELÍPTICA
+    lat: 40.38470000028444
+    lon: -3.718600000324588
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true

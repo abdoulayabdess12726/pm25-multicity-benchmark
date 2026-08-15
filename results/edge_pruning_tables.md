@@ -1,8 +1,19 @@
 # Élagage des arêtes hétérophiles (E-B) — R² agrégé par niveau
 
+⚠️ **Madrid : résultats NON UTILISABLES, en attente de re-run (E10, cf.
+REVISION_BRIEF.md P5).** Sous l'ancien code (avant le correctif source-unique
+de stations, cycle 20265149), MENDEZ ALVARO était exclue de `metrics_rows` —
+ses métriques n'ont jamais été calculées, l'agrégat Madrid ci-dessous porte
+sur 6 stations au lieu de 7. Contrairement aux baselines externes (Table 3),
+il n'existe aucune donnée à ré-agréger a posteriori : seul un ré-entraînement
+complet (13_edge_pruning.py, désormais corrigé pour inclure MENDEZ ALVARO)
+produira des chiffres Madrid valides. Beijing et London ne sont PAS affectés
+(aucune exclusion n'y a jamais été appliquée).
+
 Graphe de base : distance (k=5). Arêtes retirées par hétérophilie décroissante
 (h = 1 − corr_train). Protocole GCN-Transformer identique à 06. Métriques test
-dénormalisées, agrégat global. MENDEZ ALVARO exclue (Madrid, 6 stations).
+dénormalisées, agrégat global. Madrid ci-dessous : 6 stations (MENDEZ ALVARO
+exclue par l'ancien code — voir avertissement ci-dessus).
 
 ## Beijing (seed 42)
 

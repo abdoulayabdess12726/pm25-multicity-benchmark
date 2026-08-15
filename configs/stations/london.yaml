@@ -1,0 +1,58 @@
+# Source unique pour la liste des stations London — voir REVISION_BRIEF.md
+# et AUDIT.md §1. Ordre alphabétique (par code station) : identique à
+# l'ordre canonique produit par 06_train_multistation.py::load_london_data
+# (sorted(full_df['station'].unique())) — NE PAS RÉORDONNER.
+#
+# Aucune station London n'est exclue de quoi que ce soit : 8/8 dans les
+# deux modes.
+city: london
+source: "London Air Quality Network (LAQN) + Open-Meteo Historical Weather, 2020-2023, post quality filtering"
+stations:
+  - name: BL0
+    label: "Camden - Bloomsbury"
+    lat: 51.522287
+    lon: -0.125848
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: BT4
+    label: "Brent - Ikea"
+    lat: 51.552476
+    lon: -0.258089
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: CT3
+    label: "City of London - The Aldgate School"
+    lat: 51.513847178423
+    lon: -0.077765681752
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: GN0
+    label: "Greenwich - A206 Burrage Grove"
+    lat: 51.490532
+    lon: 0.074003
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: KC1
+    label: "Kensington and Chelsea - North Ken"
+    lat: 51.5210467476039
+    lon: -0.213492139585065
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: LH0
+    label: "Hillingdon - Harlington"
+    lat: 51.48878
+    lon: -0.441627
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: RB7
+    label: "Redbridge - Ley Street"
+    lat: 51.5694843315237
+    lon: 0.0829074748964946
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: TH4
+    label: "Tower Hamlets - Blackwall"
+    lat: 51.5150461674013
+    lon: -0.0084184926564274
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
