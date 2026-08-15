@@ -39,6 +39,8 @@ warnings.filterwarnings("ignore")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
 
 # ─────────────────────────────────────────────
 # 1. CONFIGURATION
@@ -1002,6 +1004,41 @@ def main():
     with open(out_file, 'w') as f:
         json.dump(json_results, f, indent=2)
     print(f"\nRésultats sauvegardés : {out_file}")
+
+    # ── raw_results.csv (P3, REVISION_BRIEF.md) ──
+    run_id = make_run_id(f"06_{args.city}")
+    commit = git_commit_hash()
+    T = len(data)
+    t1, t2 = int(0.70 * T), int(0.85 * T)
+    shash = compute_split_hash(T, t1, t2, SEQ_LEN)
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+    raw_rows = []
+    for gname, gdata in all_graph_results.items():
+        for model_name, seed_metrics in gdata['results'].items():
+            model = model_name.replace("+", "-")  # convention raw_results.csv (cf. CHANGELOG_TABLES.md)
+            per_station_all_seeds = gdata.get('per_station_all', {}).get(model_name, {})
+            for i, seed in enumerate(SEEDS):
+                mae_agg, rmse_agg, r2_agg = seed_metrics[i]
+                for station_name, m in per_station_all_seeds.get(seed, {}).items():
+                    raw_rows.append(dict(
+                        city=args.city, model=model, variant="", topology=gname,
+                        k=K_NEIGHBORS, keep_frac="", seed=seed,
+                        checkpoint_id="no_checkpoint_saved", split_hash=shash,
+                        n_stations=N_STATIONS, station=station_name, split="test",
+                        rmse=m["RMSE"], mae=m["MAE"], r2=m["R2"], run_id=run_id,
+                        config_path="06_train_multistation.py", git_commit=commit,
+                        timestamp=ts, provenance_note=""))
+                raw_rows.append(dict(
+                    city=args.city, model=model, variant="", topology=gname,
+                    k=K_NEIGHBORS, keep_frac="", seed=seed,
+                    checkpoint_id="no_checkpoint_saved", split_hash=shash,
+                    n_stations=N_STATIONS, station="__aggregate__", split="test",
+                    rmse=rmse_agg, mae=mae_agg, r2=r2_agg, run_id=run_id,
+                    config_path="06_train_multistation.py", git_commit=commit,
+                    timestamp=ts, provenance_note=""))
+    if raw_rows:
+        append_run(raw_rows)
+        print(f"raw_results.csv : +{len(raw_rows)} lignes (run_id={run_id})")
 
 
 if __name__ == '__main__':

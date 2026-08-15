@@ -25,6 +25,7 @@ import importlib.util
 import io
 import json
 import sys
+import time
 from contextlib import redirect_stdout
 from pathlib import Path
 
@@ -35,6 +36,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
+from src.results_io import append_run, make_run_id, git_commit_hash  # noqa: E402
 
 SEED = 42
 TOPOS = ["distance", "correlation"]
@@ -184,6 +186,41 @@ def main():
     new = pd.DataFrame(rows)
     full = upsert_rows(CSV, new, key_cols=["city", "topology", "experiment", "seed"])
     print(f"\nCSV : {CSV}  ({len(full)} lignes)", file=sys.stderr)
+
+    # ── raw_results.csv (P3, REVISION_BRIEF.md) ──
+    # NB schéma : ce script ne calcule que le R2 agrégé (pas RMSE/MAE, pas de
+    # per-station) — laissés vides, documenté dans provenance_note. `experiment`
+    # (real/shuffled_graph/no_meteorology) va dans la colonne `variant` dédiée,
+    # jamais dans le nom du modèle. Les valeurs Linear-Transformer "real"/"shuffled_graph"
+    # sont le lin_real canonique déjà écrit par 06_train_multistation.py —
+    # non réinjectées ici pour éviter une redondance trompeuse (nouveau
+    # run_id qui suggérerait un nouveau calcul). Seule Linear[no_meteorology]
+    # est un modèle réellement nouveau (1 feature, jamais entraîné ailleurs).
+    run_id = make_run_id("11_diagnostics")
+    commit = git_commit_hash()
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+    raw_rows = []
+    for r in rows:
+        note = (f"E4/E5 diagnostics, experiment={r['experiment']}; RMSE/MAE non "
+                "calculés par ce script (seul R2 agrégé) ; pas de per-station.")
+        raw_rows.append(dict(
+            city=r["city"], model="GCN-Transformer", variant=r["experiment"],
+            topology=r["topology"], k=5, keep_frac="", seed=r["seed"],
+            checkpoint_id="no_checkpoint_saved", split_hash="", n_stations="",
+            station="__aggregate__", split="test", rmse="", mae="", r2=r["gcn_r2"],
+            run_id=run_id, config_path="11_diagnostics.py", git_commit=commit,
+            timestamp=ts, provenance_note=note))
+        if r["experiment"] == "no_meteorology":
+            raw_rows.append(dict(
+                city=r["city"], model="Linear-Transformer", variant="no_meteorology",
+                topology=r["topology"], k="", keep_frac="", seed=r["seed"],
+                checkpoint_id="no_checkpoint_saved", split_hash="", n_stations="",
+                station="__aggregate__", split="test", rmse="", mae="", r2=r["lin_r2"],
+                run_id=run_id, config_path="11_diagnostics.py", git_commit=commit,
+                timestamp=ts, provenance_note=note))
+    if raw_rows:
+        append_run(raw_rows)
+        print(f"raw_results.csv : +{len(raw_rows)} lignes (run_id={run_id})", file=sys.stderr)
 
 
 if __name__ == "__main__":

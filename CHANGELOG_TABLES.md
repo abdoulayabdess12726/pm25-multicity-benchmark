@@ -5,6 +5,105 @@ révisée : table, ancienne valeur, nouvelle valeur, cause. Alimente la lettre
 de réponse aux relecteurs (cf. P11 point 6). Complété au fil des étapes, pas
 seulement à la fin.
 
+## P3 — results/raw_results.csv unifié
+
+`src/results_io.py::append_run/load_results` : append-only strict (mode
+fichier `"a"` pur, jamais de réécriture), refuse toute clé
+(run_id,city,model,topology,k,seed,station) déjà présente. Aucune fonction
+de mise à jour/suppression exposée (vérifié par test, pas juste documenté).
+
+**9 scripts instrumentés** (06, 08, 09, 10, 11, 13, 14, e6, e8) : chacun
+appelle `append_run` en fin de run avec git_commit, config_path, split_hash
+(réel — reconstruit depuis T/t1/t2/SEQ_LEN, pas un placeholder) et
+checkpoint_id="no_checkpoint_saved" (aucun script ne sauvegarde de poids,
+confirmé en P2). `09_controls_oversmoothing.py` est le seul script qui
+n'écrivait AUCUN résultat persistant avant P3 (console only) — instrumenté
+quand même, c'est la seule source possible pour la Table 8.
+
+**Deux tensions de schéma, corrigées AVANT commit (relecture) — colonnes
+dédiées, pas de champ à double sémantique ni de structure pliée dans une
+chaîne** :
+- `13_edge_pruning.py` a un axe "niveau d'élagage" absent du schéma initial
+  → **colonne `keep_frac` dédiée**, ajoutée (pas réutilisation de `k`, qui
+  reste NULL pour ces lignes et réservé au k-NN partout ailleurs). Une
+  première version repliait `keep_frac` dans `k` avec une note — rejetée sur
+  relecture : un champ à double sémantique dans le fichier canonique aurait
+  piégé les assertions de P4 et un relecteur ouvrant le CSV n'aurait pas pu
+  deviner la convention sans lire le code.
+- `11_diagnostics.py`/`09_controls_oversmoothing.py` (real/shuffled_graph/
+  no_meteorology, 1-layer/2-layer) n'ont pas de colonne "expérience"/"variante"
+  → **colonne `variant` dédiée**, ajoutée. Une première version pliait
+  l'expérience dans le nom du modèle (`GCN-Transformer[shuffled_graph]`) —
+  également rejetée : le nom du modèle ne doit pas être un champ structuré
+  déguisé.
+- `KEY_COLS` étendu en conséquence (`variant`, `keep_frac` ajoutés) — sans
+  ça, deux variantes/niveaux différents de la même condition auraient
+  partagé une clé et se seraient silencieusement écrasés au lieu d'être
+  refusés par `append_run`.
+- **Faux-positif détecté et corrigé pendant l'analyse de couverture** :
+  l'instrumentation initiale de `09_controls_oversmoothing.py` nommait son
+  Linear de référence `"Linear-Transformer"` sans variante — identique au nom
+  canonique de la Table 2, alors que c'est un entraînement séparé (topology
+  fixée, pas topology=""). Aurait fait croire que 9 conditions Table 8
+  existaient déjà. Corrigé : `variant="1layer"` explicite le distingue
+  maintenant, sans avoir besoin de décorer le nom du modèle.
+- **Bug de robustesse trouvé et corrigé pendant les tests de la correction** :
+  `append_run`/`_row_keys` comparaient les clés en `str()` nu — un champ vide
+  écrit `""` se relit en `NaN` depuis le CSV, qui se serait casté en la
+  chaîne `"nan"` (≠ `""`), faisant manquer de vraies collisions de clé sur
+  les lignes sans `variant`/`keep_frac`. `fillna("")` ajouté avant le cast
+  (même classe de bug que l'incident de fusion P2, cf. `src/csv_upsert.py`).
+- **Nommage des modèles harmonisé** : le JSON canonique stocke en interne
+  `"GCN+Transformer"`/`"Linear+Transformer"` (avec `+`, jamais modifié — ce
+  n'est pas une logique de calcul), mais `raw_results.csv` normalise en
+  `"GCN-Transformer"`/`"Linear-Transformer"` (tiret) partout, pour matcher la
+  convention déjà utilisée dans les tableaux/prose du projet (README,
+  external_baselines_tables.md). Sans cette normalisation, les lignes issues
+  de `06_train_multistation.py` et celles migrées depuis les autres sources
+  auraient été traitées comme des modèles différents par toute requête/
+  assertion sur `model`.
+- **Linear-Transformer dupliqué par topologie** (Table 2) plutôt que
+  dédupliqué à `topology=""` : bien que son calcul soit indépendant de la
+  topologie (valeurs identiques vérifiées), la boucle live de
+  `06_train_multistation.py` l'écrit naturellement une fois par topologie —
+  la migration réplique ce comportement plutôt que de le dédupliquer, pour
+  que les données migrées et les données live restent structurellement
+  identiques.
+
+**Migration (`scripts/migrate_raw_results.py`)** : 744 lignes migrées depuis
+7 sources existantes, 300 avec `provenance_note` (147 SUSPECT_6STATION Madrid
+pré-P1, 13 UNRECOVERABLE, 140 signalant une granularité réduite mais fiable —
+pas de RMSE/MAE ou pas de per-station selon le script d'origine). Aucune
+donnée dérivable d'une source déjà migrée n'a été dupliquée (Table 6, Table 4/5,
+lignes k=5 de `sensitivity_k_canonical.csv` volontairement exclues de la
+migration — recalculables à 100 % depuis le JSON canonique).
+
+**Analyse de couverture (`scripts/gap_analysis.py`)** — voir aussi le rapport
+de tâche P3 pour le détail complet : Tables 2, 3, 7, 9 intégralement
+couvertes (0 condition manquante). **Table 8 (over-smoothing/GAT) : 36/36
+conditions manquantes — aucune ligne, le script n'avait jamais rien persisté
+avant ce correctif.** Édition d'arêtes (§6.2.1) : 20/45 manquantes —
+Beijing/London n'ont que le seed 42 (Madrid a bien les 3 seeds, mais
+SUSPECT_6STATION).
+
+## Budget de calcul restant (mis à jour, à consigner)
+
+En plus d'E9 (k-sensitivity Madrid k∈{3,8}, 12 cellules) et E10 (pruning
+Madrid complet, 15 cellules) déjà identifiés en P1 :
+
+- **Table 8 (over-smoothing/GAT) : 36 runs**, jamais lancés — 3 villes × 4
+  variantes (linear1L, gcn1L, gcn2L, gat2L) × 3 seeds, topologie distance
+  uniquement. Coût par run inconnu (jamais chronométré, script jamais
+  exécuté jusqu'au bout avec sortie persistée).
+- **Édition d'arêtes (§6.2.1) : 20 runs** — seeds 123/777 pour Beijing et
+  London (5 niveaux × 2 seeds × 2 villes), en plus des 15 cellules Madrid
+  d'E10 déjà comptées séparément.
+
+**Total identifié à ce stade : 12 (E9) + 15 (E10 Madrid) + 20 (edge pruning
+Beijing/London) + 36 (Table 8) = 83 runs GCN restants**, avant toute
+expérience nouvelle (E11 parité seeds, E12 contrôles pruning, E13 modèle
+post-2024).
+
 ## P2 — Convention ddof=1 unique (Table 4 vs Table 7)
 
 Cause : défaut IMPLICITE différent entre `numpy.std()` (ddof=0) et

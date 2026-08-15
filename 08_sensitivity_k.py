@@ -30,6 +30,7 @@ import importlib.util
 import io
 import json
 import sys
+import time
 from contextlib import redirect_stdout
 from pathlib import Path
 
@@ -40,6 +41,8 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
 from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
 
 
 def _free_mps():
@@ -144,11 +147,13 @@ def main():
                 lin = np.array(lin_json[topo])                 # canonique, par seed
                 if k == 5:
                     gcn = np.array(gcn5_json[topo])            # réutilisé du JSON
+                    seed_labels = list(b.SEEDS)                # ordre canonique fixe
                     src = "json(k5)"
                 elif k in args.k:
                     ei, ew = build_graph_k(b, c, topo, k)
                     gcn = np.array([train_gcn_r2(b, c, ei, ew, s, device)
                                     for s in args.seeds])
+                    seed_labels = list(args.seeds)
                     src = "recompute"
                 else:
                     continue
@@ -162,6 +167,26 @@ def main():
                                  n_seeds=len(gcn), source=src))
                 print(f"  k={k} (eff {k_eff}) {topo:12s}: ΔR²={delta_m:+.4f} "
                       f"± {delta_s:.4f}  [{src}]", file=sys.stderr)
+
+                # raw_results.csv (P3, REVISION_BRIEF.md) — aggregate seulement
+                Tn = len(c["data"])
+                shash = compute_split_hash(Tn, int(0.70 * Tn), int(0.85 * Tn), b.SEQ_LEN)
+                rid = make_run_id(f"08_sensitivity_k_{city}_{topo}_k{k}")
+                commit = git_commit_hash()
+                ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+                raw_batch = []
+                for sd, gv, dv in zip(seed_labels, gcn, delta):
+                    raw_batch.append(dict(
+                        city=city, model="GCN-Transformer", variant="", topology=topo,
+                        k=k, keep_frac="", seed=sd,
+                        checkpoint_id="no_checkpoint_saved", split_hash=shash,
+                        n_stations=N, station="__aggregate__", split="test",
+                        rmse="", mae="", r2=float(gv), run_id=rid,
+                        config_path="08_sensitivity_k.py", git_commit=commit,
+                        timestamp=ts,
+                        provenance_note=f"source={src}; RMSE/MAE non calculés (seul R2 agrégé) ; "
+                                        "pas de per-station."))
+                append_run(raw_batch)
 
     new = pd.DataFrame(rows)
     full = upsert_rows(CSV, new, key_cols=["city", "k", "topology"])

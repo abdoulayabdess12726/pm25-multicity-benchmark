@@ -49,6 +49,8 @@ from sklearn.metrics import r2_score
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
 
 SEED = 42
 KS = [3, 5, 8]
@@ -187,6 +189,20 @@ def run_single(city, topology, k, cpu=False):
           f"R2_gcn={r2_gcn:.4f} ΔR²={row['delta_R2']:+.4f}", file=sys.stderr)
     print(f"DUREE_S={dt:.0f} DUREE_MIN={dt/60:.1f} RSS_GB={rss_gb:.2f} CSV_LIGNES={ntot}",
           file=sys.stderr)
+
+    # raw_results.csv (P3, REVISION_BRIEF.md) — pas de per-station ni RMSE/MAE
+    # (train_gcn_r2 ne renvoie que le R2 agrégé), station="__aggregate__" seule.
+    T = len(c["data"])
+    shash = compute_split_hash(T, int(0.70 * T), int(0.85 * T), b.SEQ_LEN)
+    append_run([dict(
+        city=city, model="GCN-Transformer", variant="", topology=topology,
+        k=k, keep_frac="", seed=SEED,
+        checkpoint_id="no_checkpoint_saved", split_hash=shash, n_stations=c["n_nodes"],
+        station="__aggregate__", split="test", rmse="", mae="", r2=r2_gcn,
+        run_id=make_run_id(f"e6_k_sensitivity_{city}_{topology}_k{k}"),
+        config_path="e6_k_sensitivity.py", git_commit=git_commit_hash(),
+        timestamp=time.strftime("%Y-%m-%dT%H:%M:%S"),
+        provenance_note="RMSE/MAE non calculés par ce script (seul R2 agrégé) ; pas de per-station.")])
 
 
 def main():

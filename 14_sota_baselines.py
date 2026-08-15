@@ -82,6 +82,10 @@ import torch.nn as nn
 from sklearn.metrics import r2_score
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
+
 CSV = ROOT / "results" / "table3_sota_baselines.csv"
 EXPECTED_N = {"beijing": 12, "london": 8, "madrid": 7}
 
@@ -437,6 +441,32 @@ def run_single(city, model_name, seed=42, cpu=True):
           f"isolated={n_isolated} R2={r2:.4f} Linear_ref={lin_ref:.4f}{flag}", file=sys.stderr)
     print(f"DUREE_S={dt:.0f} DUREE_MIN={dt/60:.1f} RSS_GB={rss_gb:.2f} CSV_LIGNES={ntot}",
           file=sys.stderr)
+
+    # ── raw_results.csv (P3, REVISION_BRIEF.md) — per-station calculé (P/Y déjà
+    # en mémoire, sans coût supplémentaire), pas seulement l'agrégat.
+    Tn = len(c["data"])
+    shash = compute_split_hash(Tn, int(0.70 * Tn), int(0.85 * Tn), b.SEQ_LEN)
+    run_id_v = make_run_id(f"14_sota_{city}_{model_name}_s{seed}")
+    commit = git_commit_hash()
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+    raw_rows = []
+    for i, station in enumerate(c["names"]):
+        raw_rows.append(dict(
+            city=city, model=model_name, variant="", topology="correlation",
+            k=b.K_NEIGHBORS, keep_frac="", seed=seed,
+            checkpoint_id="no_checkpoint_saved", split_hash=shash, n_stations=c["n_nodes"],
+            station=station, split="test", rmse="",
+            mae="", r2=float(r2_score(c["Y"][:, i], P[:, i])), run_id=run_id_v,
+            config_path="14_sota_baselines.py", git_commit=commit, timestamp=ts,
+            provenance_note="RMSE/MAE non calculés (seul R2)."))
+    raw_rows.append(dict(
+        city=city, model=model_name, variant="", topology="correlation",
+        k=b.K_NEIGHBORS, keep_frac="", seed=seed,
+        checkpoint_id="no_checkpoint_saved", split_hash=shash, n_stations=c["n_nodes"],
+        station="__aggregate__", split="test", rmse="", mae="", r2=r2, run_id=run_id_v,
+        config_path="14_sota_baselines.py", git_commit=commit, timestamp=ts,
+        provenance_note="RMSE/MAE non calculés (seul R2)."))
+    append_run(raw_rows)
 
 
 def main():

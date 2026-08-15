@@ -46,6 +46,7 @@ import io
 import json
 import random
 import sys
+import time
 import warnings
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -68,6 +69,8 @@ sys.path.insert(0, str(ROOT))
 from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
 from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
 from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
 
 SEQ_LEN = 24
 SEEDS = [42, 123, 777]
@@ -409,6 +412,36 @@ def main():
                                           "MAE", "RMSE", "R2"])
     full = upsert_rows(CSV, new, key_cols=["city", "model", "station", "seed"])
     print(f"\nCSV : {CSV}  ({len(full)} lignes ; +{len(new)} cette exécution)")
+
+    # ── raw_results.csv (P3, REVISION_BRIEF.md) ──
+    run_id = make_run_id("10_external_baselines")
+    commit = git_commit_hash()
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+    raw_rows = []
+    for city in args.cities:
+        c = cities_c[city]
+        T = sum(len(c["raw"][s]) for s in ("train", "val", "test"))
+        t1 = len(c["raw"]["train"])
+        t2 = t1 + len(c["raw"]["val"])
+        shash = compute_split_hash(T, t1, t2, SEQ_LEN)
+        n_stations = len(c["names"])
+        for r in all_rows:
+            if r["city"] != city:
+                continue
+            raw_rows.append(dict(
+                city=city, model=r["model"], variant="", topology="", k="",
+                keep_frac="", seed=r["seed"],
+                checkpoint_id="no_checkpoint_saved", split_hash=shash,
+                n_stations=n_stations, station=r["station"], split="test",
+                rmse=r["RMSE"], mae=r["MAE"], r2=r["R2"], run_id=run_id,
+                config_path="10_external_baselines.py", git_commit=commit,
+                timestamp=ts, provenance_note=""))
+    # NB : Linear-Transformer/GCN-Transformer (agg_from_json) ne sont PAS
+    # réinjectées ici — ce sont des relectures du JSON canonique, pas des
+    # runs produits par ce script ; leurs lignes viennent de 06_train_multistation.py.
+    if raw_rows:
+        append_run(raw_rows)
+        print(f"raw_results.csv : +{len(raw_rows)} lignes (run_id={run_id})")
 
     for city in args.cities:
         print(markdown_table(city, new, cities_c[city]))

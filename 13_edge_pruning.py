@@ -43,6 +43,7 @@ import argparse
 import importlib.util
 import io
 import sys
+import time
 from contextlib import redirect_stdout
 from pathlib import Path
 
@@ -55,6 +56,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
 from src.csv_upsert import upsert_rows  # noqa: E402 — fusion par clé exacte, jamais par ville
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
 
 LEVELS = [1.0, 0.75, 0.50, 0.25, 0.0]
 CSV = ROOT / "results" / "edge_pruning.csv"
@@ -183,6 +186,33 @@ def main():
                                           "MAE", "RMSE", "R2"])
     full = upsert_rows(CSV, new, key_cols=["city", "keep_frac", "seed", "station"])
     print(f"\nCSV : {CSV}  ({len(full)} lignes ; +{len(new)})", file=sys.stderr)
+
+    # ── raw_results.csv (P3, REVISION_BRIEF.md) ──
+    # keep_frac (niveau d'élagage) a sa propre colonne, dédiée, jamais mêlée
+    # à `k` (k-NN) — k reste NULL ici, graphe de base = distance k=5 fixe.
+    run_id = make_run_id("13_edge_pruning")
+    commit = git_commit_hash()
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+    raw_rows = []
+    for city in args.cities:
+        c = get_city(b, city)
+        T = len(c["data"])
+        t1, t2 = int(0.70 * T), int(0.85 * T)
+        shash = compute_split_hash(T, t1, t2, b.SEQ_LEN)
+        for r in all_rows:
+            if r["city"] != city:
+                continue
+            raw_rows.append(dict(
+                city=city, model="GCN-Transformer", variant="", topology="distance",
+                k="", keep_frac=r["keep_frac"], seed=r["seed"],
+                checkpoint_id="no_checkpoint_saved", split_hash=shash,
+                n_stations=c["n_nodes"], station=r["station"], split="test",
+                rmse=r["RMSE"], mae=r["MAE"], r2=r["R2"], run_id=run_id,
+                config_path="13_edge_pruning.py", git_commit=commit,
+                timestamp=ts, provenance_note=""))
+    if raw_rows:
+        append_run(raw_rows)
+        print(f"raw_results.csv : +{len(raw_rows)} lignes (run_id={run_id})", file=sys.stderr)
 
 
 if __name__ == "__main__":

@@ -58,6 +58,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stations import load_stations  # noqa: E402 — source unique des listes de stations
 from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
 
 SEEDS_ALL = [42, 123, 777]
 SEEDS_NEW = [123, 777]
@@ -227,6 +229,21 @@ def run_single(city, topology, k, seed, cpu=True):
           f"R2_gcn={r2_gcn:.4f} ΔR²={row['delta_R2']:+.4f} [{src}]", file=sys.stderr)
     print(f"DUREE_S={dt:.0f} DUREE_MIN={dt/60:.1f} RSS_GB={rss_gb:.2f} CSV_LIGNES={ntot}",
           file=sys.stderr)
+
+    # raw_results.csv (P3, REVISION_BRIEF.md) — aggregate seulement (per-station
+    # non extrait ici, cf. CHANGELOG_TABLES.md ; source [{src}] tracée en note).
+    Tn = len(c["data"])
+    shash = compute_split_hash(Tn, int(0.70 * Tn), int(0.85 * Tn), b.SEQ_LEN)
+    append_run([dict(
+        city=city, model="GCN-Transformer", variant="", topology=topology,
+        k=k, keep_frac="", seed=seed,
+        checkpoint_id="no_checkpoint_saved", split_hash=shash, n_stations=c["n_nodes"],
+        station="__aggregate__", split="test", rmse="", mae="", r2=r2_gcn,
+        run_id=make_run_id(f"e8_k_sensitivity_{city}_{topology}_k{k}_s{seed}"),
+        config_path="e8_k_sensitivity_3seeds.py", git_commit=git_commit_hash(),
+        timestamp=time.strftime("%Y-%m-%dT%H:%M:%S"),
+        provenance_note=f"source={src}; RMSE/MAE non calculés (seul R2 agrégé) ; "
+                        "pas de per-station (P non extrait de train_gcn_r2).")])
 
 
 def migrate():

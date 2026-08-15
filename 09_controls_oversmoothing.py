@@ -35,7 +35,7 @@ Outputs a results table per run; aggregate the printed mean +/- std into Table V
 ============================================================
 """
 
-import argparse, math, random, sys
+import argparse, math, random, sys, time
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -47,6 +47,8 @@ from sklearn.metrics import r2_score
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from src.stats import agg_mean_std  # noqa: E402 — convention ddof=1 unique (REVISION_BRIEF.md)
+from src.results_io import (append_run, make_run_id, git_commit_hash,  # noqa: E402
+                            compute_split_hash)
 from sklearn.preprocessing import MinMaxScaler
 
 FEATURES = ["PM2.5", "TEMP", "PRES", "DEWP", "WSPM"]   # harmonized 5-feature set
@@ -332,13 +334,17 @@ def main():
 
     variants = [("linear", 1), ("gcn", 1), ("gcn", 2), ("gat", 2)]
     agg = {}
+    per_seed_r2_per_variant = {}  # {name: {seed: r2_per array}} — pour raw_results.csv
     for kind, nl in variants:
         per_seed = []
+        per_seed_r2 = {}
         for s in SEEDS:
             r2_per, dir_e = run(args.city, args.topology, kind, nl, s, device)
             per_seed.append(r2_per.mean())
+            per_seed_r2[s] = r2_per
         name = f"{kind}{nl}L"
         agg[name] = (*agg_mean_std(per_seed), r2_per, dir_e)
+        per_seed_r2_per_variant[name] = per_seed_r2
 
     lin = agg["linear1L"][0]
     print(f"\n{'variant':14s} {'R2(mean+/-std)':20s} {'dR2 vs Linear':14s} {'Dirichlet(per layer)'}")
@@ -355,6 +361,54 @@ def main():
         print("  -> if p<0.05 AND dR2<0, the underperformance is NOT a 2-layer over-smoothing artifact.")
     except Exception as e:
         print("Wilcoxon skipped:", e)
+
+    # ── raw_results.csv (P3, REVISION_BRIEF.md) — seul point d'écriture
+    # persistant de ce script (Table 8), avant ce correctif : console only.
+    b = _bench()
+    names = list(getattr(b, "STATION_NAMES"))
+    data, _ = load_city(args.city)
+    T = len(data)
+    shash = compute_split_hash(T, int(0.70 * T), int(0.85 * T), getattr(b, "SEQ_LEN", 24))
+    # model = architecture de base, variant = profondeur (colonne dédiée,
+    # jamais pliée dans le nom du modèle — un champ structuré déguisé en
+    # chaîne serait imparsable par les assertions de P4, cf. CHANGELOG_TABLES.md).
+    # Entraînements SÉPARÉS de la Table 2 (topology=args.topology fixe, jamais
+    # topology="" comme le Linear-Transformer canonique) — distingués par
+    # (topology, variant), pas par un nom de modèle décoré.
+    name_map = {"linear1L": ("Linear-Transformer", "1layer"),
+               "gcn1L": ("GCN-Transformer", "1layer"),
+               "gcn2L": ("GCN-Transformer", "2layer"),
+               "gat2L": ("GAT-Transformer", "2layer")}
+    run_id = make_run_id(f"09_controls_oversmoothing_{args.city}_{args.topology}")
+    commit = git_commit_hash()
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S")
+    raw_rows = []
+    for name, per_seed_r2 in per_seed_r2_per_variant.items():
+        model, variant = name_map.get(name, (name, ""))
+        for seed, r2_arr in per_seed_r2.items():
+            for i, station in enumerate(names):
+                raw_rows.append(dict(
+                    city=args.city, model=model, variant=variant, topology=args.topology,
+                    k="", keep_frac="", seed=seed,
+                    checkpoint_id="no_checkpoint_saved", split_hash=shash,
+                    n_stations=len(names), station=station, split="test",
+                    rmse="", mae="", r2=float(r2_arr[i]), run_id=run_id,
+                    config_path="09_controls_oversmoothing.py", git_commit=commit,
+                    timestamp=ts, provenance_note="RMSE/MAE non calculés (seul R2 per-station)."))
+            raw_rows.append(dict(
+                city=args.city, model=model, variant=variant, topology=args.topology,
+                k="", keep_frac="", seed=seed,
+                checkpoint_id="no_checkpoint_saved", split_hash=shash,
+                n_stations=len(names), station="__aggregate__", split="test",
+                rmse="", mae="", r2=float(np.mean(r2_arr)), run_id=run_id,
+                config_path="09_controls_oversmoothing.py", git_commit=commit,
+                timestamp=ts,
+                provenance_note="Aggregate = moyenne simple des R2 par-station (pas un R2 "
+                                "recalculé sur le flatten dénormalisé, contrairement aux "
+                                "autres scripts) — cf. CHANGELOG_TABLES.md."))
+    if raw_rows:
+        append_run(raw_rows)
+        print(f"\nraw_results.csv : +{len(raw_rows)} lignes (run_id={run_id})")
 
 
 if __name__ == "__main__":
