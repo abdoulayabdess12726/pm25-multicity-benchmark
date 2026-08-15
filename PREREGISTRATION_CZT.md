@@ -100,6 +100,53 @@ En conséquence, le jeu utilisé sera **reconstruit depuis la source CNEMC**
 pour ces 22 codes sur 2020-2023, pas repris du `.npz`. Le `.npz` sert
 uniquement à identifier stations et période.
 
+## 6. Ajout daté 2026-08-16 — h(D) pré-enregistré vs h(D) reconstruit
+
+*Section ajoutée après le commit initial `dadb848`. Les sections 2 et 3 sont
+inchangées et le restent.*
+
+| Valeur | Source | État |
+|--------|--------|------|
+| **h(D) = 0.312** | `.npz` MSDGNN, PM2.5, corr k=5, train 70 % | pré-enregistrée §2 |
+| **h(D) = à venir** | reconstruction CNEMC 2020-2023, même définition | en cours de collecte |
+
+**Quels artefacts du `.npz` peuvent déplacer h(D), et lesquels ne le peuvent
+pas.** L'indice se calcule sur PM2.5 seul, à partir de corrélations
+inter-stations. Les deux défauts les plus visibles du `.npz` n'agissent donc
+pas dessus :
+
+- **Le lissage EWMA α = 0.5 ne touche pas h(D)** : il porte sur PM10, SO2, NO2
+  et O3. PM2.5 et AQI sont bruts (vérifié sur 1339A, 2020-01-01, 24/24 heures
+  identiques à la source). L'entrée de l'indice n'est pas lissée.
+- **Le décalage temporel ne touche pas h(D) non plus** : les heures supprimées
+  le sont pour *toutes* les stations à la fois, puisque c'est le même index de
+  ligne. Le décalage index↔horloge (jusqu'à −522 h) casse l'alignement avec des
+  covariables externes comme la météo, mais laisse l'alignement
+  station-à-station intact — donc les corrélations inter-stations aussi.
+
+Trois mécanismes peuvent en revanche déplacer la valeur, tous à la hausse
+attendue de la corrélation (donc à la baisse de h) dans le `.npz` :
+
+1. **1335A est interpolée** (seule colonne non entière) : une série lissée
+   corrèle mécaniquement mieux avec ses voisines. Sur la reconstruction elle
+   redevient brute, avec ses trous.
+2. **Comblement des manquants** dans le `.npz` (zéro NaN sur 34305 × 22) :
+   même effet, réparti sur toutes les stations.
+3. **Filtre qualité §3.2 et fenêtre de train** : la composition des stations et
+   la borne des 70 % changent légèrement après reconstruction.
+
+**Attente, formulée avant le calcul** : h(D) reconstruit reste dans la région
+homophile, plutôt légèrement au-dessus de 0.312 (les trois mécanismes vont dans
+le même sens), et très en deçà de Beijing (0.497). Une valeur autour de
+0.30–0.40 ne change pas le sens des prédictions P1–P3.
+
+**Règle d'arrêt.** Si h(D) reconstruit franchit le seuil au-delà duquel
+l'indice prédit une dégradation — opérationnellement, s'il atteint ou dépasse
+0.497 (Beijing, ΔR² = −0.017) —, alors la prédiction P1 change de sens et
+l'entraînement est suspendu : la valeur est rapportée à l'auteur avant tout
+lancement, et P1–P3 sont conservées telles quelles comme prédiction réfutée
+par le seul changement de jeu de données.
+
 ---
 
 *Enregistré avant tout entraînement. Ne pas modifier les sections 2 et 3.*
