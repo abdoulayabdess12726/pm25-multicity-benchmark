@@ -1,0 +1,719 @@
+#!/usr/bin/env python3
+"""
+scripts/regenerate_tables.py — Tables 1 à 9 du manuscrit, depuis
+results/raw_results.csv EXCLUSIVEMENT (P4, REVISION_BRIEF.md).
+
+Aucun chiffre en dur : chaque valeur affichée est recalculée depuis
+raw_results.csv à chaque exécution (agrégats, deltas, tests statistiques).
+
+EXCEPTION DOCUMENTÉE — Table 1 (h(D)) et la composante h(D) de la Table 5 :
+h(D) n'est PAS un résultat de run (pas de seed/model/rmse), volontairement
+exclu du schéma raw_results.csv en P3 (cf. CHANGELOG_TABLES.md). Sa seule
+source est results/heterogeneity_index_v2.csv (05_compute_heterogeneity_v2.py).
+C'est la seule lecture hors raw_results.csv de tout ce script — si ce n'est
+pas ce que "lecture depuis raw_results.csv uniquement" voulait dire, c'est
+un point à trancher avant de committer, pas une décision prise en silence.
+
+Numérotation (confirmée cycle 20265149, cf. README.md) :
+  T1 h(D) · T2 benchmark · T3 baselines externes · T4 tests statistiques ·
+  T5 corrélation inter-villes · T6 ΔR² par station · T7 sensibilité k ·
+  T8 over-smoothing/GAT · T9 diagnostics.
+
+RÈGLE D'ARRÊT : si une assertion échoue, on corrige les données ou le
+pipeline, JAMAIS l'assertion. Une condition sans aucune ligne dans
+raw_results.csv est rapportée MISSING DATA — jamais un succès par vacuité,
+jamais ignorée.
+
+Sortie : manuscript/tables/table{1..9}_*.md + .docx
+Usage : python scripts/regenerate_tables.py
+"""
+import sys
+import warnings
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from scipy import stats
+
+warnings.filterwarnings("ignore")
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from src.results_io import load_results
+from src.stats import agg_mean_std
+
+try:
+    from docx import Document
+    from docx.shared import Pt
+    HAVE_DOCX = True
+except ImportError:
+    HAVE_DOCX = False
+
+OUT_DIR = ROOT / "manuscript" / "tables"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+CITIES = ["beijing", "london", "madrid"]
+TOPOS = ["distance", "correlation"]
+SEEDS = [42, 123, 777]
+KS = [3, 5, 8]
+PRIMARY_SEED = 42
+TOL_EXACT = 1e-9
+
+H_INDEX_PATH = ROOT / "results" / "heterogeneity_index_v2.csv"
+
+# --------------------------------------------------------------------------- #
+# Suivi des assertions — PASS / FAIL / MISSING DATA, jamais un 4e état
+# --------------------------------------------------------------------------- #
+ASSERTIONS = []
+
+
+def record(name, status, detail=""):
+    assert status in ("PASS", "FAIL", "MISSING DATA"), status
+    ASSERTIONS.append(dict(name=name, status=status, detail=detail))
+    tag = {"PASS": "OK  ", "FAIL": "FAIL", "MISSING DATA": "MISS"}[status]
+    print(f"  [{tag}] {name}" + (f" — {detail}" if detail else ""))
+
+
+# --------------------------------------------------------------------------- #
+# Écriture Markdown + Word (docx natif — ouvrir, sélectionner le tableau,
+# copier-coller dans le manuscrit préserve la mise en forme Word).
+# --------------------------------------------------------------------------- #
+def write_table(name, title, headers, rows, note=""):
+    md_path = OUT_DIR / f"{name}.md"
+    lines = [f"# {title}\n", "| " + " | ".join(headers) + " |",
+             "|" + "|".join(["---"] * len(headers)) + "|"]
+    for row in rows:
+        lines.append("| " + " | ".join(str(c) for c in row) + " |")
+    if note:
+        lines.append(f"\n_{note}_")
+    md_path.write_text("\n".join(lines) + "\n")
+
+    if HAVE_DOCX:
+        doc = Document()
+        h = doc.add_heading(title, level=2)
+        table = doc.add_table(rows=1, cols=len(headers))
+        table.style = "Light Grid Accent 1"
+        for i, htext in enumerate(headers):
+            table.rows[0].cells[i].text = str(htext)
+        for row in rows:
+            cells = table.add_row().cells
+            for i, val in enumerate(row):
+                cells[i].text = str(val)
+        if note:
+            p = doc.add_paragraph(note)
+            p.runs[0].italic = True
+            p.runs[0].font.size = Pt(9)
+        doc.save(OUT_DIR / f"{name}.docx")
+    print(f"  écrit : {md_path.name}" + (" + .docx" if HAVE_DOCX else " (docx indisponible)"))
+
+
+def write_missing(name, title, expected_n):
+    """Table MISSING DATA explicite — jamais un fichier vide silencieux."""
+    md_path = OUT_DIR / f"{name}.md"
+    text = (f"# {title}\n\n"
+            f"**MISSING DATA** — 0/{expected_n} conditions présentes dans "
+            "results/raw_results.csv. Cette table ne peut pas être générée "
+            "tant que les runs correspondants n'ont pas été exécutés "
+            "(cf. CHANGELOG_TABLES.md, budget de calcul restant).\n")
+    md_path.write_text(text)
+    if HAVE_DOCX:
+        doc = Document()
+        doc.add_heading(title, level=2)
+        p = doc.add_paragraph(f"MISSING DATA — 0/{expected_n} conditions présentes.")
+        p.runs[0].bold = True
+        doc.save(OUT_DIR / f"{name}.docx")
+    print(f"  écrit (MISSING DATA) : {md_path.name}")
+
+
+# --------------------------------------------------------------------------- #
+# Chargement
+# --------------------------------------------------------------------------- #
+def load():
+    df = load_results()
+    if len(df) == 0:
+        raise RuntimeError("raw_results.csv vide ou absent — rien à régénérer.")
+    for col in ("k", "keep_frac", "n_stations"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["variant"] = df["variant"].fillna("")
+    df["topology"] = df["topology"].fillna("")
+    df["provenance_note"] = df["provenance_note"].fillna("")
+    return df
+
+
+def agg_rows(df, model, variant="", topology=None, k=None, keep_frac=None):
+    m = (df.station == "__aggregate__") & (df.model == model) & (df.variant == variant)
+    if topology is not None:
+        m &= (df.topology == topology)
+    if k is not None:
+        m &= (df.k == k)
+    if keep_frac is not None:
+        m &= (df.keep_frac == keep_frac)
+    return df[m]
+
+
+def station_rows(df, model, variant="", topology=None, k=None, seed=None):
+    m = (df.station != "__aggregate__") & (df.model == model) & (df.variant == variant)
+    if topology is not None:
+        m &= (df.topology == topology)
+    if k is not None:
+        m &= (df.k == k)
+    if seed is not None:
+        m &= (df.seed.astype(str) == str(seed))
+    return df[m]
+
+
+def k_sensitivity_delta(df, city, topology, k):
+    """Chemin de calcul INDÉPENDANT de gcn_lin_3seed (dicts par seed, pas de
+    passage par pandas .sort_values/zip) — utilisé par Table 7 ET par
+    l'assertion T7==T4, pour que la comparaison teste deux implémentations
+    réellement différentes de la même quantité, pas la même fonction appelée
+    deux fois (cf. rapport de tâche P4)."""
+    gcn = agg_rows(df, "GCN-Transformer", topology=topology, k=k)
+    gcn = gcn[gcn.city == city]
+    lin = agg_rows(df, "Linear-Transformer", topology=topology)
+    lin = lin[lin.city == city]
+    if len(gcn) == 0 or len(lin) == 0:
+        return None
+    gcn_seeds = {str(s): r2 for s, r2 in zip(gcn.seed, gcn.r2)}
+    lin_seeds = {str(s): r2 for s, r2 in zip(lin.seed, lin.r2)}
+    common = sorted(set(gcn_seeds) & set(lin_seeds))
+    if not common:
+        return None
+    delta = np.array([gcn_seeds[s] for s in common]) - np.array([lin_seeds[s] for s in common])
+    dm, ds = agg_mean_std(delta)
+    suspect = bool(len(gcn[gcn.provenance_note != ""]))
+    return dict(delta_mean=dm, delta_std=ds, n_seeds=len(common), suspect=suspect)
+
+
+def gcn_lin_3seed(df, city, topology):
+    """(gcn_mean, gcn_std, lin_mean, lin_std, delta_mean, delta_std) k=5,
+    3 seeds, ddof=1 — la quantité centrale de T2/T4/T7(k=5)."""
+    gcn = agg_rows(df, "GCN-Transformer", topology=topology, k=5)
+    gcn = gcn[gcn.city == city].sort_values("seed")
+    lin = agg_rows(df, "Linear-Transformer", topology=topology)
+    lin = lin[lin.city == city].sort_values("seed")
+    if len(gcn) == 0 or len(lin) == 0:
+        return None
+    gcn_seeds = {int(float(s)): r2 for s, r2 in zip(gcn.seed, gcn.r2)}
+    lin_seeds = {int(float(s)): r2 for s, r2 in zip(lin.seed, lin.r2)}
+    common = sorted(set(gcn_seeds) & set(lin_seeds))
+    if not common:
+        return None
+    gcn_vals = np.array([gcn_seeds[s] for s in common])
+    lin_vals = np.array([lin_seeds[s] for s in common])
+    delta_vals = gcn_vals - lin_vals
+    gm, gs = agg_mean_std(gcn_vals)
+    lm, ls = agg_mean_std(lin_vals)
+    dm, ds = agg_mean_std(delta_vals)
+    return dict(gcn_mean=gm, gcn_std=gs, lin_mean=lm, lin_std=ls,
+                delta_mean=dm, delta_std=ds, n_seeds=len(common))
+
+
+# --------------------------------------------------------------------------- #
+# T1 — h(D)  [EXCEPTION : source = results/heterogeneity_index_v2.csv]
+# --------------------------------------------------------------------------- #
+def table1():
+    if not H_INDEX_PATH.exists():
+        write_missing("table1_h_index", "Table 1 — Indice d'hétérophilie spatiale h(D)", 3)
+        return None
+    hdf = pd.read_csv(H_INDEX_PATH)
+    hdf["city"] = hdf.city.str.lower()
+    rows = [[r.city.capitalize(), r.n_stations, f"{r.r_bar:.3f}", f"{r.moran_I:.3f}",
+             f"{r.cv_raw:.3f}", f"{r.h:.3f}"] for _, r in hdf.sort_values("h").iterrows()]
+    write_table("table1_h_index", "Table 1 — Indice d'hétérophilie spatiale h(D)",
+               ["City", "Stations", "r̄", "Moran's I", "CV", "h(D)"], rows,
+               "Source : results/heterogeneity_index_v2.csv — EXCEPTION documentée, "
+               "h(D) n'est pas un résultat de run (hors schéma raw_results.csv, cf. P3).")
+    return hdf.set_index("city")["h"].to_dict()
+
+
+# --------------------------------------------------------------------------- #
+# T2 — Benchmark canonique
+# --------------------------------------------------------------------------- #
+def table2(df):
+    rows = []
+    for city in CITIES:
+        for topo in TOPOS:
+            r = gcn_lin_3seed(df, city, topo)
+            if r is None:
+                rows.append([city.capitalize(), topo, "MISSING", "MISSING", "MISSING"])
+                continue
+            rows.append([city.capitalize(), topo,
+                        f"{r['lin_mean']:.4f} ± {r['lin_std']:.4f}",
+                        f"{r['gcn_mean']:.4f} ± {r['gcn_std']:.4f}",
+                        f"{r['delta_mean']:+.4f} ± {r['delta_std']:.4f}"])
+    write_table("table2_benchmark", "Table 2 — Benchmark canonique (k=5, 3 seeds, ddof=1)",
+               ["City", "Topology", "Linear-Transformer R²", "GCN-Transformer R²", "ΔR²"], rows)
+
+
+# --------------------------------------------------------------------------- #
+# T3 — Baselines externes (4 décimales + colonne provenance)
+# --------------------------------------------------------------------------- #
+def table3(df):
+    rows = []
+    for city in CITIES:
+        for model, label, protocol in [
+            ("Persistence", "Persistence (t−1)", "deterministic"),
+            ("ARIMA", "ARIMA", "deterministic"),
+            ("XGBoost", "XGBoost", "primary_seed"),
+            ("LSTM", "LSTM", "3seed_mean"),
+        ]:
+            sub = agg_rows(df, model)
+            sub = sub[sub.city == city]
+            if len(sub) == 0:
+                rows.append([city.capitalize(), label, "", "MISSING", "MISSING", "MISSING", protocol])
+                continue
+            m, s = agg_mean_std(sub.r2.values)
+            mae_m, _ = agg_mean_std(sub.mae.values)
+            rmse_m, _ = agg_mean_std(sub.rmse.values)
+            flag = " [SUSPECT]" if (sub.provenance_note != "").any() else ""
+            rows.append([city.capitalize(), label, "", f"{mae_m:.4f}", f"{rmse_m:.4f}",
+                        f"{m:.4f} ± {s:.4f}{flag}", protocol])
+        for topo in TOPOS:
+            r = gcn_lin_3seed(df, city, topo)
+            if r is None:
+                continue
+            rows.append([city.capitalize(), "GCN-Transformer", topo, "", "",
+                        f"{r['gcn_mean']:.4f} ± {r['gcn_std']:.4f}", "3seed_mean"])
+        lin = agg_rows(df, "Linear-Transformer", topology="distance")
+        lin = lin[lin.city == city]
+        if len(lin):
+            m, s = agg_mean_std(lin.r2.values)
+            rows.append([city.capitalize(), "Linear-Transformer", "n/a (topology-independent)",
+                        "", "", f"{m:.4f} ± {s:.4f}", "3seed_mean"])
+        for model, label in [("stgcn", "STGCN"), ("graphwavenet", "Graph WaveNet")]:
+            sub = agg_rows(df, model, topology="correlation")
+            sub = sub[sub.city == city]
+            if len(sub) == 0:
+                rows.append([city.capitalize(), label, "correlation", "MISSING", "MISSING",
+                            "MISSING", "primary_seed"])
+                continue
+            rows.append([city.capitalize(), label, "correlation", "", "",
+                        f"{sub.r2.iloc[0]:.4f}", "primary_seed"])
+    write_table("table3_external_baselines",
+               "Table 3 — Baselines externes + SOTA (4 décimales)",
+               ["City", "Model", "Topology", "MAE", "RMSE", "R²", "Provenance"], rows,
+               "Provenance : 3seed_mean (moyenne±SD ddof=1 sur seeds 42/123/777) ou "
+               "primary_seed (seed 42 seul, coût de calcul) ou deterministic (ARIMA/Persistence). "
+               "[SUSPECT] : au moins une ligne source porte un provenance_note "
+               "(SUSPECT_6STATION, Madrid pré-E1 re-run) — cf. CHANGELOG_TABLES.md.")
+    return rows
+
+
+# --------------------------------------------------------------------------- #
+# T4 — Tests statistiques (Wilcoxon, bootstrap CI, Cohen's d, Holm-Bonferroni)
+# --------------------------------------------------------------------------- #
+def table4(df):
+    raw_p = []
+    entries = []
+    for city in CITIES:
+        for topo in TOPOS:
+            gcn_ps = station_rows(df, "GCN-Transformer", topology=topo, k=5, seed=PRIMARY_SEED)
+            gcn_ps = gcn_ps[gcn_ps.city == city]
+            lin_ps = station_rows(df, "Linear-Transformer", topology=topo, seed=PRIMARY_SEED)
+            lin_ps = lin_ps[lin_ps.city == city]
+            common = sorted(set(gcn_ps.station) & set(lin_ps.station))
+            r3 = gcn_lin_3seed(df, city, topo)
+            if not common or r3 is None:
+                entries.append(dict(city=city, topology=topo, missing=True))
+                continue
+            g = gcn_ps.set_index("station").loc[common].r2.values.astype(float)
+            l = lin_ps.set_index("station").loc[common].r2.values.astype(float)
+            w = stats.wilcoxon(g, l, alternative="less")
+            # Cohen's d, ddof=1 (formule standard pour un d apparié) via
+            # agg_mean_std — pas un agrégat inter-seeds, mais on route quand
+            # même par la fonction unique plutôt qu'un appel nu à l'écart-type
+            # (cf. tests/test_ddof.py). NB : results/statistical_analysis/*
+            # (pré-P4) utilisait ddof=0 pour ce même calcul (hors périmètre du
+            # correctif ddof=1 de P2, qui ne visait que l'agrégation inter-
+            # seeds) — cette table régénérée utilise donc délibérément la
+            # formule ddof=1 standard, qui peut différer légèrement des
+            # valeurs Cohen's d publiées dans le cycle précédent.
+            diff = g - l
+            diff_mean, diff_std = agg_mean_std(diff)
+            d = float(diff_mean / diff_std) if diff_std > 0 else 0.0
+            entries.append(dict(city=city, topology=topo, missing=False,
+                                delta_mean=r3["delta_mean"], delta_std=r3["delta_std"],
+                                pvalue=w.pvalue, cohens_d=d,
+                                n_worse=int((g < l).sum()), n_total=len(common)))
+            raw_p.append(w.pvalue)
+    # Holm-Bonferroni sur les p-values disponibles
+    order = np.argsort(raw_p)
+    m = len(raw_p)
+    corrected = [None] * m
+    running_max = 0.0
+    for rank, idx in enumerate(order):
+        adj = (m - rank) * raw_p[idx]
+        running_max = max(running_max, adj)
+        corrected[idx] = min(running_max, 1.0)
+    pi = 0
+    rows = []
+    for e in entries:
+        if e["missing"]:
+            rows.append([e["city"].capitalize(), e["topology"], "MISSING", "MISSING",
+                        "MISSING", "MISSING", "MISSING"])
+            continue
+        rows.append([e["city"].capitalize(), e["topology"],
+                    f"{e['delta_mean']:+.4f} ± {e['delta_std']:.4f}",
+                    f"{corrected[pi]:.3e}", f"{e['cohens_d']:+.2f}",
+                    f"{e['n_worse']}/{e['n_total']}", ""])
+        pi += 1
+    write_table("table4_statistical_tests",
+               "Table 4 — Tests statistiques (Wilcoxon, Holm-Bonferroni, Cohen's d)",
+               ["City", "Topology", "ΔR² (3 seeds, ddof=1)", "Wilcoxon p (Holm-Bonf)",
+                "Cohen's d", "GCN<Linear / total", ""], rows,
+               f"Seed primaire {PRIMARY_SEED} pour Wilcoxon/Cohen's d (per-station) ; "
+               "3 seeds ddof=1 pour ΔR² agrégé. Holm-Bonferroni sur l'ensemble des tests disponibles.")
+    return entries
+
+
+# --------------------------------------------------------------------------- #
+# T5 — Corrélation inter-villes h(D) vs ΔR²  [utilise T1]
+# --------------------------------------------------------------------------- #
+def table5(df, h_index):
+    rows = []
+    if h_index is None:
+        write_missing("table5_cross_city_correlation",
+                      "Table 5 — Corrélation inter-villes h(D) vs ΔR²", 2)
+        return
+    for topo in TOPOS:
+        h_vals, d_vals, cities_ok = [], [], []
+        for city in CITIES:
+            r = gcn_lin_3seed(df, city, topo)
+            if r is None or city not in h_index:
+                continue
+            h_vals.append(h_index[city]); d_vals.append(r["delta_mean"]); cities_ok.append(city)
+        if len(h_vals) < 3:
+            rows.append([topo, "MISSING", "MISSING", f"n={len(h_vals)}"])
+            continue
+        rho, p = stats.spearmanr(h_vals, d_vals)
+        rows.append([topo, f"{rho:+.3f}", f"{p:.4f}", f"n={len(h_vals)} (descriptif, puissance limitée)"])
+    write_table("table5_cross_city_correlation",
+               "Table 5 — Corrélation inter-villes h(D) vs ΔR² (Spearman)",
+               ["Topology", "ρ", "p", "Note"], rows)
+
+
+# --------------------------------------------------------------------------- #
+# T6 — ΔR² par station
+# --------------------------------------------------------------------------- #
+def table6(df):
+    rows = []
+    for city in CITIES:
+        for topo in TOPOS:
+            gcn_ps = station_rows(df, "GCN-Transformer", topology=topo, k=5, seed=PRIMARY_SEED)
+            gcn_ps = gcn_ps[gcn_ps.city == city]
+            lin_ps = station_rows(df, "Linear-Transformer", topology=topo, seed=PRIMARY_SEED)
+            lin_ps = lin_ps[lin_ps.city == city]
+            common = sorted(set(gcn_ps.station) & set(lin_ps.station))
+            if not common:
+                rows.append([city.capitalize(), topo, "MISSING", "", "", ""])
+                continue
+            g = gcn_ps.set_index("station").loc[common].r2.astype(float)
+            l = lin_ps.set_index("station").loc[common].r2.astype(float)
+            for st in common:
+                rows.append([city.capitalize(), topo, st, f"{g[st]:.4f}", f"{l[st]:.4f}",
+                            f"{g[st]-l[st]:+.4f}"])
+    write_table("table6_per_station", "Table 6 — ΔR² par station (seed primaire 42)",
+               ["City", "Topology", "Station", "GCN R²", "Linear R²", "ΔR²"], rows)
+
+
+# --------------------------------------------------------------------------- #
+# T7 — Sensibilité k
+# --------------------------------------------------------------------------- #
+def table7(df):
+    rows = []
+    for city in CITIES:
+        for topo in TOPOS:
+            cells = []
+            for k in KS:
+                r = k_sensitivity_delta(df, city, topo, k)
+                if r is None:
+                    gcn = agg_rows(df, "GCN-Transformer", topology=topo, k=k)
+                    gcn = gcn[gcn.city == city]
+                    if len(gcn) == 1 and str(gcn.seed.iloc[0]) == "unknown_3seed_agg":
+                        cells.append(f"{gcn.r2.iloc[0]:.4f} [UNRECOVERABLE, ddof indisponible]")
+                    else:
+                        cells.append("MISSING")
+                    continue
+                flag = " [SUSPECT]" if r["suspect"] else ""
+                cells.append(f"{r['delta_mean']:+.4f}±{r['delta_std']:.4f}{flag}")
+            rows.append([city.capitalize(), topo] + cells)
+    write_table("table7_k_sensitivity", "Table 7 — Sensibilité k (ΔR², 3 seeds, ddof=1)",
+               ["City", "Topology", "k=3", "k=5", "k=8"], rows,
+               "[SUSPECT] : au moins une ligne source porte un provenance_note "
+               "(SUSPECT_6STATION/UNRECOVERABLE) — cf. CHANGELOG_TABLES.md.")
+
+
+# --------------------------------------------------------------------------- #
+# T8 — Over-smoothing / GAT  [MISSING DATA attendu]
+# --------------------------------------------------------------------------- #
+def table8(df):
+    specs = [("Linear-Transformer", "1layer"), ("GCN-Transformer", "1layer"),
+             ("GCN-Transformer", "2layer"), ("GAT-Transformer", "2layer")]
+    n_present = sum(len(agg_rows(df, m, variant=v, topology="distance")[
+                        agg_rows(df, m, variant=v, topology="distance").city == city])
+                    for city in CITIES for m, v in specs)
+    if n_present == 0:
+        write_missing("table8_oversmoothing", "Table 8 — Over-smoothing / GAT", 36)
+        return
+    rows = []
+    for city in CITIES:
+        cells = []
+        for model, variant in specs:
+            sub = agg_rows(df, model, variant=variant, topology="distance")
+            sub = sub[sub.city == city]
+            if len(sub) == 0:
+                cells.append("MISSING")
+                continue
+            m, s = agg_mean_std(sub.r2.values)
+            cells.append(f"{m:.4f}±{s:.4f}")
+        rows.append([city.capitalize()] + cells)
+    write_table("table8_oversmoothing", "Table 8 — Over-smoothing / GAT",
+               ["City", "Linear (1L)", "GCN (1L)", "GCN (2L)", "GAT (2L)"], rows)
+
+
+# --------------------------------------------------------------------------- #
+# T9 — Contrôles diagnostiques
+# --------------------------------------------------------------------------- #
+def table9(df):
+    rows = []
+    for city in CITIES:
+        for topo in TOPOS:
+            cells = []
+            for exp in ["real", "shuffled_graph", "no_meteorology"]:
+                gcn = agg_rows(df, "GCN-Transformer", variant=exp, topology=topo)
+                gcn = gcn[gcn.city == city]
+                lin_variant = "no_meteorology" if exp == "no_meteorology" else ""
+                lin = agg_rows(df, "Linear-Transformer", variant=lin_variant,
+                              topology=(topo if lin_variant else ""))
+                lin = lin[lin.city == city]
+                if lin_variant == "":
+                    lin = agg_rows(df, "Linear-Transformer", variant="")
+                    lin = lin[(lin.city == city) & (lin.topology == topo)]
+                if len(gcn) == 0 or len(lin) == 0:
+                    cells.append("MISSING")
+                    continue
+                d = float(gcn.r2.iloc[0]) - float(lin.r2.mean())
+                cells.append(f"{d:+.4f}")
+            rows.append([city.capitalize(), topo] + cells)
+    write_table("table9_diagnostics", "Table 9 — Contrôles diagnostiques (E4/E5, seed 42)",
+               ["City", "Topology", "ΔR² real", "ΔR² shuffled_graph", "ΔR² no_meteorology"], rows)
+
+
+# --------------------------------------------------------------------------- #
+# ASSERTIONS BLOQUANTES
+# --------------------------------------------------------------------------- #
+def assert_t7_k5_equals_t4(df):
+    """T4 (delta via gcn_lin_3seed : pandas sort_values/zip) et T7 (delta via
+    k_sensitivity_delta : dicts par seed) sont deux implémentations écrites
+    séparément de la même quantité (ΔR² GCN k=5 vs Linear, 3 seeds, ddof=1) —
+    une divergence ici indique un vrai bug (mauvais filtrage de seed, mauvais
+    ddof, désalignement), pas une tautologie de code partagé."""
+    for city in CITIES:
+        for topo in TOPOS:
+            name = f"T7(k=5) == T4 [{city}/{topo}]"
+            t4 = gcn_lin_3seed(df, city, topo)
+            t7 = k_sensitivity_delta(df, city, topo, 5)
+            if t4 is None or t7 is None:
+                record(name, "MISSING DATA",
+                      f"T4 présent={t4 is not None}, T7(k=5) présent={t7 is not None}")
+                continue
+            mean_diff = abs(t4["delta_mean"] - t7["delta_mean"])
+            std_diff = abs(t4["delta_std"] - t7["delta_std"])
+            ok = mean_diff < TOL_EXACT and std_diff < TOL_EXACT
+            record(name, "PASS" if ok else "FAIL",
+                  f"mean Δ={mean_diff:.2e} (tol {TOL_EXACT:.0e}), std Δ={std_diff:.2e}, "
+                  f"T4={t4['delta_mean']:.6f}±{t4['delta_std']:.6f}, "
+                  f"T7={t7['delta_mean']:.6f}±{t7['delta_std']:.6f}")
+
+
+def assert_pruning_anchor_equals_t2(df):
+    for city in CITIES:
+        for seed in SEEDS:
+            name = f"pruning anchor (keep_frac=1.0) == T2 GCN/distance [{city}/seed={seed}]"
+            anchor = agg_rows(df, "GCN-Transformer", topology="distance", keep_frac=1.0)
+            anchor = anchor[(anchor.city == city) & (anchor.seed.astype(str) == str(seed))]
+            t2 = agg_rows(df, "GCN-Transformer", topology="distance", k=5)
+            t2 = t2[(t2.city == city) & (t2.seed.astype(str) == str(seed))]
+            if len(anchor) == 0 or len(t2) == 0:
+                record(name, "MISSING DATA",
+                      f"anchor présent={len(anchor)>0}, T2 présent={len(t2)>0}")
+                continue
+            a_val = float(anchor.r2.iloc[0]); t2_val = float(t2.r2.iloc[0])
+            diff = abs(a_val - t2_val)
+            # Tolérance = 3x l'écart-type inter-seeds observé pour cette ville/
+            # topologie (bruit normal d'entraînement, PAS ajusté après coup :
+            # dérivé de T7 k=5, jamais de cette comparaison elle-même) — ce
+            # sont deux entraînements INDÉPENDANTS du même graphe, pas la même
+            # donnée relue deux fois (contrairement à l'assertion précédente).
+            r3 = gcn_lin_3seed(df, city, "distance")
+            noise_scale = r3["gcn_std"] if r3 else 0.0
+            tol = max(3 * noise_scale, 0.01)
+            ok = diff < tol
+            anchor_n, t2_n = int(anchor.n_stations.iloc[0]), int(t2.n_stations.iloc[0])
+            cause = ""
+            if not ok and anchor_n != t2_n:
+                cause = (f" — CAUSE IDENTIFIÉE : n_stations diffère ({anchor_n} vs {t2_n}), "
+                        "cohérent avec le SUSPECT_6STATION déjà documenté en P1 (MENDEZ ALVARO "
+                        "absente du pruning Madrid, ancien protocole) — pas un nouveau bug, "
+                        "attend le re-run E10 (cf. CHANGELOG_TABLES.md).")
+            record(name, "PASS" if ok else "FAIL",
+                  f"|Δ|={diff:.4f}, tol={tol:.4f} (3×std inter-seeds GCN/distance={noise_scale:.4f}), "
+                  f"anchor={a_val:.4f} (n={anchor_n}), T2={t2_val:.4f} (n={t2_n}){cause}")
+
+
+def assert_single_linear_reference(df, t3_rows, t4_entries):
+    for city in CITIES:
+        for topo in TOPOS:
+            name = f"référence Linear-Transformer unique [{city}/{topo}, 3seed_mean]"
+            lin = agg_rows(df, "Linear-Transformer", topology=topo)
+            lin = lin[lin.city == city]
+            if len(lin) == 0:
+                record(name, "MISSING DATA", "aucune ligne Linear-Transformer")
+                continue
+            distinct = lin.groupby("seed").r2.first()
+            m, _ = agg_mean_std(distinct.values)
+            # cohérence avec la valeur utilisée dans T4 pour cette même ville/topo
+            entry = next((e for e in t4_entries if e["city"] == city and e["topology"] == topo
+                         and not e["missing"]), None)
+            if entry is None:
+                record(name, "MISSING DATA", "T4 n'a pas cette condition")
+                continue
+            r3 = gcn_lin_3seed(df, city, topo)
+            diff = abs(r3["lin_mean"] - m)
+            record(name, "PASS" if diff < TOL_EXACT else "FAIL", f"|Δ|={diff:.2e}")
+
+
+def assert_t3_graph_models_declare_topology(t3_rows):
+    name = "T3 : toute entrée de modèle graphe déclare sa topologie"
+    graph_labels = {"GCN-Transformer", "STGCN", "Graph WaveNet"}
+    offenders = [r for r in t3_rows if r[1] in graph_labels and (not r[2] or r[2] == "MISSING")]
+    if not t3_rows:
+        record(name, "MISSING DATA", "Table 3 vide")
+    elif offenders:
+        record(name, "FAIL", f"{len(offenders)} ligne(s) sans topologie : {offenders[:3]}")
+    else:
+        record(name, "PASS", f"{sum(1 for r in t3_rows if r[1] in graph_labels)} lignes vérifiées")
+
+
+IDENTITY_COLS = ["city", "model", "topology", "k", "keep_frac", "variant", "seed", "station", "split"]
+
+
+def assert_no_duplicate_conditions_across_run_ids(df):
+    """Aucune condition logique (IDENTITY_COLS) ne doit apparaître sous plus
+    d'un run_id. C'est le trou exact par lequel le doublon k=5 est passé :
+    append_run refuse une clé déjà présente, mais sa clé inclut run_id — deux
+    run_id différents pour la MÊME condition ne sont jamais détectés comme
+    collision. Cette assertion vérifie l'identité logique, pas la clé
+    d'écriture."""
+    name = "unicité structurelle : une condition = un seul run_id"
+    # Comparaison en str (fillna d'abord) : évite tout piège de dtype (NaN vs
+    # None vs "", float vs object) au moment du groupby ET du ré-examen des
+    # lignes en cas de doublon — un seul et même dataframe stringifié utilisé
+    # de bout en bout, jamais de merge sur les dtypes bruts d'origine.
+    key = df[IDENTITY_COLS].fillna("__NA__").astype(str)
+    tmp = key.copy()
+    tmp["run_id"] = df["run_id"].values
+    grouped = tmp.groupby(IDENTITY_COLS, dropna=False)["run_id"].nunique()
+    dup_keys = grouped[grouped > 1]
+    if len(dup_keys) == 0:
+        record(name, "PASS", f"{len(df)} lignes, {len(grouped)} conditions distinctes, 0 doublon")
+        return
+    examples = []
+    for idx in dup_keys.index[:10]:
+        idx_t = idx if isinstance(idx, tuple) else (idx,)
+        mask = pd.Series(True, index=tmp.index)
+        for col, val in zip(IDENTITY_COLS, idx_t):
+            mask &= (tmp[col] == val)
+        run_ids = sorted(tmp.loc[mask, "run_id"].unique())
+        examples.append(f"{dict(zip(IDENTITY_COLS, idx_t))} -> run_ids={run_ids}")
+    record(name, "FAIL",
+          f"{len(dup_keys)} condition(s) avec >1 run_id : " + " | ".join(examples))
+
+
+def assert_effective_degree(df):
+    name = "degré effectif = min(k, N-1) ; Beijing jamais plafonné pour k≤11"
+    sub = df[(df.city == "beijing") & df.k.notna() & (df.model == "GCN-Transformer")]
+    if len(sub) == 0:
+        record(name, "MISSING DATA", "aucune ligne Beijing avec k")
+        return
+    n_stations = sub.n_stations.dropna().unique()
+    if len(n_stations) == 0:
+        record(name, "MISSING DATA", "n_stations absent pour Beijing")
+        return
+    n = int(n_stations[0])
+    capped = sub[sub.k > n - 1]
+    ok = (len(capped) == 0) and all(k <= 11 for k in sub.k.unique())
+    record(name, "PASS" if ok else "FAIL",
+          f"n_stations={n}, k_values={sorted(sub.k.unique())}, "
+          f"{len(capped)} ligne(s) plafonnée(s)")
+
+
+def assert_unrounded_recomputation(df):
+    """Auto-test à deux volets :
+    (1) démontre que ça compte : sur un exemple réel, le delta recalculé
+        depuis les R² bruts diffère du delta recalculé depuis les mêmes R²
+        pré-arrondis à 4 décimales (sinon le test ne prouverait rien) ;
+    (2) vérifie que gcn_lin_3seed/k_sensitivity_delta (utilisés par TOUTES
+        les tables et assertions de ce script) produisent bien la version
+        brute, pas la version arrondie."""
+    name = "différences recalculées depuis les valeurs non arrondies (pas depuis l'affichage)"
+    gcn = agg_rows(df, "GCN-Transformer", topology="distance", k=5)
+    gcn = gcn[gcn.city == "madrid"].sort_values("seed").reset_index(drop=True)
+    lin = agg_rows(df, "Linear-Transformer", topology="distance")
+    lin = lin[lin.city == "madrid"].sort_values("seed").reset_index(drop=True)
+    if len(gcn) == 0 or len(lin) == 0:
+        record(name, "MISSING DATA", "madrid/distance k=5 absent")
+        return
+    raw_delta = float(gcn.r2.iloc[0]) - float(lin.r2.iloc[0])
+    rounded_delta = round(float(gcn.r2.iloc[0]), 4) - round(float(lin.r2.iloc[0]), 4)
+    test_is_meaningful = abs(raw_delta - rounded_delta) > 1e-9
+    r = gcn_lin_3seed(df, "madrid", "distance")
+    table_uses_raw = abs(r["gcn_mean"] - float(gcn.r2.mean())) < 1e-12
+    ok = test_is_meaningful and table_uses_raw
+    record(name, "PASS" if ok else "FAIL",
+          f"exemple madrid/distance/seed42 : brut={raw_delta:.6f} vs arrondi-4dp={rounded_delta:.6f} "
+          f"(écart {abs(raw_delta-rounded_delta):.2e}, {'significatif' if test_is_meaningful else 'NUL — test non probant'}); "
+          f"gcn_lin_3seed utilise les valeurs brutes : {table_uses_raw}")
+
+
+def main():
+    print("Chargement raw_results.csv ...")
+    df = load()
+    print(f"{len(df)} lignes.\n")
+
+    print("=== Génération des tables ===")
+    h_index = table1()
+    table2(df)
+    t3_rows = table3(df)
+    t4_entries = table4(df)
+    table5(df, h_index)
+    table6(df)
+    table7(df)
+    table8(df)
+    table9(df)
+
+    print("\n=== Assertions bloquantes ===")
+    assert_no_duplicate_conditions_across_run_ids(df)
+    assert_t7_k5_equals_t4(df)
+    assert_pruning_anchor_equals_t2(df)
+    assert_single_linear_reference(df, t3_rows, t4_entries)
+    assert_t3_graph_models_declare_topology(t3_rows)
+    assert_effective_degree(df)
+    assert_unrounded_recomputation(df)
+
+    n_pass = sum(1 for a in ASSERTIONS if a["status"] == "PASS")
+    n_fail = sum(1 for a in ASSERTIONS if a["status"] == "FAIL")
+    n_miss = sum(1 for a in ASSERTIONS if a["status"] == "MISSING DATA")
+    print(f"\n{'='*60}\nRÉCAP ASSERTIONS : {n_pass} PASS, {n_fail} FAIL, {n_miss} MISSING DATA "
+          f"(sur {len(ASSERTIONS)})\n{'='*60}")
+    for a in ASSERTIONS:
+        print(f"  [{a['status']:>13}] {a['name']}")
+
+    if n_fail:
+        print(f"\n{n_fail} assertion(s) FAIL — corriger les données/le pipeline, pas cette liste.")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

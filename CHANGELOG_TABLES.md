@@ -5,6 +5,51 @@ révisée : table, ancienne valeur, nouvelle valeur, cause. Alimente la lettre
 de réponse aux relecteurs (cf. P11 point 6). Complété au fil des étapes, pas
 seulement à la fin.
 
+## P4 — regenerate_tables.py, 24 assertions (17 PASS, 3 FAIL, 4 MISSING DATA)
+
+`scripts/regenerate_tables.py` lit `raw_results.csv` exclusivement (une
+exception documentée : h(D)/Table 1 vient de
+`results/heterogeneity_index_v2.csv`, hors schéma raw_results depuis P3) et
+émet les Tables 1-9 en Markdown + .docx natif (python-docx, table Word
+directement copiable) dans `manuscript/tables/`.
+
+**Bug de pipeline trouvé et corrigé avant de committer** (pas l'assertion
+qui l'a révélé) : `raw_results.csv` contenait des lignes DOUBLES pour
+chaque condition k=5 — une depuis le JSON canonique (pleine précision,
+migration P3 source 1) et une depuis `e6_k_sensitivity.csv` (arrondie à 4
+décimales lors de son écriture originale par e6/e8), sous deux `run_id`
+différents donc jamais détectées comme collision par `append_run`. Cause :
+`migrate_k_sensitivity()` migrait k∈{3,5,8} sans exclure k=5, qui est
+pourtant un doublon exact de `migrate_canonical()`. Corrigé : k=5 exclu de
+cette source de migration. `raw_results.csv` régénéré (816 lignes au lieu
+de 834).
+
+**3 FAIL, cause identifiée, pas un mystère** : ancre de pruning
+(keep_frac=1.0) vs Table 2 GCN-Transformer/distance pour Madrid, les 3
+seeds. `n_stations` diffère (6 vs 7) — c'est exactement le
+SUSPECT_6STATION déjà documenté en P1 (MENDEZ ALVARO absente du pruning
+Madrid), pas une nouvelle divergence. Le message d'assertion l'identifie
+explicitement. Attend le re-run E10.
+
+**4 MISSING DATA** : ancre de pruning Beijing/London seeds 123/777 — cohérent
+avec le budget consigné en P3 (20 runs edge-pruning manquants).
+
+Table 3 : 4 décimales + colonne provenance (3seed_mean/primary_seed/
+deterministic) ; les lignes Madrid ARIMA/XGBoost/LSTM/Persistence portent
+désormais [SUSPECT] dans la cellule R² (le flag manquait dans une première
+version — ajouté après avoir remarqué que ces lignes restaient encore à 6
+stations sans indication visible dans la table générée).
+
+**Assertion d'unicité structurelle ajoutée** (`assert_no_duplicate_conditions_across_run_ids`,
+25e assertion) : le doublon k=5 est passé inaperçu par `append_run` parce
+que sa clé de collision inclut `run_id` — deux `run_id` différents pour la
+même condition logique (city, model, topology, k, keep_frac, variant, seed,
+station, split) ne sont jamais comparés entre eux. Cette assertion groupe
+sur l'identité logique SANS `run_id` et échoue si `nunique(run_id) > 1`
+pour un groupe. Lancée sur les 816 lignes actuelles : **0 autre doublon
+trouvé**. 5 tests dédiés (`tests/test_regenerate_tables.py`), dont la
+reproduction exacte de l'incident k=5 et une régression sur le fichier réel.
+
 ## P3 — results/raw_results.csv unifié
 
 `src/results_io.py::append_run/load_results` : append-only strict (mode

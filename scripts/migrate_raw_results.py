@@ -206,6 +206,9 @@ def migrate_k_sensitivity():
     for _, r in df.iterrows():
         city = r["city"]
         k = int(r["k"])
+        if k == 5:
+            continue  # doublon exact (précision arrondie) de migrate_canonical() —
+                      # bug détecté par P4 (assert_unrounded_recomputation), cf. CHANGELOG_TABLES.md
         madrid_unusable = (city == "madrid") and (k in (3, 8))
         note = ("UNRECOVERABLE_6STATION: MENDEZ ALVARO jamais évaluée pour cette "
                 "cellule (exclusion au chargement, ancien code) — aucune donnée "
