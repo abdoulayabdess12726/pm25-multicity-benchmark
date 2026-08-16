@@ -131,23 +131,56 @@ avant ce correctif.** Édition d'arêtes (§6.2.1) : 20/45 manquantes —
 Beijing/London n'ont que le seed 42 (Madrid a bien les 3 seeds, mais
 SUSPECT_6STATION).
 
-## Budget de calcul restant (mis à jour, à consigner)
+## Budget de calcul restant (mis à jour P5, à consigner)
 
-En plus d'E9 (k-sensitivity Madrid k∈{3,8}, 12 cellules) et E10 (pruning
-Madrid complet, 15 cellules) déjà identifiés en P1 :
+**E9 et E10 terminés** (P5, cf. section dédiée ci-dessous pour les résultats) :
+12 cellules k-sensitivity Madrid k∈{3,8} + 15 cellules pruning Madrid complet
+— 27 runs GCN, retirés du budget restant.
+
+Restant, par ordre de dépendance :
 
 - **Table 8 (over-smoothing/GAT) : 36 runs**, jamais lancés — 3 villes × 4
   variantes (linear1L, gcn1L, gcn2L, gat2L) × 3 seeds, topologie distance
   uniquement. Coût par run inconnu (jamais chronométré, script jamais
   exécuté jusqu'au bout avec sortie persistée).
-- **Édition d'arêtes (§6.2.1) : 20 runs** — seeds 123/777 pour Beijing et
-  London (5 niveaux × 2 seeds × 2 villes), en plus des 15 cellules Madrid
-  d'E10 déjà comptées séparément.
+- **Édition d'arêtes (§6.2.1), Beijing/London : 20 runs** — seeds 123/777
+  pour Beijing et London (5 niveaux × 2 seeds × 2 villes). Madrid déjà
+  complet (E10).
+- **Parité seeds STGCN/Graph WaveNet : 12 runs.** `14_sota_baselines.py`
+  n'a jamais tourné qu'au seed 42 (périmètre strict déclaré dans le script :
+  « SOTA baselines reported at the primary seed given their computational
+  cost » — cf. manuscrit). Extension à 123/777 : 2 modèles × 3 villes × 2
+  seeds = 12 runs. ⚠️ **Numérotée « E11 » par erreur dans une consigne de
+  l'utilisateur (2026-08-16) — collision avec le label déjà pris par le
+  commit `51fd7f1` (« E11 faisabilité AirPhyNet »). Pas encore
+  renumérotée/tranchée avec l'utilisateur — ne pas utiliser « E11 » pour
+  cette expérience avant clarification.**
+- **Contrôles pruning : scope à définir.** Mentionné par l'utilisateur
+  (2026-08-16) sous le label « E12 » — même remarque de collision potentielle
+  que ci-dessus tant que la numérotation n'est pas reconciliée avec la série
+  déjà utilisée par ailleurs dans ce dépôt (E11 = AirPhyNet). Nature exacte
+  des contrôles (ex. élagage aléatoire vs. par hétérophilie comme baseline de
+  comparaison ?) à clarifier avant chiffrage du nombre de runs.
+- **Chang-Zhu-Tan (CZT) — en cours ailleurs, pas par cette session.**
+  Pré-enregistrement fait (`PREREGISTRATION_CZT.md`, commit `dadb848`) :
+  h(D)=0.312 mesuré avant tout entraînement, prédictions P1/P2/P3 datées.
+  Collecte de données démarrée (`561f42e`, 22 stations CNEMC 2020-2023,
+  `01h_download_czt.py`) — téléchargement `data/czt_raw/` vu en cours/terminé
+  au moment de ce commit (1458 fichiers), non versionné ici (hors périmètre
+  P5, appartient à cette autre ligne de travail).
+- **AirPhyNet — étude de faisabilité déjà faite ailleurs (commit `51fd7f1`,
+  `external/AIRPHYNET_FEASIBILITY.md`), portage pas encore lancé (0/9 runs :
+  3 villes × 3 seeds).** Le clone `external/AirPhyNet` fait par cette session
+  (2026-08-16) était **redondant** avec ce travail déjà existant — l'étude de
+  faisabilité (reproduction <1% d'écart aux chiffres publiés, coûts mesurés,
+  14 modifications listées) est déjà disponible et plus avancée que le
+  simple clone.
 
-**Total identifié à ce stade : 12 (E9) + 15 (E10 Madrid) + 20 (edge pruning
-Beijing/London) + 36 (Table 8) = 83 runs GCN restants**, avant toute
-expérience nouvelle (E11 parité seeds, E12 contrôles pruning, E13 modèle
-post-2024).
+**Total chiffré à ce stade : 36 (Table 8) + 20 (edge pruning Beijing/London)
++ 12 (parité seeds SOTA) = 68 runs GCN/SOTA restants**, hors contrôles
+pruning/CZT/AirPhyNet dont le périmètre ou l'avancement dépend d'une autre
+ligne de travail déjà en cours sur ce dépôt (cf. avertissement ci-dessus sur
+la numérotation E11/E12).
 
 ## P2 — Convention ddof=1 unique (Table 4 vs Table 7)
 
@@ -303,8 +336,48 @@ partout sans traitement particulier, y compris pour les modèles où elle
 | Table 3 | Madrid / XGBoost, R² | 0.8061 | **0.6758** | MENDEZ ALVARO : R²=−0.254 sur cette station seule (XGBoost apprend une constante sur un train à variance nulle, aucune capacité d'extrapolation face au régime test normal) — tire l'agrégat Madrid fortement vers le bas | ✅ confirmé — **variation la plus importante de cette étape** |
 | Table 3 | Madrid / LSTM (seed 42), R² | 0.7990 | 0.7971 | Idem Persistence/ARIMA — architecture skip-persistance, MENDEZ ALVARO bien gérée malgré le train pathologique | ✅ confirmé |
 | Table 7 | Madrid, k=5 (2 topologies × 3 seeds, 6 lignes) | 6 stations | 7 stations | k=5 ne ré-entraîne jamais rien (pull direct du JSON canonique, qui a toujours eu les 7 stations) — réparé par simple re-lecture, comme la Table 3. Nouvelles valeurs : distance ΔR² = −0.3282/−0.3192/−0.3165 (seeds 42/123/777), correlation ΔR² = −0.3913/−0.3879/−0.3594 | ✅ confirmé, zéro calcul |
-| Table 7 | Madrid, k∈{3,8} (2 topologies × 2 k × 3 seeds, 12 lignes) | 6 stations | 7 stations (en attente) | Aucun checkpoint ni prédiction par nœud jamais persisté pour ces cellules (vérifié : `grep torch.save` → 0 résultat dans e6/e8 ; `train_gcn_r2` ne retourne que le R² agrégé déjà tronqué) — ré-entraînement complet requis | ⏳ en attente (E9, P5) |
-| §6.2.1 (pruning) | Madrid, toutes lignes | 6 stations | 7 stations (en attente) | Idem — ré-entraînement complet requis (E10, P5) | ⏳ en attente (E10, P5) |
+| Table 7 | Madrid, k∈{3,8} (2 topologies × 2 k × 3 seeds, 12 lignes) | 6 stations | 7 stations | Ré-entraînement complet (E9, P5). ΔR² 3-seeds : distance k=3 −0.3019→**−0.2828**, k=8 −0.3685→**−0.3478** ; correlation k=3 −0.3437→**−0.3145**, k=8 −0.4540→**−0.4144**. Dans les 4 cas, MENDEZ ALVARO atténue la dégradation (ΔR² moins négatif de 0.019 à 0.040) mais ne change pas la conclusion qualitative (Madrid reste ~15-25× plus dégradée que Beijing selon la condition) | ✅ confirmé (E9, P5) |
+| §6.2.1 (pruning) | Madrid, toutes lignes (5 niveaux × 3 seeds, 15 conditions) | 6 stations | 7 stations | Ré-entraînement complet (E10, P5). Ancre pleine-graphe (keep_frac=1.0) : R² moyen 0.4716→**0.4877**, désormais cohérente avec Table 2 (écart <0.008, 3 seeds, tolérance 3×std passée). Courbe de récupération conservée : R² croît de 0.49 (100% arêtes) à 0.75 (0% arêtes, convergence vers Linear-Transformer) — forme et conclusion inchangées | ✅ confirmé (E10, P5) |
+
+**MENDEZ ALVARO — ΔR² par station (Madrid, graphe complet, E10, 3 seeds)** : confirme
+l'hypothèse P1 (la station dilue la dégradation Madrid). Classement des 7 stations
+par ΔR² (du moins au plus dégradé) : MENDEZ ALVARO **−0.1636** (rang 1/7, la moins
+dégradée) < PLAZA ELÍPTICA −0.2369 < CASA DE CAMPO −0.2453 < PLAZA CASTILLA-CANAL
+−0.2461 < ESCUELAS AGUIRRE −0.2708 < CUATRO CAMINOS-PABLO −0.2750 < CASTELLANA
+**−0.5770** (la plus dégradée). Moyenne 7-stations : −0.2878. MENDEZ ALVARO est
+nettement au-dessus de la moyenne (moins négative), confirmant chiffres à l'appui
+la prédiction P1.
+
+**Points à consigner pour la lettre aux relecteurs (2026-08-16) :**
+
+1. **MENDEZ ALVARO est la station la moins dégradée de tout le réseau Madrid**
+   (−0.1636 vs moyenne −0.2878, rang 1/7). Cohérent avec le mécanisme : série
+   d'entraînement constante sur cette station (PM2.5 invariant sur le train,
+   cf. `results/mendez_alvaro_diagnostic.md`), donc pas de signal temporel
+   propre que l'agrégation spatiale du GCN puisse corrompre. Conséquence
+   directe : le chiffre publié à 7 stations est **le plus conservateur des
+   deux protocoles possibles** — inclure MENDEZ ALVARO réduit la dégradation
+   Madrid rapportée, on ne gonfle pas l'effet en la gardant. **Argument à
+   faire figurer dans la réponse R1.5/R2.5.**
+2. **Étendue intra-Madrid** : ΔR² va de **−0.164** (MENDEZ ALVARO) à **−0.577**
+   (CASTELLANA) sur le même réseau, le même graphe, le même protocole — un
+   facteur **3.5×** entre la station la moins et la plus touchée. À réutiliser
+   dans l'analyse intra-ville du modèle mixte (**P9 / R2.1**) : l'hétérophilie
+   locale par station (cf. Étape 3 / `12_per_station_heterophily.py`) explique
+   une partie de cette étendue, pas seulement le h(D) global de la ville.
+
+**Correctif de migration associé (P5)** : `migrate_k_sensitivity()` et
+`migrate_edge_pruning()` (`scripts/migrate_raw_results.py`) marquaient
+inconditionnellement Madrid k∈{3,8}/toutes les lignes de pruning comme
+UNRECOVERABLE_6STATION/SUSPECT_6STATION (n_stations=6) — correct avant E9/E10,
+obsolète après (les fichiers sources `results/e6_k_sensitivity.csv` et
+`results/edge_pruning.csv` contiennent maintenant les vraies valeurs 7-station).
+117 lignes placeholder résiduelles dans `raw_results.csv` (12 k-sensitivity +
+105 pruning), en collision de run_id avec les nouvelles lignes réelles de même
+identité logique, retirées via `scripts/remove_stale_madrid_placeholders.py`
+(947→830 lignes). Assertions bloquantes : 17 PASS/4 FAIL/4 MISSING DATA →
+**21 PASS/0 FAIL/4 MISSING DATA** (les 4 MISSING DATA restants concernent
+Beijing/London seeds 123/777 pour l'ancre de pruning, hors périmètre P5).
 
 **Non modifié** : Beijing et London (aucune exclusion n'y a jamais été
 appliquée, tous les scripts chargeaient déjà la totalité des stations pour

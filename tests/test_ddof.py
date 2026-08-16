@@ -123,7 +123,7 @@ _EXEMPT_LINE_SUBSTRINGS = [
     (ROOT / "07_statistical_analysis.py", "diff.std()"),
 ]
 
-_SKIP_DIRS = {"venv", "__pycache__", ".git", "node_modules", "tests"}
+_SKIP_DIRS = {"venv", "__pycache__", ".git", "node_modules", "tests", "external"}
 _SKIP_SUFFIXES_MARKERS = (".bak", "_BACKUP_")  # gitignorés, hors pipeline actif (cf. test_stations.py)
 _STD_CALL = re.compile(r"\.std\(|np\.std\(|statistics\.stdev|statistics\.pstdev")
 

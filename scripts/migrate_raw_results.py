@@ -177,14 +177,16 @@ def migrate_edge_pruning():
         return
     df = pd.read_csv(path)
     rows = []
-    n_real = {"beijing": 12, "london": 8, "madrid": 6}
+    # n_real["madrid"] = 7 depuis E10 (P5) : results/edge_pruning.csv contient
+    # désormais MENDEZ ALVARO pour toutes les cellules (ré-entraînement complet,
+    # cf. CHANGELOG_TABLES.md). Avant E10, ce fichier était 6-station-only et
+    # ce commentaire portait note=SUSPECT_6STATION pour madrid — retiré, plus
+    # aucune ligne madrid de ce fichier n'est désormais suspecte.
+    n_real = {"beijing": 12, "london": 8, "madrid": 7}
     for city in CITIES:
         shash = get_split_hash(city)
         sub = df[df.city == city]
-        note = ("SUSPECT_6STATION: MENDEZ ALVARO absente (ancien protocole "
-                "pré-correctif P1) — jamais évaluée, aucune métrique par-station "
-                "persistée, irrécupérable sans ré-entraînement (E10, P5)."
-                if city == "madrid" else "")
+        note = ""
         for _, r in sub.iterrows():
             rows.append(_row(city, "GCN-Transformer", "distance", "", r["seed"],
                              shash, n_real[city], r["station"], r["RMSE"], r["MAE"], r["R2"],
@@ -202,6 +204,10 @@ def migrate_k_sensitivity():
         return
     df = pd.read_csv(path, dtype={"seed": str})
     rows = []
+    # n_real["madrid"] = 7 pour TOUTE ligne, y compris k∈{3,8} : depuis E9 (P5)
+    # results/e6_k_sensitivity.csv contient un ré-entraînement complet 7-station
+    # (MENDEZ ALVARO incluse) pour ces cellules — l'ancien marquage
+    # UNRECOVERABLE_6STATION/n_stations=6 est retiré, cf. CHANGELOG_TABLES.md.
     n_real = {"beijing": 12, "london": 8, "madrid": 7}
     for _, r in df.iterrows():
         city = r["city"]
@@ -209,14 +215,10 @@ def migrate_k_sensitivity():
         if k == 5:
             continue  # doublon exact (précision arrondie) de migrate_canonical() —
                       # bug détecté par P4 (assert_unrounded_recomputation), cf. CHANGELOG_TABLES.md
-        madrid_unusable = (city == "madrid") and (k in (3, 8))
-        note = ("UNRECOVERABLE_6STATION: MENDEZ ALVARO jamais évaluée pour cette "
-                "cellule (exclusion au chargement, ancien code) — aucune donnée "
-                "par-station persistée, ré-entraînement requis (E9, P5), cf. "
-                "CHANGELOG_TABLES.md." if madrid_unusable else "")
+        note = ""
         shash = get_split_hash(city)
         rows.append(_row(city, "GCN-Transformer", r["topology"], k, r["seed"], shash,
-                         6 if madrid_unusable else n_real[city], "__aggregate__",
+                         n_real[city], "__aggregate__",
                          "", "", r["R2_gcn"],
                          "e6_k_sensitivity.py/e8_k_sensitivity_3seeds.py", note))
     _emit(rows, "k_sensitivity (Table 7, e6_k_sensitivity.csv)")
@@ -270,29 +272,17 @@ def migrate_sota():
 
 
 # --------------------------------------------------------------------------- #
-# 7. sensitivity_k_canonical.csv — UNIQUEMENT la ligne UNRECOVERABLE
-#    (les lignes k=5 sont un doublon exact de la source 1, non réinjectées)
+# 7. sensitivity_k_canonical.csv — ENTIÈREMENT REDONDANT, RIEN MIGRÉ
+#    (trouvé en P5 : la ligne UNRECOVERABLE beijing/k=3/distance fait doublon
+#    AVEC DES DONNÉES RÉELLES déjà migrées depuis e6_k_sensitivity.csv —
+#    3 seeds complets, jamais suspects, Beijing n'a jamais été concernée par
+#    MENDEZ ALVARO. Migrer l'UNRECOVERABLE en plus aurait fait cohabiter deux
+#    représentations de la même condition sous des `seed` différents
+#    (42/123/777 réels vs "unknown_3seed_agg" placeholder), et le placeholder,
+#    moins précis, n'apporte plus rien. Les 6 lignes k=5 étaient déjà exclues
+#    (doublon de migrate_canonical()) — sensitivity_k_canonical.csv est donc
+#    intégralement superseded, plus aucune ligne n'en est migrée.)
 # --------------------------------------------------------------------------- #
-def migrate_sensitivity_k_canonical_unrecoverable():
-    path = ROOT / "results/sensitivity_k_canonical.csv"
-    if not path.exists():
-        print("[sensitivity_k_canonical] fichier absent")
-        return
-    df = pd.read_csv(path)
-    rows = []
-    for _, r in df.iterrows():
-        if "UNRECOVERABLE" not in str(r["source"]):
-            continue  # doublon des lignes k=5 déjà migrées (source 1)
-        city = r["city"]
-        shash = get_split_hash(city)
-        rows.append(_row(
-            city, "GCN-Transformer", r["topology"], int(r["k"]), "unknown_3seed_agg", shash,
-            N_STATIONS_CANONICAL[city], "__aggregate__", "", "", r["gcn_r2_mean"],
-            "08_sensitivity_k.py",
-            "UNRECOVERABLE: agrégat de 3 seeds sans attribution individuelle possible "
-            "(valeurs par-seed jamais persistées, cf. CHANGELOG_TABLES.md). "
-            "seed='unknown_3seed_agg' N'EST PAS un seed réel — ne pas traiter comme 42/123/777."))
-    _emit(rows, "sensitivity_k_canonical UNRECOVERABLE (08_sensitivity_k.py)")
 
 
 def main():
@@ -309,7 +299,9 @@ def main():
     migrate_k_sensitivity()
     migrate_diagnostics()
     migrate_sota()
-    migrate_sensitivity_k_canonical_unrecoverable()
+    print("[sensitivity_k_canonical] rien à migrer — intégralement redondant "
+          "avec migrate_canonical()/migrate_k_sensitivity(), cf. commentaire "
+          "source 7 dans ce fichier.")
 
     print(f"\n{'='*60}")
     print(f"TOTAL migré : {stats['rows']} lignes")

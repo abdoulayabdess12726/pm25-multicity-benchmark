@@ -1,0 +1,37 @@
+=== 2026-08-15 13:37:09 madrid/distance/k=3/seed=42 ===
+[madrid/distance/k=3/seed=42] device=cpu edges=21 R2_gcn=0.5107 ΔR²=-0.3028 [recompute(force, était archive(seed42))]
+DUREE_S=1630 DUREE_MIN=27.2 RSS_GB=0.53 CSV_LIGNES=54
+=== 2026-08-15 14:04:25 madrid/distance/k=3/seed=123 ===
+[madrid/distance/k=3/seed=123] device=cpu edges=21 R2_gcn=0.5496 ΔR²=-0.2659 [recompute]
+DUREE_S=4417 DUREE_MIN=73.6 RSS_GB=0.49 CSV_LIGNES=54
+=== 2026-08-15 15:18:08 madrid/distance/k=3/seed=777 ===
+[madrid/distance/k=3/seed=777] device=cpu edges=21 R2_gcn=0.5334 ΔR²=-0.2796 [recompute]
+DUREE_S=3465 DUREE_MIN=57.7 RSS_GB=0.66 CSV_LIGNES=54
+=== 2026-08-15 16:15:58 madrid/distance/k=8/seed=42 ===
+[madrid/distance/k=8/seed=42] device=cpu edges=42 R2_gcn=0.4572 ΔR²=-0.3563 [recompute(force, était archive(seed42))]
+DUREE_S=4173 DUREE_MIN=69.5 RSS_GB=0.59 CSV_LIGNES=54
+=== 2026-08-15 17:25:35 madrid/distance/k=8/seed=123 ===
+[madrid/distance/k=8/seed=123] device=cpu edges=42 R2_gcn=0.4737 ΔR²=-0.3417 [recompute]
+DUREE_S=12038 DUREE_MIN=200.6 RSS_GB=0.67 CSV_LIGNES=54
+=== 2026-08-15 20:46:17 madrid/distance/k=8/seed=777 ===
+[madrid/distance/k=8/seed=777] device=cpu edges=42 R2_gcn=0.4678 ΔR²=-0.3453 [recompute]
+DUREE_S=2994 DUREE_MIN=49.9 RSS_GB=0.56 CSV_LIGNES=54
+=== 2026-08-15 21:36:16 madrid/correlation/k=3/seed=42 ===
+[madrid/correlation/k=3/seed=42] device=cpu edges=12 R2_gcn=0.4921 ΔR²=-0.3213 [recompute(force, était archive(seed42))]
+DUREE_S=1517 DUREE_MIN=25.3 RSS_GB=0.51 CSV_LIGNES=54
+=== 2026-08-15 22:01:45 madrid/correlation/k=3/seed=123 ===
+[madrid/correlation/k=3/seed=123] device=cpu edges=12 R2_gcn=0.5045 ΔR²=-0.3110 [recompute]
+DUREE_S=8979 DUREE_MIN=149.7 RSS_GB=0.59 CSV_LIGNES=54
+=== 2026-08-16 00:31:30 madrid/correlation/k=3/seed=777 ===
+[madrid/correlation/k=3/seed=777] device=cpu edges=12 R2_gcn=0.5019 ΔR²=-0.3112 [recompute]
+DUREE_S=1601 DUREE_MIN=26.7 RSS_GB=0.65 CSV_LIGNES=54
+=== 2026-08-16 00:58:16 madrid/correlation/k=8/seed=42 ===
+[madrid/correlation/k=8/seed=42] device=cpu edges=30 R2_gcn=0.3667 ΔR²=-0.4468 [recompute(force, était archive(seed42))]
+DUREE_S=1398 DUREE_MIN=23.3 RSS_GB=0.66 CSV_LIGNES=54
+=== 2026-08-16 01:21:39 madrid/correlation/k=8/seed=123 ===
+[madrid/correlation/k=8/seed=123] device=cpu edges=30 R2_gcn=0.4336 ΔR²=-0.3819 [recompute]
+DUREE_S=3159 DUREE_MIN=52.6 RSS_GB=0.71 CSV_LIGNES=54
+=== 2026-08-16 02:14:23 madrid/correlation/k=8/seed=777 ===
+[madrid/correlation/k=8/seed=777] device=cpu edges=30 R2_gcn=0.3987 ΔR²=-0.4144 [recompute]
+DUREE_S=3762 DUREE_MIN=62.7 RSS_GB=0.69 CSV_LIGNES=54
+E9_TOTAL_DUREE_S=49200 E9_TOTAL_DUREE_MIN=820

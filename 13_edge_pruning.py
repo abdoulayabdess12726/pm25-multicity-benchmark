@@ -161,8 +161,10 @@ def main():
                     choices=["beijing", "london", "madrid"])
     ap.add_argument("--seeds", nargs="+", type=int, default=[42, 123, 777])
     ap.add_argument("--levels", nargs="+", type=float, default=LEVELS)
+    ap.add_argument("--cpu", action="store_true",
+                    help="force device=cpu (évite la fuite mémoire MPS sur process long, cf. E3/NOTE.md)")
     args = ap.parse_args()
-    device = ("mps" if torch.backends.mps.is_available()
+    device = "cpu" if args.cpu else ("mps" if torch.backends.mps.is_available()
               else "cuda" if torch.cuda.is_available() else "cpu")
     b = load_bench()
 

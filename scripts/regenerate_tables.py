@@ -140,6 +140,18 @@ def load():
     return df
 
 
+_SUSPECT_MARKERS = ("SUSPECT_6STATION", "UNRECOVERABLE")
+
+
+def _is_suspect(notes):
+    """True si au moins une note signale un VRAI problème de provenance
+    (SUSPECT_6STATION/UNRECOVERABLE) — pas n'importe quelle note informative
+    (ex. "RMSE/MAE non calculés", "source=recompute"). Une première version
+    déclenchait [SUSPECT] sur toute note non vide, ce qui flaggait à tort des
+    lignes Beijing jamais concernées par MENDEZ ALVARO — corrigé avant E9."""
+    return notes.fillna("").str.contains("|".join(_SUSPECT_MARKERS), regex=True).any()
+
+
 def agg_rows(df, model, variant="", topology=None, k=None, keep_frac=None):
     m = (df.station == "__aggregate__") & (df.model == model) & (df.variant == variant)
     if topology is not None:
@@ -181,7 +193,7 @@ def k_sensitivity_delta(df, city, topology, k):
         return None
     delta = np.array([gcn_seeds[s] for s in common]) - np.array([lin_seeds[s] for s in common])
     dm, ds = agg_mean_std(delta)
-    suspect = bool(len(gcn[gcn.provenance_note != ""]))
+    suspect = _is_suspect(gcn.provenance_note)
     return dict(delta_mean=dm, delta_std=ds, n_seeds=len(common), suspect=suspect)
 
 
@@ -266,7 +278,7 @@ def table3(df):
             m, s = agg_mean_std(sub.r2.values)
             mae_m, _ = agg_mean_std(sub.mae.values)
             rmse_m, _ = agg_mean_std(sub.rmse.values)
-            flag = " [SUSPECT]" if (sub.provenance_note != "").any() else ""
+            flag = " [SUSPECT]" if _is_suspect(sub.provenance_note) else ""
             rows.append([city.capitalize(), label, "", f"{mae_m:.4f}", f"{rmse_m:.4f}",
                         f"{m:.4f} ± {s:.4f}{flag}", protocol])
         for topo in TOPOS:

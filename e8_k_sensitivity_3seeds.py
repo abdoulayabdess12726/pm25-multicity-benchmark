@@ -191,7 +191,11 @@ def upsert_row(row):
     return len(df)
 
 
-def run_single(city, topology, k, seed, cpu=True):
+def run_single(city, topology, k, seed, cpu=True, force_retrain=False):
+    """force_retrain=True : ignore l'archive seed=42 (6 stations, cf.
+    CHANGELOG_TABLES.md P1/P5) et ré-entraîne même pour ce seed. Nécessaire
+    pour Madrid (E9, P5) — l'archive n'a jamais vu MENDEZ ALVARO dans son
+    agrégat, même si le graphe qu'elle a entraîné avait déjà 7 nœuds."""
     t0 = time.time()
     device = "cpu" if cpu else ("mps" if torch.backends.mps.is_available()
                                 else "cuda" if torch.cuda.is_available() else "cpu")
@@ -207,7 +211,7 @@ def run_single(city, topology, k, seed, cpu=True):
     if k == 5:
         r2_gcn = ref_r2_from_json(c, "GCN+Transformer", topology, seed)
         src = "json(k5)"
-    elif seed == 42:
+    elif seed == 42 and not force_retrain:
         ref = ref_from_backup(city, topology, k)
         if ref["n_edges"] != n_edges:                     # STOP : graphe incohérent vs archive
             raise RuntimeError(f"{city}/{topology} k={k}: n_edges recalculé {n_edges} != archive {ref['n_edges']}")
@@ -217,7 +221,7 @@ def run_single(city, topology, k, seed, cpu=True):
         src = "archive(seed42)"
     else:
         r2_gcn = train_gcn_r2(b, c, ei, ew, device, seed)
-        src = "recompute"
+        src = "recompute" if not (seed == 42 and force_retrain) else "recompute(force, était archive(seed42))"
 
     row = dict(city=city, topology=topology, k=k, seed=seed, n_edges=n_edges,
                R2_gcn=round(r2_gcn, 4), R2_linear_ref=round(lin, 4),
@@ -305,6 +309,8 @@ def main():
     ap.add_argument("--cpu", action="store_true", default=True)
     ap.add_argument("--migrate", action="store_true")
     ap.add_argument("--aggregate", action="store_true")
+    ap.add_argument("--force-retrain", action="store_true",
+                    help="ignore l'archive seed=42 (6 stations), ré-entraîne même pour ce seed (E9, P5)")
     args = ap.parse_args()
 
     if args.migrate:
@@ -314,7 +320,8 @@ def main():
         aggregate()
         return
     if args.city and args.topology and args.k and args.seed:
-        run_single(args.city, args.topology, args.k, args.seed, cpu=args.cpu)
+        run_single(args.city, args.topology, args.k, args.seed, cpu=args.cpu,
+                  force_retrain=args.force_retrain)
         return
     ap.error("spécifier --migrate, --aggregate, ou --city --topology --k --seed")
 
