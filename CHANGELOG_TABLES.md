@@ -146,41 +146,43 @@ Restant, par ordre de dépendance :
 - **Édition d'arêtes (§6.2.1), Beijing/London : 20 runs** — seeds 123/777
   pour Beijing et London (5 niveaux × 2 seeds × 2 villes). Madrid déjà
   complet (E10).
-- **Parité seeds STGCN/Graph WaveNet : 12 runs.** `14_sota_baselines.py`
+**Numérotation officielle des expériences : voir `REVISION_BRIEF.md`, section
+« Numérotation des expériences (E-series) » — référence unique, toutes
+sessions. Ne pas attribuer de numéro localement.**
+
+- **E11 — parité seeds STGCN/Graph WaveNet : 12 runs.** `14_sota_baselines.py`
   n'a jamais tourné qu'au seed 42 (périmètre strict déclaré dans le script :
   « SOTA baselines reported at the primary seed given their computational
   cost » — cf. manuscrit). Extension à 123/777 : 2 modèles × 3 villes × 2
-  seeds = 12 runs. ⚠️ **Numérotée « E11 » par erreur dans une consigne de
-  l'utilisateur (2026-08-16) — collision avec le label déjà pris par le
-  commit `51fd7f1` (« E11 faisabilité AirPhyNet »). Pas encore
-  renumérotée/tranchée avec l'utilisateur — ne pas utiliser « E11 » pour
-  cette expérience avant clarification.**
-- **Contrôles pruning : scope à définir.** Mentionné par l'utilisateur
-  (2026-08-16) sous le label « E12 » — même remarque de collision potentielle
-  que ci-dessus tant que la numérotation n'est pas reconciliée avec la série
-  déjà utilisée par ailleurs dans ce dépôt (E11 = AirPhyNet). Nature exacte
-  des contrôles (ex. élagage aléatoire vs. par hétérophilie comme baseline de
-  comparaison ?) à clarifier avant chiffrage du nombre de runs.
-- **Chang-Zhu-Tan (CZT) — en cours ailleurs, pas par cette session.**
-  Pré-enregistrement fait (`PREREGISTRATION_CZT.md`, commit `dadb848`) :
-  h(D)=0.312 mesuré avant tout entraînement, prédictions P1/P2/P3 datées.
-  Collecte de données démarrée (`561f42e`, 22 stations CNEMC 2020-2023,
-  `01h_download_czt.py`) — téléchargement `data/czt_raw/` vu en cours/terminé
-  au moment de ce commit (1458 fichiers), non versionné ici (hors périmètre
-  P5, appartient à cette autre ligne de travail).
-- **AirPhyNet — étude de faisabilité déjà faite ailleurs (commit `51fd7f1`,
-  `external/AIRPHYNET_FEASIBILITY.md`), portage pas encore lancé (0/9 runs :
-  3 villes × 3 seeds).** Le clone `external/AirPhyNet` fait par cette session
-  (2026-08-16) était **redondant** avec ce travail déjà existant — l'étude de
-  faisabilité (reproduction <1% d'écart aux chiffres publiés, coûts mesurés,
-  14 modifications listées) est déjà disponible et plus avancée que le
-  simple clone.
+  seeds = 12 runs.
+- **E12 — contrôles pruning : élagage aléatoire à densité appariée + élagage
+  inverse** (garder les arêtes les plus hétérophiles au lieu des moins
+  hétérophiles). Nombre de runs à chiffrer une fois le protocole détaillé.
+- **E13 — Table 8 (over-smoothing/GAT) : 36 runs**, jamais lancés — 3 villes
+  × 4 variantes (linear1L, gcn1L, gcn2L, gat2L) × 3 seeds, topologie distance
+  uniquement. Coût par run inconnu (jamais chronométré, script jamais
+  exécuté jusqu'au bout avec sortie persistée).
+- **E14 — édition d'arêtes Beijing/London : 20 runs** — seeds 123/777 pour
+  Beijing et London (5 niveaux × 2 seeds × 2 villes). Madrid déjà complet
+  (E10).
+- **E15 — AirPhyNet, baseline post-2024** — session parallèle (pas cette
+  session). Étude de faisabilité déjà faite (`external/AIRPHYNET_FEASIBILITY.md`,
+  commit `51fd7f1` — labellisé « E11 » à l'époque, correspond en réalité à
+  E15, cf. note de correspondance dans `REVISION_BRIEF.md`) : reproduction à
+  <1 % des chiffres publiés, coûts mesurés, 14 modifications listées. Runs
+  non lancés (0/9 : 3 villes × 3 seeds). Le clone `external/AirPhyNet` fait
+  par cette session (2026-08-16) était redondant avec ce travail déjà
+  existant — sans impact (gitignoré), rien à corriger.
+- **E16 — Chang-Zhu-Tan (CZT), 4e réseau de validation externe de h(D)** —
+  session parallèle (pas cette session). Pré-enregistrement fait
+  (`PREREGISTRATION_CZT.md`, commit `dadb848`) : h(D)=0.312 mesuré avant tout
+  entraînement, prédictions P1/P2/P3 datées. Collecte de données démarrée
+  (`561f42e`, 22 stations CNEMC 2020-2023, `01h_download_czt.py`) — non
+  versionné ici, appartient à cette autre ligne de travail.
 
-**Total chiffré à ce stade : 36 (Table 8) + 20 (edge pruning Beijing/London)
-+ 12 (parité seeds SOTA) = 68 runs GCN/SOTA restants**, hors contrôles
-pruning/CZT/AirPhyNet dont le périmètre ou l'avancement dépend d'une autre
-ligne de travail déjà en cours sur ce dépôt (cf. avertissement ci-dessus sur
-la numérotation E11/E12).
+**Total chiffré à ce stade : 36 (E13) + 20 (E14) + 12 (E11) = 68 runs
+GCN/SOTA restants**, hors E12 (scope à détailler) et E15/E16 (pilotées par
+une autre session).
 
 ## P2 — Convention ddof=1 unique (Table 4 vs Table 7)
 

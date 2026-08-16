@@ -39,6 +39,11 @@ parce qu'aucune station n'y est exclue.
   Aucun script n'a sa propre liste en dur.
 - Entraînements longs : lancer en arrière-plan avec log horodaté, ne jamais
   bloquer la session.
+- **Toute nouvelle expérience prend son numéro dans la table ci-dessous
+  (« Numérotation des expériences »), jamais attribué localement par une
+  session.** Plusieurs sessions tournent en parallèle sur ce dépôt (cf.
+  cette section) ; un numéro attribué localement crée une collision dès
+  qu'une autre session en choisit un déjà pris.
 
 ## Décision d'agrégation MENDEZ ALVARO (P1, confirmée)
 
@@ -102,6 +107,32 @@ Sous la numérotation confirmée, Table 6 = ΔR² par station (un tableau
 différent) et la sensibilité k est désormais Table 7. Le contenu du script
 est correct (c'est bien de la sensibilité k), seul le label documentaire
 était périmé — corrigé.
+
+## Numérotation des expériences (E-series) — référence unique, toutes sessions
+
+Ce dépôt est travaillé par plusieurs sessions en parallèle (P5 — sensibilité
+k/pruning Madrid — n'est qu'une des lignes de travail en cours ; d'autres
+sessions avancent en parallèle sur AirPhyNet et Chang-Zhu-Tan, sur consigne
+directe de l'utilisateur, pas de collision de travail). Le numéro E<n> d'une
+expérience est fixé **ici** et nulle part ailleurs — un script, un commit ou
+un CHANGELOG ne doit jamais inventer son propre numéro localement.
+
+| N° | Expérience | Statut (2026-08-16) |
+|---|---|---|
+| E9  | Sensibilité k Madrid, 7 stations (k∈{3,8}×2 topo×3 seeds) | **FAIT** (P5) |
+| E10 | Pruning Madrid, 7 stations (5 niveaux×3 seeds) | **FAIT** (P5) |
+| E11 | Parité seeds STGCN/Graph WaveNet (2 modèles×3 villes×2 seeds, 12 runs) | à faire |
+| E12 | Contrôles pruning : élagage aléatoire à densité appariée + élagage inverse (garder les arêtes les plus hétérophiles) | à faire (scope de détail à préciser avant chiffrage des runs) |
+| E13 | Table 8, over-smoothing/GAT (3 villes×4 variantes×3 seeds, 36 runs) | jamais lancée |
+| E14 | Édition d'arêtes Beijing/London, seeds 123/777 (5 niveaux×2 seeds×2 villes, 20 runs) | à faire (Madrid déjà couvert par E10) |
+| E15 | AirPhyNet, baseline post-2024 | étude de faisabilité faite (reproduction <1% d'écart, coûts mesurés — `external/AIRPHYNET_FEASIBILITY.md`), runs non lancés (0/9 : 3 villes×3 seeds) — session parallèle |
+| E16 | Chang-Zhu-Tan, 4e réseau de validation externe de h(D) | pré-enregistrement fait (`PREREGISTRATION_CZT.md`, h(D)=0.312 mesuré avant entraînement), collecte de données en cours — session parallèle |
+
+**Note de correspondance** : le commit `51fd7f1` (« E11 faisabilité AirPhyNet »)
+utilisait un numéro provisoire attribué localement, avant que cette table ne
+soit figée. Il correspond en réalité à **E15**. Le commit n'est **pas
+réécrit** (historique git non modifié) — cette note fait foi pour toute
+lecture future du log.
 
 ## Schéma de `results/raw_results.csv`
 
