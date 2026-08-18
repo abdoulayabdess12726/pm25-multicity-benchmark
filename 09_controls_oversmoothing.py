@@ -324,12 +324,14 @@ def main():
     ap.add_argument("--city", required=True, choices=["beijing", "london", "madrid"])
     ap.add_argument("--topology", default="distance", choices=["distance", "correlation"])
     ap.add_argument("--data_dir", default=None, help="Beijing PRSA dir (optional override)")
+    ap.add_argument("--cpu", action="store_true",
+                    help="force device=cpu (évite la fuite mémoire MPS sur process long, cf. E3/NOTE.md)")
     args = ap.parse_args()
     if args.data_dir:
         global BEIJING_DIR
         BEIJING_DIR = args.data_dir
-    device = "mps" if torch.backends.mps.is_available() else (
-             "cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu" if args.cpu else ("mps" if torch.backends.mps.is_available() else (
+             "cuda" if torch.cuda.is_available() else "cpu"))
     print(f"\n=== {args.city.upper()} / {args.topology} / device={device} ===")
 
     variants = [("linear", 1), ("gcn", 1), ("gcn", 2), ("gat", 2)]

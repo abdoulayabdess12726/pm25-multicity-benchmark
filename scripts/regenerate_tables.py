@@ -298,10 +298,15 @@ def table3(df):
             sub = sub[sub.city == city]
             if len(sub) == 0:
                 rows.append([city.capitalize(), label, "correlation", "MISSING", "MISSING",
-                            "MISSING", "primary_seed"])
+                            "MISSING", "3seed_mean"])
                 continue
-            rows.append([city.capitalize(), label, "correlation", "", "",
-                        f"{sub.r2.iloc[0]:.4f}", "primary_seed"])
+            protocol = "3seed_mean" if len(sub) == 3 else "primary_seed"
+            if protocol == "3seed_mean":
+                m, s = agg_mean_std(sub.r2.values)
+                r2_str = f"{m:.4f} ± {s:.4f}"
+            else:
+                r2_str = f"{sub.r2.iloc[0]:.4f}"
+            rows.append([city.capitalize(), label, "correlation", "", "", r2_str, protocol])
     write_table("table3_external_baselines",
                "Table 3 — Baselines externes + SOTA (4 décimales)",
                ["City", "Model", "Topology", "MAE", "RMSE", "R²", "Provenance"], rows,

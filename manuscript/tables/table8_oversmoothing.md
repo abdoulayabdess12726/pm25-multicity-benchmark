@@ -1,3 +1,7 @@
 # Table 8 — Over-smoothing / GAT
 
-**MISSING DATA** — 0/36 conditions présentes dans results/raw_results.csv. Cette table ne peut pas être générée tant que les runs correspondants n'ont pas été exécutés (cf. CHANGELOG_TABLES.md, budget de calcul restant).
+| City | Linear (1L) | GCN (1L) | GCN (2L) | GAT (2L) |
+|---|---|---|---|---|
+| Beijing | 0.8790±0.0020 | 0.8852±0.0082 | 0.8825±0.0031 | 0.8619±0.0027 |
+| London | 0.6938±0.0202 | 0.2523±0.0122 | 0.1366±0.0077 | -0.0705±0.0220 |
+| Madrid | 0.6460±0.0050 | 0.4968±0.0086 | 0.4588±0.0037 | 0.3090±0.0045 |

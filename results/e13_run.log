@@ -1,0 +1,82 @@
+=== 2026-08-16 23:31:36 beijing/distance (4 variantes x 3 seeds) ===
+
+=== BEIJING / distance / device=cpu ===
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+
+variant        R2(mean+/-std)       dR2 vs Linear  Dirichlet(per layer)
+linear1L       0.8790 +/- 0.0020                    -
+gcn1L          0.8852 +/- 0.0082     +0.006         985.496
+gcn2L          0.8825 +/- 0.0031     +0.004         839.539,1408.830
+gat2L          0.8619 +/- 0.0027     -0.017         71.312,71.922
+
+[Over-smoothing control] 1-layer GCN < Linear  Wilcoxon p = 0.9939
+  -> if p<0.05 AND dR2<0, the underperformance is NOT a 2-layer over-smoothing artifact.
+Beijing chargé : 35064 timesteps, 12 stations, 5 features
+
+raw_results.csv : +156 lignes (run_id=09_controls_oversmoothing_beijing_distance_1786967788_22412702)
+=== 2026-08-17 13:56:30 london/distance (4 variantes x 3 seeds) ===
+
+=== LONDON / distance / device=cpu ===
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+
+variant        R2(mean+/-std)       dR2 vs Linear  Dirichlet(per layer)
+linear1L       0.6938 +/- 0.0202                    -
+gcn1L          0.2523 +/- 0.0122     -0.442         546.052
+gcn2L          0.1366 +/- 0.0077     -0.557         564.841,1385.917
+gat2L          -0.0705 +/- 0.0220     -0.764         22.687,14.015
+
+[Over-smoothing control] 1-layer GCN < Linear  Wilcoxon p = 0.0039
+  -> if p<0.05 AND dR2<0, the underperformance is NOT a 2-layer over-smoothing artifact.
+London chargé : 35064 timesteps, 8 stations, 5 features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)
+
+raw_results.csv : +108 lignes (run_id=09_controls_oversmoothing_london_distance_1787001791_a4e6ba9b)
+=== 2026-08-17 23:23:13 madrid/distance (4 variantes x 3 seeds) ===
+
+=== MADRID / distance / device=cpu ===
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+
+variant        R2(mean+/-std)       dR2 vs Linear  Dirichlet(per layer)
+linear1L       0.6460 +/- 0.0050                    -
+gcn1L          0.4968 +/- 0.0086     -0.149         737.708
+gcn2L          0.4588 +/- 0.0037     -0.187         718.241,946.945
+gat2L          0.3090 +/- 0.0045     -0.337         109.556,16.684
+
+[Over-smoothing control] 1-layer GCN < Linear  Wilcoxon p = 0.0078
+  -> if p<0.05 AND dR2<0, the underperformance is NOT a 2-layer over-smoothing artifact.
+Madrid charge : 35064 timesteps, 7 stations, 5 features (NO2 is per-station constant proxy).
+
+raw_results.csv : +96 lignes (run_id=09_controls_oversmoothing_madrid_distance_1787026986_4472aad3)
+E13_TOTAL_DUREE_S=111093 E13_TOTAL_DUREE_MIN=1851

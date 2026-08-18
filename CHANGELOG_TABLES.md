@@ -368,6 +368,169 @@ la prédiction P1.
    locale par station (cf. Étape 3 / `12_per_station_heterophily.py`) explique
    une partie de cette étendue, pas seulement le h(D) global de la ville.
 
+## E11 — parité seeds STGCN/Graph WaveNet (P5, validé 2026-08-16)
+
+12 runs (2 modèles × 3 villes × seeds 123/777, en plus du seed 42 déjà
+présent depuis E7). Table 3 : STGCN et Graph WaveNet passent de
+`primary_seed` (une seule ligne, seed 42) à `3seed_mean` (moyenne±écart-type
+ddof=1 sur 42/123/777), au même standard que les autres modèles stochastiques
+de la table (`scripts/regenerate_tables.py::table3()`, bloc STGCN/GWN
+réécrit pour utiliser `agg_mean_std` au lieu de `sub.r2.iloc[0]`).
+
+**Provenance du « au plus 0.011 » (résumé, §5.2, §6.1) — chiffre affiché
+inchangé, provenance à corriger.** L'avantage maximal d'un modèle graphe sur
+le Linear-Transformer, recalculé depuis les valeurs non arrondies sur
+moyennes 3 seeds (tous modèles graphe confondus — GCN-Transformer 2
+topologies, STGCN, Graph WaveNet — dans les 3 villes) : **0.010593**
+(Beijing / Graph WaveNet), contre 0.011351 au seed 42 seul (même
+ville/modèle). Les deux arrondissent à **0.011** — **le chiffre affiché ne
+change pas** — mais sa provenance change : ce n'est plus une valeur seed-42,
+c'est désormais une moyenne 3 seeds. **À corriger partout où « 0.011 »
+apparaît (résumé, §5.2, §6.1)** : remplacer la mention « seed 42 »/valeur
+seed-unique par « moyenne 3 seeds (42/123/777) » en note de provenance,
+sans toucher au chiffre 0.011 lui-même.
+
+**Nuance à traiter en §6.1, pas encore rédigée (attend E12 + E15) : Madrid /
+Graph WaveNet = +0.005622, positif.** Sur le réseau où le GCN-Transformer
+s'effondre le plus (ΔR² −0.32 à −0.40 selon la topologie), une architecture
+à adjacence *apprise* (Graph WaveNet) fait légèrement mieux que le
+Linear-Transformer — seul cas positif hors Beijing parmi les 12 combinaisons
+ville×modèle-graphe testées (cf. tableau de classement ci-dessous). C'est
+une nuance réelle du résultat négatif du papier : à documenter explicitement
+en §6.1 plutôt que de la laisser dans le seul tableau, pour qu'un relecteur
+ne la découvre pas de lui-même. **Ne pas rédiger §6.1 avant que E12
+(contrôles pruning) et E15 (AirPhyNet) aient donné leurs résultats** — la
+rédaction attend une vue d'ensemble, pas cette seule cellule.
+
+Classement complet, avantage vs Linear-Transformer (moyenne 3 seeds, non
+arrondi, tous modèles graphe × toutes villes) :
+
+| Rang | Ville / modèle | Avantage vs Linear |
+|---|---|---|
+| 1 | Beijing / Graph WaveNet | **+0.010593** |
+| 2 | Beijing / STGCN | +0.008769 |
+| 3 | **Madrid / Graph WaveNet** | **+0.005622** |
+| 4 | London / Graph WaveNet | +0.000239 |
+| 5 | London / STGCN | −0.000114 |
+| 6 | Beijing / GCN-Transformer (distance) | −0.017178 |
+| 7 | Madrid / STGCN | −0.019684 |
+| 8 | Beijing / GCN-Transformer (correlation) | −0.037517 |
+| 9 | Madrid / GCN-Transformer (distance) | −0.321297 |
+| 10 | London / GCN-Transformer (distance) | −0.375412 |
+| 11 | Madrid / GCN-Transformer (correlation) | −0.379538 |
+| 12 | London / GCN-Transformer (correlation) | −0.401444 |
+
+## E13 — Table 8, over-smoothing/GAT (P5, 2026-08-17/18) — CONTREDIT LE MANUSCRIT POUR BEIJING
+
+36 runs (3 villes × 4 variantes × 3 seeds, topologie distance uniquement,
+cf. Table 8 caption du manuscrit). **Cette table n'avait jamais eu de ligne
+persistée avant ce run** — c'est la première exécution reproductible.
+Variantes vérifiées contre le manuscrit (§6.2, paragraphe décrivant le
+contrôle : « single-layer GCN, the two-layer GCN, and a GAT variant ») avant
+lancement : linear1L/gcn1L/gcn2L/gat2L, correspondance confirmée.
+
+| Ville | Linear (1L) | GCN (1L) | GCN (2L) | GAT (2L) | ΔR² gcn1L vs Linear | Wilcoxon p (gcn1L<Linear) |
+|---|---|---|---|---|---|---|
+| Beijing | 0.8790±0.0020 | 0.8852±0.0082 | 0.8825±0.0031 | 0.8619±0.0027 | **+0.006** | **0.9939** |
+| London | 0.6938±0.0202 | 0.2523±0.0122 | 0.1366±0.0077 | −0.0705±0.0220 | −0.442 | 0.0039 |
+| Madrid | 0.6460±0.0050 | 0.4968±0.0086 | 0.4588±0.0037 | 0.3090±0.0045 | −0.149 | 0.0078 |
+
+**Comparaison à l'affirmation du manuscrit** (§6.2 : *« A single-layer GCN
+[...] already underperforms the baseline at every city (per-station
+Wilcoxon: London ΔR2 = −0.279, p = 0.004; Madrid −0.283, p = 0.008; Beijing
+−0.008, p = 0.005) »*) :
+
+- **Beijing — CONTREDIT, pas une simple divergence de magnitude.** Le
+  manuscrit affirme ΔR²=−0.008, p=0.005 (significatif, gcn1L pire que
+  Linear). Ce run donne ΔR²=**+0.006** (signe opposé), p=**0.9939** (non
+  significatif — au sens strict, gcn1L n'est même pas *pire* que Linear ici,
+  la comparaison va dans l'autre sens). Cohérent avec h(D) Beijing=0.497
+  (le réseau le moins hétérophile, peu d'arêtes hétérophiles à corrompre le
+  signal) mais **contredit le chiffre précis déjà écrit dans le texte**
+  utilisé pour l'argument central du §6.2 (« underperforms at every city »).
+- **London — même sens (significatif, gcn1L pire), magnitude très
+  différente.** Manuscrit ΔR²=−0.279 ; ce run ΔR²=−0.442 (58 % plus négatif).
+  p quasi identique (0.0039 vs 0.004 manuscrit).
+- **Madrid — même sens (significatif, gcn1L pire), magnitude très
+  différente.** Manuscrit ΔR²=−0.283 ; ce run ΔR²=−0.149 (quasi moitié moins
+  négatif). p quasi identique (0.0078 vs 0.008 manuscrit).
+
+**Point prioritaire (2026-08-18) : les MAGNITUDES divergent pour Londres/Madrid,
+pas seulement Beijing — un décalage de protocole donnerait un biais de même
+sens partout, ce n'est pas le cas ici (Londres plus négatif que le
+manuscrit, Madrid moins négatif).** Investigation menée, sans relancer aucun
+entraînement (consigne explicite) :
+
+1. **Recherche de −0.279/−0.283/−0.008 ailleurs dans le dépôt (autre ville,
+   variante gcn2L, autre topologie).** Grep textuel sur tout le dépôt
+   (hors `data/czt_raw`, `external`, `MSDGNN...`) : aucune occurrence sauf
+   dans ce CHANGELOG. `git log --all -S` (pickaxe) sur toute l'histoire :
+   aucun commit n'a jamais introduit ces valeurs, et aucun commit n'a jamais
+   touché `09_controls_oversmoothing.py` avant E13 — cohérent avec « cette
+   table n'a jamais eu de ligne persistée ». Recalcul exhaustif de tous les
+   ΔR² possibles (gcn1L/gcn2L/gat2L) × (Linear T8 propre / Linear T2
+   canonique) pour les 3 villes : **aucune combinaison ne reproduit les 3
+   valeurs du manuscrit simultanément** — seul un rapprochement isolé et
+   non systématique apparaît pour Beijing/gat2L vs Linear-T8 (−0.017,
+   proche de −0.008 mais pas exact, et ne concerne qu'une ville). Un
+   rapprochement numérique notable a été trouvé ailleurs : **Madrid
+   Table 7 (k-sensitivity) k=3/distance = −0.2828**, qui arrondit à
+   **−0.283** — coïncidence troublante avec la cible Madrid, mais dans une
+   table entièrement différente (sensibilité k, pas over-smoothing), et
+   surtout **cette valeur Table 7 vient d'être corrigée par E9 dans cette
+   même session P5** (ancienne valeur 6-station : −0.3019, pas −0.283) — le
+   manuscrit, rédigé avant E9, ne pouvait pas avoir cité ce chiffre. Très
+   probablement une coïncidence numérique, pas la source réelle.
+2. **Référence Linear vérifiée — confirmé, deux références distinctes
+   existent et sont substantiellement différentes.** Table 8 utilise sa
+   propre référence (`Linear-Transformer`, `variant=1layer`, une simple
+   couche `nn.Linear` + backbone temporel partagé) : R²=0.879/0.694/0.646
+   (Beijing/London/Madrid). Table 2 utilise le Linear-Transformer canonique
+   (architecture complète) : R²=0.949/0.842/0.814 — un modèle nettement
+   plus fort. Les deux références ont été testées comme dénominateur
+   possible pour les 3 variantes GCN (point 1 ci-dessus) : aucune ne
+   reproduit les chiffres du manuscrit, donc une confusion de référence
+   n'explique pas à elle seule l'écart, même si c'est une source d'erreur
+   réelle et maintenant documentée pour toute relecture future du script.
+3. **Aucune trace de l'exécution console d'origine.** Pas de log, notebook,
+   ou historique shell retrouvé dans ce dépôt. Cohérent avec le docstring du
+   script lui-même (« aggregate the printed mean +/- std into Table VI/VI.B »
+   — la transcription manuelle console→manuscrit était le flux prévu dès
+   l'origine, jamais un export automatisé).
+
+**Conclusion de l'investigation : source de −0.279/−0.283/−0.008 non
+identifiée.** Aucune reconstruction cohérente (autre variante, autre
+référence, autre table) ne reproduit les 3 valeurs simultanément. Le script
+`09_controls_oversmoothing.py` n'a jamais été modifié dans cette révision
+hors l'ajout du flag `--cpu` (P5), et rien ne prouve ni n'exclut une
+divergence de version antérieure à ce dépôt. **§6.2 ne doit pas être mis à
+jour tant que cette source n'est pas identifiée.**
+
+**Point positif à consigner : le mécanisme anti-over-smoothing tient,
+partiellement nuancé par h(D).** ⚠️ Attention, les valeurs h(D) à utiliser
+sont celles de la Table 1 (`manuscript/tables/table1_h_index.md`) :
+**Beijing 0.497, London 0.656, Madrid 0.728** — Beijing le plus homophile,
+Madrid le plus hétérophile (pas Beijing 0.497/Madrid 0.656/London 0.728
+comme indiqué dans une consigne du 2026-08-18 ; London et Madrid étaient
+inversées). Avec les valeurs correctes : Beijing (h=0.497, le plus
+homophile) a bien la dégradation gcn1L la plus faible (+0.006, même
+positive) — cohérent avec h(D). **Mais l'ordre Londres/Madrid ne suit PAS
+h(D) au sens strict** : Madrid a le h(D) le plus élevé (0.728 > 0.656) mais
+une dégradation gcn1L moins sévère (−0.149) que Londres (−0.442, h=0.656
+plus bas). **Ce n'est pas un artefact de la version simplifiée du contrôle
+over-smoothing** : le même renversement existe dans le modèle canonique
+(Table 2/4, GCN-Transformer complet) — London plus dégradée que Madrid dans
+les deux topologies (distance −0.375 vs −0.321 ; correlation −0.401 vs
+−0.380) malgré un h(D) plus faible. L'argument anti-over-smoothing lui-même
+n'est pas affaibli par ceci (un GCN 1-couche qui ne peut pas over-smooth
+dégrade quand même la performance à Londres et Madrid, l'essentiel du
+contrôle) — mais la formulation « l'ordre suit h(D) » serait inexacte telle
+quelle : h(D) sépare bien Beijing du reste, pas Londres de Madrid entre eux.
+À garder en tête pour la rédaction future (attend E12 + E15, comme déjà
+noté) : la relation h(D)↔dégradation n'est pas parfaitement monotone sur 3
+villes, seulement directionnellement correcte pour le point le plus extrême
+(Beijing).
+
 **Correctif de migration associé (P5)** : `migrate_k_sensitivity()` et
 `migrate_edge_pruning()` (`scripts/migrate_raw_results.py`) marquaient
 inconditionnellement Madrid k∈{3,8}/toutes les lignes de pruning comme

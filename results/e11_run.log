@@ -1,0 +1,101 @@
+=== 2026-08-16 13:06:47 beijing/stgcn/seed=123 ===
+[beijing/stgcn/seed=123] device=cpu n_nodes=12 (MENDEZ ALVARO n/a) edges=60 isolated=0 R2=0.9570 Linear_ref=0.9495  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=971 DUREE_MIN=16.2 RSS_GB=0.49 CSV_LIGNES=7
+     epoch   5 | val_loss=0.00063
+     epoch  10 | val_loss=0.00059
+     epoch  15 | val_loss=0.00052
+     epoch  20 | val_loss=0.00051
+   Early stop epoch 21 (val_loss=0.00050)
+=== 2026-08-16 13:23:04 beijing/stgcn/seed=777 ===
+[beijing/stgcn/seed=777] device=cpu n_nodes=12 (MENDEZ ALVARO n/a) edges=60 isolated=0 R2=0.9573 Linear_ref=0.9495  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=569 DUREE_MIN=9.5 RSS_GB=0.56 CSV_LIGNES=8
+     epoch   5 | val_loss=0.00048
+     epoch  10 | val_loss=0.00058
+   Early stop epoch 13 (val_loss=0.00048)
+=== 2026-08-16 13:32:37 london/stgcn/seed=123 ===
+[london/stgcn/seed=123] device=cpu n_nodes=8 (MENDEZ ALVARO n/a) edges=40 isolated=0 R2=0.8415 Linear_ref=0.8451
+DUREE_S=1013 DUREE_MIN=16.9 RSS_GB=0.44 CSV_LIGNES=9
+     epoch   5 | val_loss=0.00187
+     epoch  10 | val_loss=0.00224
+     epoch  15 | val_loss=0.00164
+     epoch  20 | val_loss=0.00206
+     epoch  25 | val_loss=0.00178
+   Early stop epoch 26 (val_loss=0.00163)
+=== 2026-08-16 13:49:41 london/stgcn/seed=777 ===
+[london/stgcn/seed=777] device=cpu n_nodes=8 (MENDEZ ALVARO n/a) edges=40 isolated=0 R2=0.8370 Linear_ref=0.8451
+DUREE_S=413 DUREE_MIN=6.9 RSS_GB=0.53 CSV_LIGNES=10
+     epoch   5 | val_loss=0.00169
+     epoch  10 | val_loss=0.00181
+   Early stop epoch 13 (val_loss=0.00169)
+=== 2026-08-16 13:56:38 madrid/stgcn/seed=123 ===
+[madrid/stgcn/seed=123] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=24 isolated=1 R2=0.8134 Linear_ref=0.8135
+DUREE_S=1010 DUREE_MIN=16.8 RSS_GB=0.51 CSV_LIGNES=11
+     epoch   5 | val_loss=0.00338
+     epoch  10 | val_loss=0.00269
+     epoch  15 | val_loss=0.00270
+     epoch  20 | val_loss=0.00254
+     epoch  25 | val_loss=0.00264
+   Early stop epoch 28 (val_loss=0.00254)
+=== 2026-08-16 14:13:33 madrid/stgcn/seed=777 ===
+[madrid/stgcn/seed=777] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=24 isolated=1 R2=0.7814 Linear_ref=0.8135
+DUREE_S=415 DUREE_MIN=6.9 RSS_GB=0.38 CSV_LIGNES=12
+     epoch   5 | val_loss=0.00256
+     epoch  10 | val_loss=0.00262
+   Early stop epoch 13 (val_loss=0.00256)
+=== 2026-08-16 14:20:34 beijing/graphwavenet/seed=123 ===
+[beijing/graphwavenet/seed=123] device=cpu n_nodes=12 (MENDEZ ALVARO n/a) edges=60 isolated=0 R2=0.9578 Linear_ref=0.9495  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=2204 DUREE_MIN=36.7 RSS_GB=0.61 CSV_LIGNES=13
+     epoch   5 | val_loss=0.00049
+     epoch  10 | val_loss=0.00052
+     epoch  15 | val_loss=0.00049
+   Early stop epoch 15 (val_loss=0.00045)
+=== 2026-08-16 14:57:23 beijing/graphwavenet/seed=777 ===
+[beijing/graphwavenet/seed=777] device=cpu n_nodes=12 (MENDEZ ALVARO n/a) edges=60 isolated=0 R2=0.9609 Linear_ref=0.9495  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=14196 DUREE_MIN=236.6 RSS_GB=0.54 CSV_LIGNES=14
+     epoch   5 | val_loss=0.00057
+     epoch  10 | val_loss=0.00043
+     epoch  15 | val_loss=0.00043
+     epoch  20 | val_loss=0.00042
+     epoch  25 | val_loss=0.00049
+   Early stop epoch 28 (val_loss=0.00042)
+=== 2026-08-16 18:54:03 london/graphwavenet/seed=123 ===
+[london/graphwavenet/seed=123] device=cpu n_nodes=8 (MENDEZ ALVARO n/a) edges=40 isolated=0 R2=0.8517 Linear_ref=0.8451  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=4451 DUREE_MIN=74.2 RSS_GB=0.57 CSV_LIGNES=15
+     epoch   5 | val_loss=0.00174
+     epoch  10 | val_loss=0.00169
+     epoch  15 | val_loss=0.00198
+     epoch  20 | val_loss=0.00165
+     epoch  25 | val_loss=0.00167
+     epoch  30 | val_loss=0.00164
+     epoch  35 | val_loss=0.00163
+     epoch  40 | val_loss=0.00158
+     epoch  45 | val_loss=0.00177
+     epoch  50 | val_loss=0.00163
+   Early stop epoch 50 (val_loss=0.00157)
+=== 2026-08-16 20:08:19 london/graphwavenet/seed=777 ===
+[london/graphwavenet/seed=777] device=cpu n_nodes=8 (MENDEZ ALVARO n/a) edges=40 isolated=0 R2=0.8362 Linear_ref=0.8451
+DUREE_S=4523 DUREE_MIN=75.4 RSS_GB=0.56 CSV_LIGNES=16
+     epoch   5 | val_loss=0.00220
+     epoch  10 | val_loss=0.00196
+     epoch  15 | val_loss=0.00166
+     epoch  20 | val_loss=0.00165
+   Early stop epoch 20 (val_loss=0.00163)
+=== 2026-08-16 21:23:46 madrid/graphwavenet/seed=123 ===
+[madrid/graphwavenet/seed=123] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=24 isolated=1 R2=0.8202 Linear_ref=0.8135  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=3357 DUREE_MIN=55.9 RSS_GB=0.56 CSV_LIGNES=17
+     epoch   5 | val_loss=0.00267
+     epoch  10 | val_loss=0.00291
+     epoch  15 | val_loss=0.00283
+     epoch  20 | val_loss=0.00262
+     epoch  25 | val_loss=0.00258
+     epoch  30 | val_loss=0.00260
+   Early stop epoch 33 (val_loss=0.00258)
+=== 2026-08-16 22:19:47 madrid/graphwavenet/seed=777 ===
+[madrid/graphwavenet/seed=777] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=24 isolated=1 R2=0.8203 Linear_ref=0.8135  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=4181 DUREE_MIN=69.7 RSS_GB=0.56 CSV_LIGNES=18
+     epoch   5 | val_loss=0.00270
+     epoch  10 | val_loss=0.00259
+     epoch  15 | val_loss=0.00261
+     epoch  20 | val_loss=0.00259
+   Early stop epoch 24 (val_loss=0.00257)
+E11_TOTAL_DUREE_S=37367 E11_TOTAL_DUREE_MIN=622
