@@ -498,38 +498,50 @@ entraînement (consigne explicite) :
    — la transcription manuelle console→manuscrit était le flux prévu dès
    l'origine, jamais un export automatisé).
 
-**Conclusion de l'investigation : source de −0.279/−0.283/−0.008 non
-identifiée.** Aucune reconstruction cohérente (autre variante, autre
-référence, autre table) ne reproduit les 3 valeurs simultanément. Le script
+**Conclusion de l'investigation (close, 2026-08-18) : source de
+−0.279/−0.283/−0.008 non identifiée — trois pistes épuisées.** Ceci est une
+conclusion, pas un échec d'investigation : (1) recherche textuelle +
+`git log --all -S` sur tout le dépôt et son historique — rien ; (2) toutes
+les combinaisons (variante × référence Linear T2/T8, 3 villes) testées —
+aucune ne reproduit les 3 valeurs simultanément ; (3) aucune trace de
+log/notebook/historique shell de l'exécution console d'origine. Le script
 `09_controls_oversmoothing.py` n'a jamais été modifié dans cette révision
-hors l'ajout du flag `--cpu` (P5), et rien ne prouve ni n'exclut une
-divergence de version antérieure à ce dépôt. **§6.2 ne doit pas être mis à
-jour tant que cette source n'est pas identifiée.**
+hors l'ajout du flag `--cpu` (P5). **§6.2 ne doit pas être mis à jour tant
+que cette source n'est pas identifiée — aucune investigation
+supplémentaire prévue à ce stade.**
 
-**Point positif à consigner : le mécanisme anti-over-smoothing tient,
-partiellement nuancé par h(D).** ⚠️ Attention, les valeurs h(D) à utiliser
-sont celles de la Table 1 (`manuscript/tables/table1_h_index.md`) :
-**Beijing 0.497, London 0.656, Madrid 0.728** — Beijing le plus homophile,
-Madrid le plus hétérophile (pas Beijing 0.497/Madrid 0.656/London 0.728
-comme indiqué dans une consigne du 2026-08-18 ; London et Madrid étaient
-inversées). Avec les valeurs correctes : Beijing (h=0.497, le plus
-homophile) a bien la dégradation gcn1L la plus faible (+0.006, même
-positive) — cohérent avec h(D). **Mais l'ordre Londres/Madrid ne suit PAS
-h(D) au sens strict** : Madrid a le h(D) le plus élevé (0.728 > 0.656) mais
-une dégradation gcn1L moins sévère (−0.149) que Londres (−0.442, h=0.656
-plus bas). **Ce n'est pas un artefact de la version simplifiée du contrôle
-over-smoothing** : le même renversement existe dans le modèle canonique
-(Table 2/4, GCN-Transformer complet) — London plus dégradée que Madrid dans
-les deux topologies (distance −0.375 vs −0.321 ; correlation −0.401 vs
-−0.380) malgré un h(D) plus faible. L'argument anti-over-smoothing lui-même
-n'est pas affaibli par ceci (un GCN 1-couche qui ne peut pas over-smooth
-dégrade quand même la performance à Londres et Madrid, l'essentiel du
-contrôle) — mais la formulation « l'ordre suit h(D) » serait inexacte telle
-quelle : h(D) sépare bien Beijing du reste, pas Londres de Madrid entre eux.
-À garder en tête pour la rédaction future (attend E12 + E15, comme déjà
-noté) : la relation h(D)↔dégradation n'est pas parfaitement monotone sur 3
-villes, seulement directionnellement correcte pour le point le plus extrême
-(Beijing).
+## Point de rédaction §6.3 — h(D) prédit le signe/l'ampleur, pas un classement strict (préexistant, pas un artefact E13)
+
+**Le renversement Madrid/London existe DÉJÀ dans la Table 2 du manuscrit
+soumis** — ce n'est pas un artefact du contrôle over-smoothing simplifié
+d'E13, découvert en creusant E13 mais présent indépendamment. Valeurs h(D)
+(Table 1, `manuscript/tables/table1_h_index.md`) : **Beijing 0.497, London
+0.656, Madrid 0.728** — Madrid est le réseau le plus hétérophile des trois,
+pas Londres.
+
+Or, dans la Table 2 du manuscrit (GCN-Transformer canonique, ΔR² vs
+Linear-Transformer, 3 seeds) : **London dégrade davantage que Madrid dans
+les deux topologies** (distance −0.375 vs −0.321 ; correlation −0.401 vs
+−0.380), malgré un h(D) plus faible (0.656 < 0.728). Le même renversement
+réapparaît dans le contrôle over-smoothing d'E13 (gcn1L : London −0.442 vs
+Madrid −0.149) — cohérence entre les deux modèles, qui exclut un artefact
+de l'architecture simplifiée du contrôle.
+
+**Portée exacte, à ne pas surstate** : sur 3 réseaux, h(D) sépare
+correctement Beijing (le plus homophile, la dégradation la plus faible,
+voire nulle/positive) du groupe {London, Madrid} (tous deux nettement
+dégradés) — le signe et l'ordre de grandeur de l'effet sont bien prédits.
+Ce que h(D) ne produit PAS, c'est un classement strict entre London et
+Madrid : leurs h(D) sont proches (0.656 vs 0.728) et leur ΔR² observé va
+dans le sens inverse de leur écart de h(D).
+
+**À énoncer nous-mêmes en §6.3 comme limite de l'indice, plutôt que de
+laisser un relecteur la trouver** — cohérent avec le repli déjà prévu sur
+« indicateur diagnostique préliminaire » (R2.1) plutôt qu'un prédicteur
+quantitatif strict. **Rédaction non faite maintenant** (consigne explicite,
+2026-08-18) — ce point attend la même vue d'ensemble qu'E11's nuance
+Madrid/GraphWaveNet (E12 + E15), pas de modification du manuscrit à ce
+stade.
 
 **Correctif de migration associé (P5)** : `migrate_k_sensitivity()` et
 `migrate_edge_pruning()` (`scripts/migrate_raw_results.py`) marquaient
