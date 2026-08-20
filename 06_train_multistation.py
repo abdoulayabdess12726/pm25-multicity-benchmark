@@ -121,7 +121,22 @@ def build_graph(k=K_NEIGHBORS):
 
 
 def build_correlation_graph(data, k=K_NEIGHBORS, threshold=0.0):
-    """Construit un graphe basé sur la corrélation PM2.5 entre stations."""
+    """Construit un graphe basé sur la corrélation PM2.5 entre stations.
+
+    Politique pour une corrélation indéfinie (NaN, variance nulle sur la
+    période passée — ex. Madrid/MENDEZ ALVARO en train) : un candidat NaN
+    n'occupe jamais un rang de voisin ; le candidat réel suivant est promu
+    à sa place, comme l'exige le §4.2 du manuscrit (« k plus corrélés »,
+    pas « k premiers du tri, indéfinis compris »). Une station dont TOUTES
+    les corrélations sont indéfinies (aucun pair réellement corrélé,
+    par définition) reçoit ZÉRO voisin — elle est isolée, ce n'est pas un
+    défaut de sélection mais l'absence réelle de tout pair mesurable.
+    Correctif P5 (cf. CHANGELOG_TABLES.md) : avant ce correctif,
+    `np.argsort(corr[i])[::-1]` plaçait les NaN en tête du tri décroissant,
+    consommant un rang de voisin sans jamais le réattribuer — Madrid
+    perdait ainsi 11/35 arêtes à k=5 (MENDEZ ALVARO totalement isolée, les
+    6 autres stations à 4 voisins réels au lieu de 5). Beijing/London n'ont
+    aucune station à corrélation indéfinie, non affectés."""
     feat_idx = FEATURES.index('PM2.5')
     pm25 = data[:, :, feat_idx]
 
@@ -138,7 +153,11 @@ def build_correlation_graph(data, k=K_NEIGHBORS, threshold=0.0):
     src, dst, wts = [], [], []
     k_eff = min(k, N_STATIONS - 1)
     for i in range(N_STATIONS):
-        neighbors = np.argsort(corr[i])[::-1][:k_eff]
+        row = corr[i]
+        valid = np.isfinite(row)                       # exclut self (-inf) et corrélations indéfinies (NaN)
+        masked = np.where(valid, row, -np.inf)
+        n_take = min(k_eff, int(valid.sum()))
+        neighbors = np.argsort(masked)[::-1][:n_take]
         for j in neighbors:
             if corr[i, j] > threshold:
                 src.append(i); dst.append(j)

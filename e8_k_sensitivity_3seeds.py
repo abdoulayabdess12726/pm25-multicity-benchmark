@@ -208,7 +208,7 @@ def run_single(city, topology, k, seed, cpu=True, force_retrain=False):
     if n_edges > exp_max or n_edges == 0:
         raise RuntimeError(f"{city}/{topology} k={k}: n_edges={n_edges} incohérent (max {exp_max})")
 
-    if k == 5:
+    if k == 5 and not force_retrain:
         r2_gcn = ref_r2_from_json(c, "GCN+Transformer", topology, seed)
         src = "json(k5)"
     elif seed == 42 and not force_retrain:
@@ -221,7 +221,12 @@ def run_single(city, topology, k, seed, cpu=True, force_retrain=False):
         src = "archive(seed42)"
     else:
         r2_gcn = train_gcn_r2(b, c, ei, ew, device, seed)
-        src = "recompute" if not (seed == 42 and force_retrain) else "recompute(force, était archive(seed42))"
+        if k == 5 and force_retrain:
+            src = "recompute(force, était json(k5) — correctif build_correlation_graph P5)"
+        elif seed == 42 and force_retrain:
+            src = "recompute(force, était archive(seed42))"
+        else:
+            src = "recompute"
 
     row = dict(city=city, topology=topology, k=k, seed=seed, n_edges=n_edges,
                R2_gcn=round(r2_gcn, 4), R2_linear_ref=round(lin, 4),
