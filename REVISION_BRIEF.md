@@ -121,10 +121,10 @@ un CHANGELOG ne doit jamais inventer son propre numéro localement.
 |---|---|---|
 | E9  | Sensibilité k Madrid, 7 stations (k∈{3,8}×2 topo×3 seeds) | **FAIT** (P5) |
 | E10 | Pruning Madrid, 7 stations (5 niveaux×3 seeds) | **FAIT** (P5) |
-| E11 | Parité seeds STGCN/Graph WaveNet (2 modèles×3 villes×2 seeds, 12 runs) | à faire |
-| E12 | Contrôles pruning : élagage aléatoire à densité appariée + élagage inverse (garder les arêtes les plus hétérophiles) | à faire (scope de détail à préciser avant chiffrage des runs) |
+| E11 | Parité seeds STGCN/Graph WaveNet (2 modèles×3 villes×2 seeds, 12 runs) | **FAIT** (P5) |
+| E12 | Contrôles pruning : élagage aléatoire à densité appariée + élagage inverse (garder les arêtes les plus hétérophiles) | **FAIT** (P5) — niveaux réduits à {0.75, 0.25} (budget), 5 tirages aléatoires |
 | E13 | Table 8, over-smoothing/GAT (3 villes×4 variantes×3 seeds, 36 runs) | jamais lancée |
-| E14 | Édition d'arêtes Beijing/London, seeds 123/777 (5 niveaux×2 seeds×2 villes, 20 runs) | à faire (Madrid déjà couvert par E10) |
+| E14 | Édition d'arêtes Beijing/London, seeds 123/777 (5 niveaux×2 seeds×2 villes, 20 runs) | **FAIT** (P5) |
 | E15 | AirPhyNet, baseline post-2024 | étude de faisabilité faite (reproduction <1% d'écart, coûts mesurés — `external/AIRPHYNET_FEASIBILITY.md`), runs non lancés (0/9 : 3 villes×3 seeds) — session parallèle |
 | E16 | Chang-Zhu-Tan, 4e réseau de validation externe de h(D) | pré-enregistrement fait (`PREREGISTRATION_CZT.md`, h(D)=0.312 mesuré avant entraînement), collecte de données en cours — session parallèle |
 

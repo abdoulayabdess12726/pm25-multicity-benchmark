@@ -1,0 +1,141 @@
+=== 2026-08-18 11:56:10 beijing/keep=1.0/seed=123 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep=100% ( 60 arêtes) seed 123: R2=0.9301
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (243 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787049834_30f5fdf4)
+=== 2026-08-18 12:43:57 beijing/keep=1.0/seed=777 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep=100% ( 60 arêtes) seed 777: R2=0.9323
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (256 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787084844_c176928e)
+=== 2026-08-18 22:27:27 beijing/keep=0.75/seed=123 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep= 75% ( 45 arêtes) seed 123: R2=0.9299
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (269 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787087570_e74f5d1f)
+=== 2026-08-18 23:12:53 beijing/keep=0.75/seed=777 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep= 75% ( 45 arêtes) seed 777: R2=0.9325
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (282 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787095154_36c0673f)
+=== 2026-08-19 01:19:17 beijing/keep=0.5/seed=123 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep= 50% ( 30 arêtes) seed 123: R2=0.9398
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (295 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787097954_a08dcbae)
+=== 2026-08-19 02:05:56 beijing/keep=0.5/seed=777 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep= 50% ( 30 arêtes) seed 777: R2=0.9413
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (308 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787105142_69556b79)
+=== 2026-08-19 04:05:45 beijing/keep=0.25/seed=123 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep= 25% ( 15 arêtes) seed 123: R2=0.9445
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (321 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787111951_3f7ce7cc)
+=== 2026-08-19 05:59:14 beijing/keep=0.25/seed=777 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep= 25% ( 15 arêtes) seed 777: R2=0.9440
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (334 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787118493_20f9927d)
+=== 2026-08-19 07:48:16 beijing/keep=0.0/seed=123 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep=  0% (  0 arêtes) seed 123: R2=0.9452
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (347 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787121314_d33bde9e)
+=== 2026-08-19 08:35:17 beijing/keep=0.0/seed=777 ===
+
+[beijing] 12 nœuds, 60 arêtes (distance k=5)
+  keep=  0% (  0 arêtes) seed 777: R2=0.9462
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (360 lignes ; +13)
+raw_results.csv : +13 lignes (run_id=13_edge_pruning_1787127895_1a908ec3)
+=== 2026-08-19 10:24:58 london/keep=1.0/seed=123 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep=100% ( 40 arêtes) seed 123: R2=0.4759
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (369 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787134604_d78e42d9)
+=== 2026-08-19 12:16:46 london/keep=1.0/seed=777 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep=100% ( 40 arêtes) seed 777: R2=0.4504
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (378 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787138750_3d1ec939)
+=== 2026-08-19 13:25:52 london/keep=0.75/seed=123 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep= 75% ( 30 arêtes) seed 123: R2=0.6038
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (387 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787142881_aa41a24d)
+=== 2026-08-19 14:34:44 london/keep=0.75/seed=777 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep= 75% ( 30 arêtes) seed 777: R2=0.5813
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (396 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787147203_34bdb0dd)
+=== 2026-08-19 15:46:48 london/keep=0.5/seed=123 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep= 50% ( 20 arêtes) seed 123: R2=0.6132
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (405 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787148636_464df214)
+=== 2026-08-19 16:10:38 london/keep=0.5/seed=777 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep= 50% ( 20 arêtes) seed 777: R2=0.6249
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (414 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787152645_cb51d8a3)
+=== 2026-08-19 17:17:27 london/keep=0.25/seed=123 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep= 25% ( 10 arêtes) seed 123: R2=0.7318
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (423 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787155547_36e24106)
+=== 2026-08-19 18:05:49 london/keep=0.25/seed=777 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep= 25% ( 10 arêtes) seed 777: R2=0.7398
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (432 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787159616_b87ddf8e)
+=== 2026-08-19 19:13:38 london/keep=0.0/seed=123 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep=  0% (  0 arêtes) seed 123: R2=0.7904
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (441 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787162507_fa3e72e8)
+=== 2026-08-19 20:01:49 london/keep=0.0/seed=777 ===
+
+[london] 8 nœuds, 40 arêtes (distance k=5)
+  keep=  0% (  0 arêtes) seed 777: R2=0.7895
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/edge_pruning.csv  (450 lignes ; +9)
+raw_results.csv : +9 lignes (run_id=13_edge_pruning_1787165077_b5d0e94b)
+E14_TOTAL_DUREE_S=118111 E14_TOTAL_DUREE_MIN=1968

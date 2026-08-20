@@ -559,3 +559,112 @@ Beijing/London seeds 123/777 pour l'ancre de pruning, hors périmètre P5).
 **Non modifié** : Beijing et London (aucune exclusion n'y a jamais été
 appliquée, tous les scripts chargeaient déjà la totalité des stations pour
 ces deux villes).
+
+## E14 — édition d'arêtes Beijing/London, seeds 123/777 (P5, 2026-08-19)
+
+20 runs (2 villes × 5 niveaux × seeds 123/777, script `13_edge_pruning.py`
+inchangé). Complète les 4 MISSING DATA de l'ancre de pruning (Beijing/London
+seeds 123/777) et met la courbe de pruning à parité de 3 seeds avec Madrid
+(déjà acquis depuis E10). **Assertions bloquantes : 25 PASS / 0 FAIL / 0
+MISSING DATA (25/25) — complet pour la première fois ce cycle.**
+
+## E12 — contrôles de pruning : aléatoire à densité appariée + inverse (P5, 2026-08-20)
+
+Nouveau script `15_pruning_controls.py` (réutilise `get_city`/`prune`/
+`train_eval`/`metrics_rows` de `13_edge_pruning.py` par import, aucune
+logique de calcul existante modifiée). Deux stratégies de contrôle,
+appariées en densité (même nombre d'arêtes conservées) avec le pruning
+guidé : (1) **aléatoire** — sous-ensemble uniforme sans remise, 5 tirages
+indépendants (seeds 1001-1005, hors bande des seeds canoniques 42/123/777,
+un seed contrôlant à la fois la sélection d'arêtes et l'entraînement du
+tirage) ; (2) **inverse** — retire les arêtes les plus homophiles
+(corrélées) d'abord, exact opposé du guidé, protocole standard 3 seeds.
+
+**Réduction de budget assumée** (consigne explicite : réduire les niveaux,
+pas les tirages) : niveaux intermédiaires réduits à {0.75, 0.25} au lieu
+des 5 canoniques — les niveaux 1.0/0.0 sont partagés avec le guidé
+(identiques par construction à ces extrêmes, aucune donnée dupliquée). 48
+entraînements au total (3 villes × 2 niveaux × (5 tirages + 3 seeds)),
+3172 min (~52,9h). Figure : `figures/pruning_controls.png`
+(`16_pruning_controls_figure.py`), 3 courbes par ville + Linear-Transformer
+en pointillés.
+
+### Ce qui est tenu constant (degré effectif) vs ce qui diffère (magnitude des messages)
+
+Degré effectif identique par construction entre les 3 stratégies à un
+niveau donné (densité appariée) ; magnitude moyenne des messages (= moyenne
+des edge_weight conservés, le coefficient de pondération GCN) diffère
+nettement et dans le sens attendu (guidé > aléatoire > inverse, puisque
+guidé garde les arêtes les plus fortement corrélées) :
+
+| Ville | Niveau | Degré effectif (identique) | Magnitude guidé | Magnitude aléatoire (moy. 5 tirages) | Magnitude inverse |
+|---|---|---|---|---|---|
+| Beijing | 75% | 3.75 | 0.4306 | 0.3311 | 0.2316 |
+| Beijing | 25% | 1.25 | 0.6289 | 0.3431 | 0.0318 |
+| London | 75% | 3.75 | 0.3050 | 0.3097 | 0.3365 |
+| London | 25% | 1.25 | 0.2230 | 0.2694 | 0.3176 |
+| Madrid | 75% | 3.71 | 0.2780 | 0.2598 | 0.2289 |
+| Madrid | 25% | 1.29 | 0.3683 | 0.2513 | 0.2119 |
+
+(London/Madrid : la magnitude guidé/aléatoire/inverse est plus resserrée
+qu'à Beijing — cohérent avec un réseau globalement plus hétérophile, où
+même les arêtes "les plus corrélées" du guidé ne sont pas très corrélées
+en absolu.)
+
+### R² par ville, niveau, stratégie (moyenne, ddof=1)
+
+| Ville | Niveau | Guidé | Aléatoire (5 tirages) | Inverse (3 seeds) |
+|---|---|---|---|---|
+| Beijing | 75% | 0.9316±0.0015 | 0.9323±0.0021 | 0.9325±0.0018 |
+| Beijing | 25% | 0.9442±0.0003 | 0.9366±0.0033 | 0.9445±0.0008 |
+| London | 75% | **0.5859**±0.0161 | 0.4766±0.0349 | 0.4833±0.0090 |
+| London | 25% | **0.7357**±0.0040 | 0.6439±0.0580 | 0.5829±0.0074 |
+| Madrid | 75% | 0.5051±0.0086 | 0.4937±0.0393 | **0.5827**±0.0216 |
+| Madrid | 25% | 0.5896±0.0078 | 0.6088±0.0888 | **0.6409**±0.0614 |
+
+### Résultat par rapport à la prédiction (guidé > aléatoire > inverse) — rapporté tel quel, pas de collapse généralisé mais Madrid contredit franchement
+
+- **Beijing** : les 3 stratégies indiscernables (réseau trop homophile —
+  h(D)=0.497 — pour que l'ordre des arêtes retirées fasse une différence
+  mesurable). Résultat neutre, ni confirme ni infirme.
+- **London (h(D)=0.656)** : **confirme la prédiction** — guidé > aléatoire >
+  inverse aux deux niveaux, écarts nets (guidé bat aléatoire de +0.109 à
+  75%, +0.092 à 25% ; aléatoire bat inverse de +0.061 à 25%, quasi égal à
+  75%). Le mécanisme (récupération vient de la suppression des arêtes
+  hétérophiles, pas de la réduction de densité) tient clairement pour cette
+  ville.
+- **Madrid (h(D)=0.728, le réseau le plus hétérophile) : CONTREDIT
+  FRANCHEMENT LA PRÉDICTION.** Inverse (0.5827/0.6409) bat guidé
+  (0.5051/0.5896) aux deux niveaux — l'exact opposé de l'ordre prédit.
+
+**Investigation menée avant de rapporter (pas un cadrage qui sauve la
+conclusion — vérification que ce n'est pas un artefact avant de conclure) :**
+suspicion initiale que MENDEZ ALVARO (dont les corrélations train sont
+quasi nulles avec tout le monde, donc classée arête "maximalement
+hétérophile" par construction plutôt que par une vraie relation spatiale)
+soit isolée sous guidé (degré=0 vérifié dès 75%, contre degré=5 conservé
+sous inverse) et fasse basculer l'agrégat. **Écartée** : en excluant
+MENDEZ ALVARO, l'écart persiste et **s'aggrandit** sur les 6 autres
+stations (guidé 0.459 vs inverse 0.563 à 75% ; 0.556 vs 0.637 à 25%).
+MENDEZ ALVARO est en fait la SEULE station de Madrid qui va dans le sens
+prédit (guidé meilleur pour elle : R²≈0.72-0.75 isolée vs 0.34-0.64 sous
+inverse, cohérent avec le fait qu'elle n'a jamais eu besoin du graphe,
+cf. P1) — elle atténue le renversement au niveau agrégat, elle ne
+l'explique pas. La cause du renversement Madrid reste ouverte (7 stations
+seulement, `n=3` seeds par condition — échantillon petit ; graphe très
+clairsemé aux niveaux testés, 9 arêtes sur 7 nœuds à 25% — la structure
+fine du sous-graphe pourrait dominer davantage que l'hétérophilie moyenne
+à cette taille).
+
+**Conséquence pour §6.2.1** : l'argument causal actuel (« pruning guidé
+par hétérophilie récupère la performance, donc l'hétérophilie est bien la
+cause ») **ne peut plus être énoncé comme universel sur les 3 villes**.
+Il tient pour Londres, est neutre pour Beijing, et est contredit pour
+Madrid. §6.2.1 nécessite une révision — **pas une réécriture complète**
+(le mécanisme n'est pas invalidé partout, contrairement au scénario du
+collapse généralisé qui aurait fait s'effondrer aléatoire au niveau de
+guidé dans les 3 villes, ce qui n'est PAS ce qu'on observe), mais la
+formulation ne peut plus prétendre à une causalité uniforme. **Rédaction
+non faite maintenant** — attend une décision sur la formulation
+(nuancer par ville ? approfondir la cause Madrid avant §6.2.1 ? cf.
+discussion à avoir).

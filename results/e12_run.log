@@ -1,0 +1,133 @@
+=== 2026-08-18 12:07:34 beijing/keep=0.75/random (5 tirages) ===
+
+[beijing] 12 noeuds, 60 aretes de base (distance k=5)
+  [random] keep= 75% tirage 0 (seed=1001) deg_eff=3.75 msg_mag=0.323 R2=0.9319
+  [random] keep= 75% tirage 1 (seed=1002) deg_eff=3.75 msg_mag=0.320 R2=0.9328
+  [random] keep= 75% tirage 2 (seed=1003) deg_eff=3.75 msg_mag=0.327 R2=0.9324
+  [random] keep= 75% tirage 3 (seed=1004) deg_eff=3.75 msg_mag=0.334 R2=0.9293
+  [random] keep= 75% tirage 4 (seed=1005) deg_eff=3.75 msg_mag=0.351 R2=0.9351
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (65 lignes ; +65)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (5 lignes)
+raw_results.csv : +65 lignes (run_id=15_pruning_controls_1787100492_a1af0c98)
+=== 2026-08-19 02:48:16 beijing/keep=0.75/inverse (3 seeds) ===
+
+[beijing] 12 noeuds, 60 aretes de base (distance k=5)
+  [inverse] keep= 75% seed=42 deg_eff=3.75 msg_mag=0.232 R2=0.9338
+  [inverse] keep= 75% seed=123 deg_eff=3.75 msg_mag=0.232 R2=0.9304
+  [inverse] keep= 75% seed=777 deg_eff=3.75 msg_mag=0.232 R2=0.9332
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (104 lignes ; +39)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (6 lignes)
+raw_results.csv : +39 lignes (run_id=15_pruning_controls_1787115870_0221753d)
+=== 2026-08-19 07:04:33 beijing/keep=0.25/random (5 tirages) ===
+
+[beijing] 12 noeuds, 60 aretes de base (distance k=5)
+  [random] keep= 25% tirage 0 (seed=1001) deg_eff=1.25 msg_mag=0.255 R2=0.9398
+  [random] keep= 25% tirage 1 (seed=1002) deg_eff=1.25 msg_mag=0.308 R2=0.9326
+  [random] keep= 25% tirage 2 (seed=1003) deg_eff=1.25 msg_mag=0.440 R2=0.9345
+  [random] keep= 25% tirage 3 (seed=1004) deg_eff=1.25 msg_mag=0.312 R2=0.9400
+  [random] keep= 25% tirage 4 (seed=1005) deg_eff=1.25 msg_mag=0.401 R2=0.9360
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (169 lignes ; +65)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (11 lignes)
+raw_results.csv : +65 lignes (run_id=15_pruning_controls_1787135827_069d0d36)
+=== 2026-08-19 12:37:10 beijing/keep=0.25/inverse (3 seeds) ===
+
+[beijing] 12 noeuds, 60 aretes de base (distance k=5)
+  [inverse] keep= 25% seed=42 deg_eff=1.25 msg_mag=0.032 R2=0.9447
+  [inverse] keep= 25% seed=123 deg_eff=1.25 msg_mag=0.032 R2=0.9437
+  [inverse] keep= 25% seed=777 deg_eff=1.25 msg_mag=0.032 R2=0.9452
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (208 lignes ; +39)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (12 lignes)
+raw_results.csv : +39 lignes (run_id=15_pruning_controls_1787149691_109fca64)
+=== 2026-08-19 16:28:14 london/keep=0.75/random (5 tirages) ===
+
+[london] 8 noeuds, 40 aretes de base (distance k=5)
+  [random] keep= 75% tirage 0 (seed=1001) deg_eff=3.75 msg_mag=0.330 R2=0.4962
+  [random] keep= 75% tirage 1 (seed=1002) deg_eff=3.75 msg_mag=0.273 R2=0.4446
+  [random] keep= 75% tirage 2 (seed=1003) deg_eff=3.75 msg_mag=0.319 R2=0.4344
+  [random] keep= 75% tirage 3 (seed=1004) deg_eff=3.75 msg_mag=0.293 R2=0.5138
+  [random] keep= 75% tirage 4 (seed=1005) deg_eff=3.75 msg_mag=0.333 R2=0.4940
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (253 lignes ; +45)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (17 lignes)
+raw_results.csv : +45 lignes (run_id=15_pruning_controls_1787166807_dad8366e)
+=== 2026-08-19 21:13:29 london/keep=0.75/inverse (3 seeds) ===
+
+[london] 8 noeuds, 40 aretes de base (distance k=5)
+  [inverse] keep= 75% seed=42 deg_eff=3.75 msg_mag=0.337 R2=0.4936
+  [inverse] keep= 75% seed=123 deg_eff=3.75 msg_mag=0.337 R2=0.4775
+  [inverse] keep= 75% seed=777 deg_eff=3.75 msg_mag=0.337 R2=0.4787
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (280 lignes ; +27)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (18 lignes)
+raw_results.csv : +27 lignes (run_id=15_pruning_controls_1787175675_cb8c34b9)
+=== 2026-08-19 23:41:16 london/keep=0.25/random (5 tirages) ===
+
+[london] 8 noeuds, 40 aretes de base (distance k=5)
+  [random] keep= 25% tirage 0 (seed=1001) deg_eff=1.25 msg_mag=0.378 R2=0.5727
+  [random] keep= 25% tirage 1 (seed=1002) deg_eff=1.25 msg_mag=0.212 R2=0.6280
+  [random] keep= 25% tirage 2 (seed=1003) deg_eff=1.25 msg_mag=0.375 R2=0.6122
+  [random] keep= 25% tirage 3 (seed=1004) deg_eff=1.25 msg_mag=0.189 R2=0.6991
+  [random] keep= 25% tirage 4 (seed=1005) deg_eff=1.25 msg_mag=0.193 R2=0.7076
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (325 lignes ; +45)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (23 lignes)
+raw_results.csv : +45 lignes (run_id=15_pruning_controls_1787189469_36b4b87f)
+=== 2026-08-20 03:31:11 london/keep=0.25/inverse (3 seeds) ===
+
+[london] 8 noeuds, 40 aretes de base (distance k=5)
+  [inverse] keep= 25% seed=42 deg_eff=1.25 msg_mag=0.318 R2=0.5909
+  [inverse] keep= 25% seed=123 deg_eff=1.25 msg_mag=0.318 R2=0.5761
+  [inverse] keep= 25% seed=777 deg_eff=1.25 msg_mag=0.318 R2=0.5818
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (352 lignes ; +27)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (24 lignes)
+raw_results.csv : +27 lignes (run_id=15_pruning_controls_1787198465_81f550ff)
+=== 2026-08-20 06:01:07 madrid/keep=0.75/random (5 tirages) ===
+
+[madrid] 7 noeuds, 35 aretes de base (distance k=5)
+  [random] keep= 75% tirage 0 (seed=1001) deg_eff=3.71 msg_mag=0.299 R2=0.5000
+  [random] keep= 75% tirage 1 (seed=1002) deg_eff=3.71 msg_mag=0.250 R2=0.5596
+  [random] keep= 75% tirage 2 (seed=1003) deg_eff=3.71 msg_mag=0.268 R2=0.4646
+  [random] keep= 75% tirage 3 (seed=1004) deg_eff=3.71 msg_mag=0.227 R2=0.4673
+  [random] keep= 75% tirage 4 (seed=1005) deg_eff=3.71 msg_mag=0.254 R2=0.4773
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (392 lignes ; +40)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (29 lignes)
+raw_results.csv : +40 lignes (run_id=15_pruning_controls_1787207025_ded5f11a)
+=== 2026-08-20 08:23:47 madrid/keep=0.75/inverse (3 seeds) ===
+
+[madrid] 7 noeuds, 35 aretes de base (distance k=5)
+  [inverse] keep= 75% seed=42 deg_eff=3.71 msg_mag=0.229 R2=0.5666
+  [inverse] keep= 75% seed=123 deg_eff=3.71 msg_mag=0.229 R2=0.6073
+  [inverse] keep= 75% seed=777 deg_eff=3.71 msg_mag=0.229 R2=0.5742
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (416 lignes ; +24)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (30 lignes)
+raw_results.csv : +24 lignes (run_id=15_pruning_controls_1787211553_4afb2dd6)
+=== 2026-08-20 09:39:15 madrid/keep=0.25/random (5 tirages) ===
+
+[madrid] 7 noeuds, 35 aretes de base (distance k=5)
+  [random] keep= 25% tirage 0 (seed=1001) deg_eff=1.29 msg_mag=0.376 R2=0.5265
+  [random] keep= 25% tirage 1 (seed=1002) deg_eff=1.29 msg_mag=0.199 R2=0.7175
+  [random] keep= 25% tirage 2 (seed=1003) deg_eff=1.29 msg_mag=0.274 R2=0.5370
+  [random] keep= 25% tirage 3 (seed=1004) deg_eff=1.29 msg_mag=0.231 R2=0.5734
+  [random] keep= 25% tirage 4 (seed=1005) deg_eff=1.29 msg_mag=0.177 R2=0.6897
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (456 lignes ; +40)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (35 lignes)
+raw_results.csv : +40 lignes (run_id=15_pruning_controls_1787224328_2a386bfe)
+=== 2026-08-20 13:12:10 madrid/keep=0.25/inverse (3 seeds) ===
+
+[madrid] 7 noeuds, 35 aretes de base (distance k=5)
+  [inverse] keep= 25% seed=42 deg_eff=1.29 msg_mag=0.212 R2=0.6514
+  [inverse] keep= 25% seed=123 deg_eff=1.29 msg_mag=0.212 R2=0.6964
+  [inverse] keep= 25% seed=777 deg_eff=1.29 msg_mag=0.212 R2=0.5750
+
+CSV : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls.csv (480 lignes ; +24)
+CSV (degré/magnitude) : /Users/badouch/Desktop/FPO/2026/air_quality_project/results/pruning_controls_conditions.csv (36 lignes)
+raw_results.csv : +24 lignes (run_id=15_pruning_controls_1787238014_d0aa7fac)
+E12_TOTAL_DUREE_S=190362 E12_TOTAL_DUREE_MIN=3172
