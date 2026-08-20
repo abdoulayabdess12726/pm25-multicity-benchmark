@@ -891,3 +891,135 @@ réduction de budget équivalente, protocoles complets aux deux.
 
 Rien rédigé dans le manuscrit ni dans un brouillon de §6.2.1/lettre — ce
 sont les données brutes, organisées pour rédaction ultérieure.
+
+## PRIORITÉ ABSOLUE — ampleur du bug de tri NaN dans build_correlation_graph (2026-08-20)
+
+Établi sans rien corriger, sans rien relancer (consigne explicite).
+`06_train_multistation.py::build_correlation_graph()`, utilisée pour la
+topologie « correlation » de la **Table 2 du manuscrit soumis** (pas un
+artefact de contrôle) : `np.argsort(corr[i])[::-1]` place les corrélations
+NaN en tête du tri décroissant, le slot de voisin est ensuite éliminé par
+le seuil `corr>0` **sans être remplacé par le candidat réel suivant**.
+
+### 1. Portée — Madrid uniquement, aux 3 valeurs de k testées
+
+Vérifié par variance train nulle + comptage direct des NaN dans la matrice
+de corrélation, puis comptage des arêtes réelles vs attendues (n×k_eff)
+pour les 3 villes, les 2 topologies, k∈{3,5,8} :
+
+| Ville | Variance train nulle ? | NaN dans corr ? | Distance : toujours n×k_eff exact ? |
+|---|---|---|---|
+| Beijing | aucune station | 0 | ✅ (non applicable, corrélation aussi exacte) |
+| London | aucune station | 0 | ✅ (non applicable, corrélation aussi exacte) |
+| Madrid | MENDEZ ALVARO | 12 (hors diagonale) | ✅ (distance non affectée, seule correlation l'est) |
+
+| Ville | k | Arêtes attendues (n×k_eff) | Arêtes réelles (correlation) | MENDEZ ALVARO |
+|---|---|---|---|---|
+| Beijing | 3/5/8 | 36/60/96 | 36/60/96 (exact) | — |
+| London | 3/5/8 | 24/40/56 | 24/40/56 (exact) | — |
+| **Madrid** | **3** | 21 | **12** (−9) | out=0, in=0 |
+| **Madrid** | **5** | 35 | **24** (−11) | out=0, in=0 |
+| **Madrid** | **8** | 42 | **30** (−12) | out=0, in=0 |
+
+**Beijing et London : aucune corrélation NaN, comptage d'arêtes exact à
+tous les k testés — non affectés.** Madrid : isolée aux 3 k, et 6 des 6
+autres stations perdent systématiquement 1 slot de voisin (le manque
+total = k_eff pour elle-même + 6 pour les autres, exactement, aux 3 k).
+
+**Confirmé, testé, pas supposé** : `09_controls_oversmoothing.py::build_edges("correlation")`
+exécuté sur les vraies données Madrid (pas un cas jouet) — **35/35 arêtes,
+MENDEZ ALVARO out=5, in=1, aucune perte**. Le tri `argsort(-sim[i])` (sans
+`[::-1]`) place bien le NaN en QUEUE, hors du top-k. Confirmé sûr en
+pratique, pas seulement par construction — mais toujours non exercé dans
+les runs réels d'E13 (topologie distance uniquement).
+
+**Découverte en creusant point 1** : `14_sota_baselines.py` (E11, STGCN et
+Graph WaveNet) réutilise **exactement** `b.build_correlation_graph`
+(ligne 399, commentaire ligne 48 : « IDENTIQUE à 06_train_multistation.py »)
+— **également affecté**. Les résultats STGCN/Graph WaveNet Madrid de la
+Table 3 (seed 42 d'E7 + seeds 123/777 d'E11, P5) utilisent donc aussi le
+graphe à 24 arêtes, MENDEZ ALVARO isolée.
+
+### 2. Écart avec §4.2 du manuscrit
+
+Manuscrit (§4.2, paragraphe décrivant la construction du graphe) :
+*« The correlation topology connects each station to its k = 5
+most-correlated peers based on PM2.5 Pearson correlation computed on the
+training period only »* — implique : pour chaque station, les k
+partenaires réellement les plus corrélés, un ensemble de taille k à chaque
+fois.
+
+Ce que le code fait réellement (Madrid, k=5, formule précise) : pour une
+station i, calcule `argsort(corr[i,:])[::-1][:5]` — si `corr[i,j]` est
+NaN pour un j donné (le cas de MENDEZ ALVARO, ou j=MENDEZ ALVARO vue par
+une autre station i), **ce candidat NaN occupe l'UN des 5 premiers rangs
+du tri** (avant tout candidat réel, quelle que soit sa vraie corrélation),
+**puis est éliminé par le filtre `corr[i,j] > 0`** — le rang qu'il
+occupait n'est PAS réattribué au 6e candidat réel. Résultat : la station
+récupère strictement moins de 5 voisins dès qu'au moins un candidat a une
+corrélation indéfinie — **4 au lieu de 5** pour les 6 stations Madrid hors
+MENDEZ ALVARO, **0 au lieu de 5** pour elle (tous ses candidats sont NaN,
+tous éliminés, aucun de remplacement possible puisqu'elle n'a par
+définition aucune corrélation réelle avec personne).
+
+**L'écart n'est donc pas « k=5 devient k=4 partout »** — c'est spécifique
+à chaque paire affectée par un NaN : MENDEZ ALVARO perd la totalité de ses
+arêtes (pas de secours possible, toutes ses corrélations sont indéfinies),
+les 6 autres stations perdent exactement 1 arête chacune (celle vers elle),
+sans réduction par ailleurs de leurs 4 autres voisins réels.
+
+### 3. Chiffres publiés potentiellement affectés — toute valeur issue d'un GCN/STGCN/GraphWaveNet Madrid topologie correlation
+
+| Table | Contenu affecté | Source du chiffre | Nature de l'impact |
+|---|---|---|---|
+| **Table 2** | Madrid, GCN-Transformer, topologie correlation, 3 seeds | Entraînement direct via `build_correlation_graph`, graphe canonique | **Directement affecté** — R² calculé sur un modèle entraîné avec 24 arêtes au lieu de 35 |
+| **Table 3** | Madrid, STGCN, topologie correlation | `14_sota_baselines.py`, même fonction (ligne 399) | **Directement affecté** (E7 seed 42 + E11 seeds 123/777) |
+| **Table 3** | Madrid, Graph WaveNet, topologie correlation | idem | **Directement affecté** |
+| **Table 4** | Madrid, correlation, tests statistiques (Wilcoxon/Cohen's d) | Dérivé des prédictions per-station de Table 2 | **Affecté** — mêmes prédictions sous-jacentes |
+| **Table 6** | Madrid, correlation, ΔR² par station | idem | **Affecté** — mêmes prédictions |
+| **Table 7** | Madrid, correlation, k=3 et k=8 (k=5 = Table 2) | `e6_k_sensitivity.py`/`e8_k_sensitivity_3seeds.py`, même fonction | **Directement affecté** aux 2 k, 3 seeds chacun (E9, P5) |
+| **Table 5** | Ligne « correlation » de la corrélation h(D)↔ΔR² | Agrégation de Table 2/7 (Madrid) + h(D) (Table 1, non affecté) | **Indirectement affecté** — recalcule automatiquement si Table 2/7 changent, aucun run séparé |
+| Analyse per-station (`12_per_station_heterophily.py`) | h_i (prédicteur) : NON affecté (calcul propre, masquage NaN explicite, déjà vérifié P5) ; ΔR² (variable expliquée) pour la topologie correlation : affecté via Table 6 | — | **Partiellement affecté** — seulement la variable expliquée, pas le prédicteur |
+
+**Non affecté, à noter explicitement** : topologie **distance** (Madrid et
+toutes les villes) ; Beijing et London (toutes topologies, tous les k) ;
+Table 1 (h(D), `nanmean` sûr) ; pruning §6.2.1/E10/E12/E14 (graphe de base
+= distance, jamais correlation) ; Table 8/E13 (distance uniquement, et de
+toute façon le builder de correlation y est sûr, testé point 1).
+
+### 4. Coût d'un re-run correct (tri NaN corrigé, non lancé)
+
+Avec un tri corrigé (NaN exclu du top-k avant sélection, candidat réel
+suivant promu à la place), Madrid obtiendrait 35/35 arêtes en topologie
+correlation à k=5, MENDEZ ALVARO connectée normalement (dans le sens
+attendu, potentiellement pas exactement les mêmes 5 voisins pour les 6
+autres stations non plus, puisqu'un slot libéré par la promotion d'un
+nouveau 5e candidat change potentiellement TOUT le classement top-5 de
+la station concernée). Runs nécessaires (seuls Madrid/correlation est
+concerné, distance et Beijing/London inchangés) :
+
+| Table | Runs |
+|---|---|
+| Table 2 (GCN-Transformer, correlation, k=5) | 3 seeds |
+| Table 7 (GCN-Transformer, correlation, k=3) | 3 seeds |
+| Table 7 (GCN-Transformer, correlation, k=8) | 3 seeds |
+| Table 3 (STGCN, correlation) | 3 seeds |
+| Table 3 (Graph WaveNet, correlation) | 3 seeds |
+| **Total** | **15 runs** |
+
+(Table 4/5/6 se recalculent automatiquement depuis ces 15 runs via
+`regenerate_tables.py`, aucun run séparé.)
+
+Durée par run observée sur Madrid/correlation (E9 k-sensitivity : 5 valeurs
+mesurées, 23-150 min, moyenne ≈56 min ; E11 SOTA : 2 valeurs mesurées,
+17-56 min, moyenne ≈37 min) — variabilité importante selon contention avec
+d'autres jobs sur la machine. **Estimation : 15 runs × 25-70 min/run ≈
+6 à 17,5h**, sans contention avec d'autres sessions en parallèle sur ce
+dépôt ; plus si contention (cf. expérience E9-E14 où la contention a
+multiplié certaines durées par 3-5×).
+
+**Rien corrigé, rien relancé.** Cette section établit l'ampleur ; la
+décision de corriger (et comment : exclure proprement le candidat NaN et
+promouvoir le suivant ? traiter la station comme non connectée par
+construction, comme documenté pour le contrôle de pruning ? autre choix ?)
+reste à prendre séparément.
