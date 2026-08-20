@@ -668,3 +668,226 @@ formulation ne peut plus prétendre à une causalité uniforme. **Rédaction
 non faite maintenant** — attend une décision sur la formulation
 (nuancer par ville ? approfondir la cause Madrid avant §6.2.1 ? cf.
 discussion à avoir).
+
+### Investigation Madrid (2026-08-20) — deux anomalies indépendantes sur le même réseau, source non résolue
+
+Madrid renverse déjà l'ordre h(D) en Table 2 (§6.3, point de rédaction
+ci-dessus) et renverse maintenant aussi l'ordre guidé/inverse en E12 — deux
+anomalies distinctes sur le même réseau. Quatre points vérifiés, **aucun
+entraînement relancé, aucune configuration cherchée pour redresser Madrid** :
+
+**1. Niveaux testés et dispersion inter-seeds.** Seuls 2 niveaux
+intermédiaires réentraînés pour Madrid (0.75 et 0.25, réduction de budget
+E12 déjà documentée) :
+
+| Niveau | Guidé (3 seeds) | Inverse (3 seeds) | Écart | SE combiné | Écart/SE |
+|---|---|---|---|---|---|
+| 0.75 | 0.5031, 0.4976, 0.5145 → 0.5051±0.0086 | 0.6073, 0.5666, 0.5742 → 0.5827±0.0216 | +0.0776 | 0.0233 | **3.34** |
+| 0.25 | 0.5926, 0.5954, 0.5808 → 0.5896±0.0078 | 0.6964, 0.6514, 0.5750 → 0.6409±0.0614 | +0.0513 | 0.0619 | **0.83** |
+
+À 75 % l'écart est net, ~3,3 fois l'incertitude combinée — pas un
+chevauchement de dispersion. À 25 % l'écart n'est **pas** distinguable de
+la dispersion inter-seeds (0,83×SE), portée presque entièrement par la
+variance d'`inverse` (std=0,0614, 8× celle de guidé à ce niveau) —
+un seed (777, R²=0,575) tire la moyenne inverse vers le bas. **Avec 3
+seeds seulement, le point à 25 % ne permet pas de conclure seul ; celui à
+75 % si.**
+
+**2. MENDEZ ALVARO dans l'ordre d'élagage.** Ses 11 arêtes (sur 35 au
+total, 31 %) ont une corrélation train NaN (variance nulle, cf. P1) — dans
+le calcul d'hétérophilie (`het = 1 − corr`, NaN traité comme hétérophilie
+infinie), **ses 11 arêtes occupent EXACTEMENT les rangs 0-10 (les 11
+premières retirées) sous guidé, et EXACTEMENT les rangs 24-34 (les 11
+dernières retirées) sous inverse** — sur un total de 35 arêtes. Elle
+bascule donc à l'extrême le plus tôt possible dans un ordre et à l'extrême
+le plus tard possible dans l'autre, par construction : ce n'est pas une
+hétérophilie mesurée qui la place là, c'est une valeur dégénérée (NaN) qui
+la place automatiquement à la borne, quel que soit le sens du tri.
+Conséquence structurelle : sous guidé elle est isolée (degré=0) dès
+keep=75 % ; sous inverse elle garde son degré plein (5) même à keep=25 %,
+et devient un hub disproportionné dans le sous-graphe conservé (5 de ses
+arêtes sur les 9 arêtes totales conservées à ce niveau, cf. section E12
+ci-dessus). **Déjà vérifié (section E12) que l'exclure de l'agrégat ne
+supprime pas le renversement** — les 6 autres stations le montrent aussi,
+en plus fort. Ceci n'explique donc pas le renversement du R² agrégé, mais
+explique pourquoi l'ORDRE d'élagage lui-même est structurellement dominé
+par un artefact de corrélation dégénérée plutôt que par une hétérophilie
+réellement mesurée, sur près d'un tiers des arêtes.
+
+**3. Magnitude des messages, guidé vs inverse — écart réel, pas un défaut
+de discrimination.**
+
+| Ville | Niveau | Magnitude guidé | Magnitude inverse | Écart relatif |
+|---|---|---|---|---|
+| Beijing | 75% | 0,4306 | 0,2316 | +46 % |
+| Beijing | 25% | 0,6289 | 0,0318 | +95 % |
+| London | 75% | 0,3050 | 0,3365 | −10 % |
+| London | 25% | 0,2230 | 0,3176 | −42 % |
+| Madrid | 75% | 0,2780 | 0,2289 | +18 % |
+| Madrid | 25% | 0,3683 | 0,2119 | +42 % |
+
+Madrid n'a PAS un écart quasi nul : +18 % à 75 %, +42 % à 25 % — du même
+ordre de grandeur que Beijing à 75 % (+46 %) et plus net que London (qui
+est même inversé, guidé < inverse en magnitude aux deux niveaux — cohérence
+supplémentaire avec le fait que Londres suit la prédiction). **Écarté** :
+l'explication « guidé et inverse retirent des arêtes de magnitude quasi
+identique à Madrid, donc les deux conditions ne sont pas distinctes » ne
+tient pas — les conditions SONT distinctes en magnitude, le renversement
+n'est pas un artefact d'absence de contraste.
+
+**4. Distribution des corrélations d'arêtes, base graphe (avant élagage).**
+
+| Ville | n arêtes | n NaN (Mendez) | corr finie : min/méd./max | std | CV (std/moy) | Forme |
+|---|---|---|---|---|---|---|
+| Beijing | 60 | 0 | 0,814 / 0,931 / 0,963 | 0,043 | 0,047 | unimodale, resserrée en haut |
+| London | 40 | 0 | 0,259 / 0,576 / 0,766 | 0,112 | 0,194 | unimodale, large étalement |
+| Madrid | 35 | 11 (31 %) | 0,332 / 0,470 / 0,620 | 0,062 | 0,130 | unimodale, **resserrée** |
+
+**Ni bimodale ni plate** : les 24 arêtes à corrélation finie de Madrid
+forment une distribution unimodale, resserrée (tout l'intervalle tient
+entre 0,33 et 0,62 — pas d'arête franchement anti-corrélée ni quasi-nulle
+parmi les arêtes non-dégénérées). Combiné au point 2 : **31 % des arêtes
+de Madrid (les 11 de MENDEZ ALVARO) sont placées aux extrêmes de l'ordre
+par un artefact NaN, et les 24 arêtes restantes ne se séparent pas
+nettement en deux groupes homophile/hétérophile** — elles occupent un
+continuum étroit. L'ordre guidé/inverse à Madrid est donc dominé par
+l'artefact MENDEZ ALVARO sur près d'un tiers du graphe, et par un
+classement à faible contraste sur le reste.
+
+**Bilan, sans redresser Madrid** : le point à 75 % reste une contradiction
+statistiquement nette (3,3×SE) de la prédiction, la magnitude des messages
+confirme que les conditions sont réellement distinctes (point 3), et la
+piste MENDEZ ALVARO reste écartée comme explication du renversement du R²
+agrégé (point 2, déjà vérifié en E12). Ce qui EST nouveau ici : la
+distribution des corrélations (point 4) montre que l'ordre d'élagage
+lui-même repose à Madrid sur un signal plus faible et plus artefactuel
+(NaN sur 31 % des arêtes, continuum étroit sur le reste) qu'à Londres —
+une raison plausible pour laquelle le classement des arêtes y est moins
+fiable, sans que ceci explique le SENS du renversement observé. **Source
+du renversement Madrid toujours non identifiée.** Aucune modification du
+manuscrit.
+
+### Traitement des corrélations indéfinies (2026-08-20) — investigation, aucun re-run
+
+**1. Confirmé — à 75% à Madrid, guidé et inverse ne retirent pas la même
+catégorie d'arêtes du tout.** 35 arêtes de base, keep=75% → 9 retirées :
+
+- **Guidé** : les 9 arêtes retirées sont **9/9 NaN** (MENDEZ ALVARO,
+  0 arête finie touchée) — les 9 retraits sont exactement ses 9 arêtes
+  restantes à ce niveau (elle en a 11 au total sur 35 ; à 75% guidé a déjà
+  retiré 9 des 11).
+- **Inverse** : les 9 arêtes retirées sont **9/9 finies** (0 NaN touchée) —
+  les plus corrélées réellement mesurées (corr 0,50 à 0,62 : CASTELLANA↔
+  PLAZA ELÍPTICA, CASTELLANA↔CUATRO CAMINOS-PABLO, CASTELLANA↔CASA DE CAMPO,
+  CASA DE CAMPO↔PLAZA ELÍPTICA, CASTELLANA↔PLAZA CASTILLA-CANAL).
+
+**À ce niveau, « guidé » ne teste quasiment aucune décision d'hétérophilie
+réelle — il retire presque exclusivement un artefact de corrélation
+dégénérée**, tandis qu'« inverse » retire un signal homophile réellement
+mesuré. Le contraste observé à 75% (guidé 0,5051 vs inverse 0,5827, section
+E12) compare donc « graphe sans les arêtes dégénérées de MENDEZ ALVARO »
+à « graphe sans ses 9 arêtes les plus corrélées réelles » — pas
+« hétérophile retiré » vs « homophile retiré » au sens propre voulu par le
+contrôle.
+
+**2. Convention « NaN → hétérophilie infinie »** : **explicite et
+documentée**, pas implicite — `13_edge_pruning.py`, docstring du module
+(lignes 12-15) : *« Les arêtes vers une station à corr NaN [...] sont
+traitées comme les plus hétérophiles (élaguées en premier) »* ; implémentée
+ligne 101, `key = np.where(np.isnan(het), np.inf, het)`, commentée en
+ligne (`# NaN -> plus hétérophile`). `15_pruning_controls.py::prune_inverse`
+réutilise exactement la même ligne (copiée, pas importée) mais sans
+réexpliquer la convention dans son propre docstring — corrigé au passage
+dans ce même correctif de docstring (2026-08-18, cf. section E12).
+
+**3. Recherche exhaustive de propagation — un point non documenté trouvé,
+qui affecte la Table 2 canonique, pas seulement le contrôle de pruning :**
+
+| Fichier | Usage de la corrélation | Gestion du NaN | Statut |
+|---|---|---|---|
+| `13_edge_pruning.py` / `15_pruning_controls.py` | ordre d'élagage (train seul) | NaN→∞, documenté | ✅ intentionnel |
+| `06_train_multistation.py::build_correlation_graph()` | **graphe topologie « correlation », Table 2 canonique** (train seul, `data[:train_len]`, appel réel ligne 912) | **aucune** — `np.argsort(corr[i])[::-1]` place NaN en TÊTE (vérifié empiriquement), puis le seuil `corr>0` élimine l'arête NaN mais **consomme un slot de voisin sans le remplacer** | ⚠️ **NON documenté, affecte Table 2** |
+| `12_per_station_heterophily.py` | h_i par station (Étape 3) | **masque explicitement** NaN/non-finis avant top-k (`valid = np.isfinite(row)`), h_i=NaN si aucun voisin valide | ✅ correct, documenté en commentaire (lignes 84-87) |
+| `09_controls_oversmoothing.py::build_edges()` | topologie correlation (E13, **non exercée** — E13 lancé en `--topology distance` uniquement) | `argsort(-sim[i])` (sans `[::-1]`) — NaN reste en QUEUE, exclu du top-k (vérifié empiriquement sur cas jouet) | ✅ sûr par construction, mais jamais testé en pratique |
+| `05_compute_heterogeneity_v2.py` (Table 1, h(D)) | r̄ (corrélation inter-stations moyenne) | `np.nanmean(corr[iu])` — ignore le NaN silencieusement ; Moran's I et CV ne dépendent pas de la matrice de corrélation (moyennes/écarts-types bruts par station) | ✅ sûr, pas de filtre explicite en amont mais résultat correct |
+
+**Finding le plus important : `build_correlation_graph()` (Table 2,
+topologie correlation, Madrid) construit en réalité un graphe où MENDEZ
+ALVARO est TOTALEMENT ISOLÉE (0 arête entrante, 0 sortante — vérifié
+empiriquement avec l'appel réel `data[:train_len]`), et où chacune des 6
+autres stations perd 1 de ses 5 voisins k-NN prévus (4 arêtes réelles au
+lieu de 5) parce qu'un NaN a occupé son 5e slot avant d'être filtré sans
+remplacement.** Total : 24 arêtes au lieu des 35 attendues pour un k-NN à
+k=5 sur 7 nœuds. **Ceci n'est PAS propre au contrôle de pruning — c'est
+dans le graphe canonique utilisé pour la Table 2, topologie correlation,
+Madrid, GCN-Transformer.** Pas encore établi si ceci modifie les chiffres
+déjà publiés dans Table 2 (topologie « correlation », Madrid) au-delà de
+« MENDEZ ALVARO isolée s'y comporte essentiellement comme un nœud sans
+agrégation spatiale » — **non creusé plus loin, hors périmètre de cette
+tâche (aucune réécriture demandée)**. À traiter comme item séparé.
+
+**4. Coût d'un re-run avec les 11 arêtes NaN exclues structurellement du
+graphe (élagage restreint aux 24 arêtes finies) — chiffré, non lancé.**
+Interprétation retenue : reconstruire le graphe de base de pruning Madrid
+en retirant d'emblée les 11 arêtes de MENDEZ ALVARO (elle devient isolée à
+TOUS les niveaux, y compris 100%) — les 24 arêtes restantes constituent le
+seul univers soumis à l'élagage. **Conséquence méthodologique à anticiper** :
+l'ancre keep=100% de cette variante ne vaut plus 0,4877 (Table 2, graphe à
+35 arêtes) — c'est un graphe différent, donc une nouvelle ancre propre à
+calculer, l'assertion « ancre pruning == Table 2 » ne s'appliquerait pas
+telle quelle à cette variante.
+
+Budget (aucune donnée réutilisable de E10/E12, le graphe de base change) :
+guidé 5 niveaux×3 seeds=15 + aléatoire 2 niveaux×5 tirages=10 + inverse
+2 niveaux×3 seeds=6 → **31 runs**. Durée par run observée sur Madrid :
+E10 (guidé, avec contention d'autres jobs) ≈57 min/run en moyenne ;
+E12 (aléatoire/inverse, sans contention) ≈25-43 min/run. **Estimation :
+31 runs × 35-70 min/run ≈ 18 à 36h**, selon contention avec d'autres runs
+en parallèle sur la machine.
+
+## Matériau pour §6.2.1 et la lettre R2.6 (2026-08-20) — rassemblé, rien rédigé
+
+**Courbes 3 stratégies par ville, avec écart-types et seuil de
+significativité (écart vs dispersion inter-seeds combinée)** — figure :
+`figures/pruning_controls.png` ; données complètes :
+
+| Ville | Niveau | Guidé | Aléatoire (5 tirages) | Inverse (3 seeds) | Écart guidé/inverse ÷ SE combiné |
+|---|---|---|---|---|---|
+| Beijing | 75% | 0,9316±0,0015 | 0,9323±0,0021 | 0,9325±0,0018 | 0,26 (indiscernable) |
+| Beijing | 25% | 0,9442±0,0003 | 0,9366±0,0033 | 0,9445±0,0008 | 0,33 (indiscernable) |
+| London | 75% | 0,5859±0,0161 | 0,4766±0,0349 | 0,4833±0,0090 | 5,45 (net) |
+| London | 25% | 0,7357±0,0040 | 0,6439±0,0580 | 0,5829±0,0074 | 18,3 (net) |
+| **Madrid** | **75%** | 0,5051±0,0086 | 0,4937±0,0393 | 0,5827±0,0216 | **3,34 (net, dépasse la dispersion)** |
+| **Madrid** | **25%** | 0,5896±0,0078 | 0,6088±0,0888 | 0,6409±0,0614 | **0,83 (NE dépasse PAS la dispersion)** |
+
+**Magnitude des messages par condition** (moyenne des edge_weight
+conservés) :
+
+| Ville | Niveau | Guidé | Aléatoire (moy. 5 tirages) | Inverse | Écart relatif guidé→inverse |
+|---|---|---|---|---|---|
+| Beijing | 75% | 0,4306 | 0,3311 | 0,2316 | +46% |
+| Beijing | 25% | 0,6289 | 0,3431 | 0,0318 | +95% |
+| London | 75% | 0,3050 | 0,3097 | 0,3365 | −10% |
+| London | 25% | 0,2230 | 0,2694 | 0,3176 | −42% |
+| Madrid | 75% | 0,2780 | 0,2598 | 0,2289 | +18% |
+| Madrid | 25% | 0,3683 | 0,2513 | 0,2119 | +42% |
+
+**Distribution des corrélations d'arêtes (base graphe, avant élagage), les
+3 villes :**
+
+| Ville | n arêtes | n NaN | corr finie : min/méd./max | std | CV | Forme |
+|---|---|---|---|---|---|---|
+| Beijing | 60 | 0 | 0,814 / 0,931 / 0,963 | 0,043 | 0,047 | unimodale, resserrée haut |
+| London | 40 | 0 | 0,259 / 0,576 / 0,766 | 0,112 | 0,194 | unimodale, large étalement |
+| Madrid | 35 | 11 (31%) | 0,332 / 0,470 / 0,620 | 0,062 | 0,130 | unimodale, resserrée |
+
+**À déclarer dans la lettre (R2.6)** : E12 n'a réentraîné que 2 niveaux
+intermédiaires (75%, 25%) au lieu des 5 niveaux canoniques de la courbe de
+pruning guidée — réduction de budget assumée, décidée pour préserver les
+≥5 tirages aléatoires par niveau plutôt que de les réduire. Les niveaux
+100%/0% sont partagés avec le pruning guidé (identiques par construction
+à ces extrêmes, non réentraînés). Table 8 (§6.2), Table 2 (§6.1) : pas de
+réduction de budget équivalente, protocoles complets aux deux.
+
+Rien rédigé dans le manuscrit ni dans un brouillon de §6.2.1/lettre — ce
+sont les données brutes, organisées pour rédaction ultérieure.
