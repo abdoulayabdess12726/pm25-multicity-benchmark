@@ -510,38 +510,42 @@ hors l'ajout du flag `--cpu` (P5). **§6.2 ne doit pas être mis à jour tant
 que cette source n'est pas identifiée — aucune investigation
 supplémentaire prévue à ce stade.**
 
-## Point de rédaction §6.3 — h(D) prédit le signe/l'ampleur, pas un classement strict (préexistant, pas un artefact E13)
+## Point de rédaction §6.3 — h(D) prédit le signe/l'ampleur, MISE À JOUR 2026-08-21 : le renversement correlation ne subsiste pas après correctif
 
-**Le renversement Madrid/London existe DÉJÀ dans la Table 2 du manuscrit
-soumis** — ce n'est pas un artefact du contrôle over-smoothing simplifié
-d'E13, découvert en creusant E13 mais présent indépendamment. Valeurs h(D)
-(Table 1, `manuscript/tables/table1_h_index.md`) : **Beijing 0.497, London
-0.656, Madrid 0.728** — Madrid est le réseau le plus hétérophile des trois,
-pas Londres.
+**Historique (2026-08-18)** : ce point notait un renversement Madrid/London
+dans les DEUX topologies de la Table 2 soumise (distance −0.375 vs −0.321 ;
+correlation −0.401 vs −0.380), malgré h(D) Madrid=0.728 > London=0.656 —
+présenté comme une limite de l'indice à assumer en §6.3.
 
-Or, dans la Table 2 du manuscrit (GCN-Transformer canonique, ΔR² vs
-Linear-Transformer, 3 seeds) : **London dégrade davantage que Madrid dans
-les deux topologies** (distance −0.375 vs −0.321 ; correlation −0.401 vs
-−0.380), malgré un h(D) plus faible (0.656 < 0.728). Le même renversement
-réapparaît dans le contrôle over-smoothing d'E13 (gcn1L : London −0.442 vs
-Madrid −0.149) — cohérence entre les deux modèles, qui exclut un artefact
-de l'architecture simplifiée du contrôle.
+**Correction (2026-08-21, cf. section « PRIORITÉ ABSOLUE » ci-dessus)** :
+le renversement en topologie **correlation** était mesuré sur un graphe
+Madrid défectueux (24 arêtes au lieu de 35, MENDEZ ALVARO isolée par un
+bug de tri NaN dans `build_correlation_graph`). **Avec le graphe corrigé,
+il ne subsiste PAS** : Madrid/correlation passe de ΔR²=−0.3795 (arrondi
+−0.380, bug) à **ΔR²=−0.4144** (corrigé) — désormais plus dégradée que
+London/correlation (−0.4014, inchangée), l'ordre h(D) est rétabli pour
+cette topologie. **Ne pas présumer — ceci est le résultat mesuré, pas une
+conclusion forcée** (consigne explicite du 2026-08-21).
 
-**Portée exacte, à ne pas surstate** : sur 3 réseaux, h(D) sépare
-correctement Beijing (le plus homophile, la dégradation la plus faible,
-voire nulle/positive) du groupe {London, Madrid} (tous deux nettement
-dégradés) — le signe et l'ordre de grandeur de l'effet sont bien prédits.
-Ce que h(D) ne produit PAS, c'est un classement strict entre London et
-Madrid : leurs h(D) sont proches (0.656 vs 0.728) et leur ΔR² observé va
-dans le sens inverse de leur écart de h(D).
+**Ce qui SUBSISTE, sans changement, non affecté par ce correctif** : le
+renversement en topologie **distance** (Madrid −0.3213 vs London −0.3754,
+Table 2/4, confirmé après régénération) — la topologie distance n'a jamais
+utilisé de corrélation, jamais touchée par le bug. **Ce renversement-là
+reste une limite réelle de l'indice, à assumer en §6.3, comme initialement
+prévu — mais seulement pour la topologie distance, plus pour correlation.**
+Le renversement observé dans le contrôle over-smoothing d'E13 (gcn1L,
+London −0.442 vs Madrid −0.149) utilisait également la topologie distance
+(`--topology distance`, seule lancée pour E13) — également non affecté,
+également subsistant.
 
-**À énoncer nous-mêmes en §6.3 comme limite de l'indice, plutôt que de
-laisser un relecteur la trouver** — cohérent avec le repli déjà prévu sur
-« indicateur diagnostique préliminaire » (R2.1) plutôt qu'un prédicteur
-quantitatif strict. **Rédaction non faite maintenant** (consigne explicite,
-2026-08-18) — ce point attend la même vue d'ensemble qu'E11's nuance
-Madrid/GraphWaveNet (E12 + E15), pas de modification du manuscrit à ce
-stade.
+**Formulation à retenir pour §6.3** : h(D) sépare correctement Beijing du
+groupe {London, Madrid} dans les deux topologies. Le classement strict
+London vs Madrid : **suit h(D) en topologie correlation** (après
+correctif) mais **le contredit en topologie distance** — une limite de
+l'indice qui ne concerne plus qu'une topologie sur deux, pas les deux
+comme documenté avant le 2026-08-21. **Rédaction toujours non faite** —
+attend la même vue d'ensemble qu'E11/E12 (E15 notamment), pas de
+modification du manuscrit à ce stade.
 
 **Correctif de migration associé (P5)** : `migrate_k_sensitivity()` et
 `migrate_edge_pruning()` (`scripts/migrate_raw_results.py`) marquaient
@@ -1023,3 +1027,52 @@ décision de corriger (et comment : exclure proprement le candidat NaN et
 promouvoir le suivant ? traiter la station comme non connectée par
 construction, comme documenté pour le contrôle de pruning ? autre choix ?)
 reste à prendre séparément.
+
+## RÉSOLU — correctif appliqué et 15 runs relancés (2026-08-21)
+
+Feu vert donné, correctif appliqué (`06_train_multistation.py::build_correlation_graph`,
+cf. commit dédié), test de régression ajouté (`tests/test_correlation_graph.py`,
+10 tests, tous verts), 15 runs relancés en arrière-plan
+(`e17_run_correlation_fix.sh`, 547 min ≈ 9,1h). 43 lignes pré-correctif
+retirées de `raw_results.csv` (collision de run_id attendue et vérifiée
+avant retrait — même condition logique, run_id différent, cf. pattern déjà
+établi P5). `regenerate_tables.py` : **25 PASS / 0 FAIL / 0 MISSING DATA
+(25/25)**. 61/61 tests passent.
+
+### Avant / après, les 15 conditions
+
+| Condition | Avant (graphe buggy) | Après (graphe corrigé) |
+|---|---|---|
+| GCN-Transformer/correlation/k=3 | R²=0,4995±0,0065 (ΔR²=−0,3145) | R²=0,4448±0,0244 (ΔR²=**−0,3692**) |
+| GCN-Transformer/correlation/k=5 (Table 2) | R²=0,4345±0,0168 (ΔR²=−0,3795) | R²=0,3996±0,0335 (ΔR²=**−0,4144**) |
+| GCN-Transformer/correlation/k=8 | R²=0,3997±0,0335 (ΔR²=−0,4143) | R²=0,3996±0,0335 (ΔR²=**−0,4144**) |
+| STGCN/correlation (Table 3) | R²=0,7943±0,0169 | R²=**0,7962±0,0152** |
+| Graph WaveNet/correlation (Table 3) | R²=0,8196±0,0011 | R²=**0,8193±0,0010** |
+
+**Note k=5 == k=8 après correctif** : les deux niveaux produisent
+désormais EXACTEMENT le même graphe pour Madrid (30 arêtes, plafonné par
+les 5 candidats réellement corrélés disponibles par station, pas par la
+valeur de k demandée — cf. section précédente, point 1). **Le
+k-sensitivity Table 7 Madrid/correlation ne varie donc plus qu'entre k=3
+(18 arêtes) et k=5/k=8 (30 arêtes identiques)** — à noter pour la
+rédaction, ce n'est pas un artefact du correctif mais une conséquence
+structurelle correcte (Madrid n'a que 6 stations à corrélation définie).
+
+**GCN-Transformer** : chaque k dégrade avec le graphe corrigé (plus
+d'arêtes réelles = plus de mixage hétérophile, cohérent avec le
+mécanisme). **STGCN/Graph WaveNet** : écarts faibles (±0,002-0,003 pour
+Graph WaveNet, légèrement plus pour STGCN) — ces architectures apprennent
+une adjacence adaptative, moins sensibles à la structure exacte du graphe
+d'initialisation que le GCN pur.
+
+### Renversement h(D) — réponse à la question posée, sans présumer
+
+**Ne subsiste PAS en topologie correlation** : Madrid passait de −0,380
+(bug) à **−0,4144** (corrigé), désormais plus dégradée que London
+(−0,4014, inchangée) — ordre h(D) rétabli pour cette topologie
+uniquement. **Subsiste, INCHANGÉ, en topologie distance** : Madrid
+−0,3213 vs London −0,3754 (Table 2/4, confirmé post-régénération) — la
+topologie distance n'a jamais utilisé de corrélation, jamais concernée par
+ce correctif. Le point de rédaction §6.3 (ci-dessus) mis à jour en
+conséquence : la limite de l'indice à assumer ne concerne plus qu'une
+topologie sur deux.

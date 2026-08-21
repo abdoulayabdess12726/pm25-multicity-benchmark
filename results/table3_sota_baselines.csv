@@ -11,9 +11,9 @@ london,graphwavenet,777,0.8362,0.8451,False,40,0
 london,stgcn,42,0.8479,0.8451,True,40,0
 london,stgcn,123,0.8415,0.8451,False,40,0
 london,stgcn,777,0.837,0.8451,False,40,0
-madrid,graphwavenet,42,0.8184,0.8135,True,24,1
-madrid,graphwavenet,123,0.8202,0.8135,True,24,1
-madrid,graphwavenet,777,0.8203,0.8135,True,24,1
-madrid,stgcn,42,0.7882,0.8135,False,24,1
-madrid,stgcn,123,0.8134,0.8135,False,24,1
-madrid,stgcn,777,0.7814,0.8135,False,24,1
+madrid,graphwavenet,42,0.8183,0.8135,True,30,1
+madrid,graphwavenet,123,0.8194,0.8135,True,30,1
+madrid,graphwavenet,777,0.8202,0.8135,True,30,1
+madrid,stgcn,42,0.791,0.8135,False,30,1
+madrid,stgcn,123,0.7844,0.8135,False,30,1
+madrid,stgcn,777,0.8133,0.8135,False,30,1

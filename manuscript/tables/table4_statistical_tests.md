@@ -7,6 +7,6 @@
 | London | distance | -0.3754 ± 0.0258 | 1.562e-02 | -1.10 | 8/8 |  |
 | London | correlation | -0.4014 ± 0.0061 | 1.562e-02 | -1.18 | 8/8 |  |
 | Madrid | distance | -0.3213 ± 0.0061 | 1.562e-02 | -2.24 | 7/7 |  |
-| Madrid | correlation | -0.3795 ± 0.0175 | 1.562e-02 | -2.01 | 7/7 |  |
+| Madrid | correlation | -0.4144 ± 0.0325 | 1.562e-02 | -2.01 | 7/7 |  |
 
 _Seed primaire 42 pour Wilcoxon/Cohen's d (per-station) ; 3 seeds ddof=1 pour ΔR² agrégé. Holm-Bonferroni sur l'ensemble des tests disponibles._

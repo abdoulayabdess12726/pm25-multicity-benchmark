@@ -25,9 +25,9 @@
 | Madrid | XGBoost |  | 3.0147 | 4.7688 | 0.8061 ± 0.0000 [SUSPECT] | primary_seed |
 | Madrid | LSTM |  | 2.8801 | 4.8551 | 0.7990 ± 0.0000 [SUSPECT] | 3seed_mean |
 | Madrid | GCN-Transformer | distance |  |  | 0.4927 ± 0.0064 | 3seed_mean |
-| Madrid | GCN-Transformer | correlation |  |  | 0.4345 ± 0.0168 | 3seed_mean |
+| Madrid | GCN-Transformer | correlation |  |  | 0.3996 ± 0.0335 | 3seed_mean |
 | Madrid | Linear-Transformer | n/a (topology-independent) |  |  | 0.8140 ± 0.0013 | 3seed_mean |
-| Madrid | STGCN | correlation |  |  | 0.7943 ± 0.0168 | 3seed_mean |
-| Madrid | Graph WaveNet | correlation |  |  | 0.8196 ± 0.0011 | 3seed_mean |
+| Madrid | STGCN | correlation |  |  | 0.7962 ± 0.0152 | 3seed_mean |
+| Madrid | Graph WaveNet | correlation |  |  | 0.8193 ± 0.0010 | 3seed_mean |
 
 _Provenance : 3seed_mean (moyenne±SD ddof=1 sur seeds 42/123/777) ou primary_seed (seed 42 seul, coût de calcul) ou deterministic (ARIMA/Persistence). [SUSPECT] : au moins une ligne source porte un provenance_note (SUSPECT_6STATION, Madrid pré-E1 re-run) — cf. CHANGELOG_TABLES.md._

@@ -7,6 +7,6 @@
 | London | distance | -0.3295±0.0128 | -0.3754±0.0258 | -0.3944±0.0144 |
 | London | correlation | -0.3471±0.0144 | -0.4014±0.0061 | -0.5059±0.0288 |
 | Madrid | distance | -0.2828±0.0187 | -0.3213±0.0061 | -0.3478±0.0076 |
-| Madrid | correlation | -0.3145±0.0059 | -0.3795±0.0175 | -0.4144±0.0325 |
+| Madrid | correlation | -0.3692±0.0239 | -0.4144±0.0325 | -0.4144±0.0325 |
 
 _[SUSPECT] : au moins une ligne source porte un provenance_note (SUSPECT_6STATION/UNRECOVERABLE) — cf. CHANGELOG_TABLES.md._

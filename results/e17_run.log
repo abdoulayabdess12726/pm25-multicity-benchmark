@@ -1,1 +1,77 @@
 === 2026-08-20 21:27:38 madrid/correlation/k=5/seed=42 (Table 2/7) ===
+[madrid/correlation/k=5/seed=42] device=cpu edges=30 R2_gcn=0.3667 ΔR²=-0.4468 [recompute(force, était json(k5) — correctif build_correlation_graph P5)]
+DUREE_S=1427 DUREE_MIN=23.8 RSS_GB=0.57 CSV_LIGNES=54
+=== 2026-08-20 21:51:32 madrid/correlation/k=5/seed=123 (Table 2/7) ===
+[madrid/correlation/k=5/seed=123] device=cpu edges=30 R2_gcn=0.4336 ΔR²=-0.3819 [recompute(force, était json(k5) — correctif build_correlation_graph P5)]
+DUREE_S=2030 DUREE_MIN=33.8 RSS_GB=0.54 CSV_LIGNES=54
+=== 2026-08-20 22:25:26 madrid/correlation/k=5/seed=777 (Table 2/7) ===
+[madrid/correlation/k=5/seed=777] device=cpu edges=30 R2_gcn=0.3987 ΔR²=-0.4144 [recompute(force, était json(k5) — correctif build_correlation_graph P5)]
+DUREE_S=4212 DUREE_MIN=70.2 RSS_GB=0.65 CSV_LIGNES=54
+=== 2026-08-20 23:35:43 madrid/correlation/k=3/seed=42 (Table 2/7) ===
+[madrid/correlation/k=3/seed=42] device=cpu edges=18 R2_gcn=0.4166 ΔR²=-0.3969 [recompute(force, était archive(seed42))]
+DUREE_S=1960 DUREE_MIN=32.7 RSS_GB=0.62 CSV_LIGNES=54
+=== 2026-08-21 00:08:27 madrid/correlation/k=3/seed=123 (Table 2/7) ===
+[madrid/correlation/k=3/seed=123] device=cpu edges=18 R2_gcn=0.4602 ΔR²=-0.3553 [recompute]
+DUREE_S=1912 DUREE_MIN=31.9 RSS_GB=0.60 CSV_LIGNES=54
+=== 2026-08-21 00:40:23 madrid/correlation/k=3/seed=777 (Table 2/7) ===
+[madrid/correlation/k=3/seed=777] device=cpu edges=18 R2_gcn=0.4575 ΔR²=-0.3555 [recompute]
+DUREE_S=1057 DUREE_MIN=17.6 RSS_GB=0.64 CSV_LIGNES=54
+=== 2026-08-21 00:58:04 madrid/correlation/k=8/seed=42 (Table 2/7) ===
+[madrid/correlation/k=8/seed=42] device=cpu edges=30 R2_gcn=0.3667 ΔR²=-0.4468 [recompute(force, était archive(seed42))]
+DUREE_S=928 DUREE_MIN=15.5 RSS_GB=0.64 CSV_LIGNES=54
+=== 2026-08-21 01:13:36 madrid/correlation/k=8/seed=123 (Table 2/7) ===
+[madrid/correlation/k=8/seed=123] device=cpu edges=30 R2_gcn=0.4336 ΔR²=-0.3819 [recompute]
+DUREE_S=4522 DUREE_MIN=75.4 RSS_GB=0.64 CSV_LIGNES=54
+=== 2026-08-21 02:29:02 madrid/correlation/k=8/seed=777 (Table 2/7) ===
+[madrid/correlation/k=8/seed=777] device=cpu edges=30 R2_gcn=0.3987 ΔR²=-0.4144 [recompute]
+DUREE_S=4740 DUREE_MIN=79.0 RSS_GB=0.55 CSV_LIGNES=54
+=== 2026-08-21 03:48:06 madrid/stgcn/seed=42 (Table 3) ===
+[madrid/stgcn/seed=42] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=30 isolated=1 R2=0.7910 Linear_ref=0.8135
+DUREE_S=512 DUREE_MIN=8.5 RSS_GB=0.49 CSV_LIGNES=18
+     epoch   5 | val_loss=0.00277
+     epoch  10 | val_loss=0.00281
+   Early stop epoch 14 (val_loss=0.00257)
+=== 2026-08-21 03:56:41 madrid/stgcn/seed=123 (Table 3) ===
+[madrid/stgcn/seed=123] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=30 isolated=1 R2=0.7844 Linear_ref=0.8135
+DUREE_S=720 DUREE_MIN=12.0 RSS_GB=0.47 CSV_LIGNES=18
+     epoch   5 | val_loss=0.00401
+     epoch  10 | val_loss=0.00270
+     epoch  15 | val_loss=0.00270
+     epoch  20 | val_loss=0.00255
+   Early stop epoch 20 (val_loss=0.00253)
+=== 2026-08-21 04:08:45 madrid/stgcn/seed=777 (Table 3) ===
+[madrid/stgcn/seed=777] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=30 isolated=1 R2=0.8133 Linear_ref=0.8135
+DUREE_S=1019 DUREE_MIN=17.0 RSS_GB=0.50 CSV_LIGNES=18
+     epoch   5 | val_loss=0.00265
+     epoch  10 | val_loss=0.00258
+     epoch  15 | val_loss=0.00265
+     epoch  20 | val_loss=0.00273
+     epoch  25 | val_loss=0.00272
+   Early stop epoch 27 (val_loss=0.00250)
+=== 2026-08-21 04:25:48 madrid/graphwavenet/seed=42 (Table 3) ===
+[madrid/graphwavenet/seed=42] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=30 isolated=1 R2=0.8183 Linear_ref=0.8135  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=2812 DUREE_MIN=46.9 RSS_GB=0.57 CSV_LIGNES=18
+     epoch   5 | val_loss=0.00270
+     epoch  10 | val_loss=0.00285
+     epoch  15 | val_loss=0.00261
+     epoch  20 | val_loss=0.00260
+     epoch  25 | val_loss=0.00258
+   Early stop epoch 29 (val_loss=0.00257)
+=== 2026-08-21 05:12:44 madrid/graphwavenet/seed=123 (Table 3) ===
+[madrid/graphwavenet/seed=123] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=30 isolated=1 R2=0.8194 Linear_ref=0.8135  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=2603 DUREE_MIN=43.4 RSS_GB=0.57 CSV_LIGNES=18
+     epoch   5 | val_loss=0.00268
+     epoch  10 | val_loss=0.00291
+     epoch  15 | val_loss=0.00283
+     epoch  20 | val_loss=0.00262
+     epoch  25 | val_loss=0.00258
+   Early stop epoch 27 (val_loss=0.00257)
+=== 2026-08-21 05:56:11 madrid/graphwavenet/seed=777 (Table 3) ===
+[madrid/graphwavenet/seed=777] device=cpu n_nodes=7 (MENDEZ ALVARO incluse) edges=30 isolated=1 R2=0.8202 Linear_ref=0.8135  *** BAT LE LINEAR-TRANSFORMER — RÉSULTAT SCIENTIFIQUE À RAPPORTER TEL QUEL ***
+DUREE_S=2321 DUREE_MIN=38.7 RSS_GB=0.57 CSV_LIGNES=18
+     epoch   5 | val_loss=0.00269
+     epoch  10 | val_loss=0.00259
+     epoch  15 | val_loss=0.00261
+     epoch  20 | val_loss=0.00259
+   Early stop epoch 24 (val_loss=0.00257)
+CORRFIX_TOTAL_DUREE_S=32837 CORRFIX_TOTAL_DUREE_MIN=547
