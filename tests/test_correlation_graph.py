@@ -48,6 +48,21 @@ def _load_city_data(b, city):
     return np.asarray(data, dtype=np.float32)
 
 
+def _load_czt_pm25(b):
+    """CZT n'a pas encore de load_czt_data() dans 06 (E16, prétraitement
+    seulement — pas d'entraînement lancé). Charge directement le PM2.5
+    reconstruit et aligne le global N_STATIONS, comme le font les
+    load_*_data() existants — sans quoi build_correlation_graph boucle sur
+    l'ancien N_STATIONS (12, Beijing) et tronque silencieusement le calcul."""
+    import pandas as pd
+    path = ROOT / "data" / "czt_processed" / "czt_pm25_hourly.csv"
+    if not path.exists():
+        pytest.skip("data/czt_processed/czt_pm25_hourly.csv absent — 01i_preprocess_czt.py pas encore exécuté")
+    pm25 = pd.read_csv(path, index_col=0, parse_dates=True)
+    b.N_STATIONS = pm25.shape[1]
+    return pm25.values.astype(np.float32)[:, :, None]  # [T, N, 1], PM2.5 seul colonne 0
+
+
 def _expected_edge_count(data, train_len, k):
     """Compte attendu station-par-station, en excluant les candidats NaN
     (pas une formule uniforme n×k_eff)."""
@@ -84,6 +99,30 @@ def test_correlation_graph_edge_count_matches_valid_neighbors(city, k):
         "(un candidat NaN a peut-être consommé un rang de voisin sans être "
         "réattribué — cf. incident build_correlation_graph, CHANGELOG_TABLES.md)"
     )
+
+
+@pytest.mark.parametrize("k", [3, 5, 8])
+def test_czt_correlation_graph_edge_count_is_exactly_n_times_k(k):
+    """CZT (E16, 20 stations, cf. configs/stations/czt.yaml) n'a aucune
+    corrélation indéfinie (aucune station à variance train nulle, contraire
+    à Madrid/MENDEZ ALVARO) — le nombre d'arêtes réelles doit donc égaler
+    EXACTEMENT n×k_eff, sans exception NaN à gérer."""
+    b = _load_bench()
+    data = _load_czt_pm25(b)
+    n = data.shape[1]
+    train_len = int(0.70 * len(data))
+
+    corr = np.corrcoef(data[:train_len, :, 0].T)
+    n_nan = int(np.isnan(corr[~np.eye(n, dtype=bool)]).sum())
+    assert n_nan == 0, f"CZT : {n_nan} corrélations NaN trouvées — hypothèse invalidée, revoir ce test"
+
+    with redirect_stdout(io.StringIO()):
+        ei, _ = b.build_correlation_graph(data[:train_len], k=k)
+
+    k_eff = min(k, n - 1)
+    expected = n * k_eff
+    actual = ei.shape[1]
+    assert actual == expected, f"CZT/k={k} : {actual} arêtes, {expected} attendues (n={n}×k_eff={k_eff})"
 
 
 def test_madrid_mendez_alvaro_isolated_but_others_get_full_valid_neighbors():

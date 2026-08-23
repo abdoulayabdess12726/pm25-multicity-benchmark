@@ -149,4 +149,57 @@ par le seul changement de jeu de données.
 
 ---
 
+## 7. Ajout daté 2026-08-23 — h(D) reconstruit calculé, résultat du prétraitement
+
+*Section ajoutée après le commit initial `dadb848` et l'ajout du 2026-08-16
+(section 6, ci-dessus). Les sections 2 et 3 sont inchangées et le restent.*
+
+**Prétraitement** (`01i_preprocess_czt.py`) : reconstruction depuis
+`data/czt_raw/` (CNEMC 2020-2023, 20 stations — cf. `configs/stations/czt.yaml`
+pour l'écart 22→20, décommissionnement post-2023 de 1344A/1559A, confirmé
+présents dans l'historique 2020-2023). Jonction météo Open-Meteo sur 3 points
+ville (centroïdes Changsha/Zhuzhou/Xiangtan, un point par ville plutôt que par
+station — 20 stations mais seulement 3 climats locaux distincts). Filtre §3.2
+réel (couverture PM2.5 brute ≥ 50 %, non imputée) : **20/20 stations
+retenues**, couverture brute 89,0 % à 98,4 % selon la station (aucune
+proche du seuil). Aucun mode variance-train-faible/variance-test-normale
+détecté (pas d'équivalent MENDEZ ALVARO sur ce réseau).
+
+**h(D) reconstruit** (topologie corrélation, k=5, période train = 70 %
+initiaux, convention identique à `05_compute_heterogeneity_v2.py`, comme la
+valeur pré-enregistrée) :
+
+| | r̄ | Moran's I | CV (normalisé) | h(D) |
+|---|---|---|---|---|
+| Pré-enregistré (§2, .npz MSDGNN) | 0.512 | — | — | **0.312** |
+| Reconstruit (ce calcul, CNEMC) | 0.904 | 0.262 | 0.404 | **0.413** |
+
+**Écart : +0.101.** Dans le sens anticipé par la section 6 (les trois
+mécanismes identifiés — 1335A non lissée, pas de comblement artificiel des
+manquants, fenêtre train légèrement différente — poussent tous vers un h(D)
+plus élevé après reconstruction) et dans la fourchette annoncée
+« 0.30–0.40 » à 0.01 près (légèrement au-dessus, pas en dehors du
+raisonnement qui sous-tendait cette fourchette).
+
+**Règle d'arrêt (§6) : NON déclenchée.** h(D) = 0.413 < 0.497 (seuil
+Beijing) — la prédiction P1 ne change pas de sens sous ce résultat. CZT
+reste, comme prévu, notablement moins hétérophile que les trois réseaux du
+manuscrit (Beijing 0.497 le plus proche, London 0.656, Madrid 0.728).
+
+**Correctif build_correlation_graph (P5, 2026-08-21) vérifié sur CZT** :
+aucune corrélation indéfinie (0 NaN sur la matrice 20×20, contrairement à
+Madrid/MENDEZ ALVARO) — le nombre d'arêtes réelles égale exactement n×k_eff
+à k∈{3,5,8} (60/100/160 pour n=20), confirmé par
+`tests/test_correlation_graph.py::test_czt_correlation_graph_edge_count_is_exactly_n_times_k`.
+Le correctif ne change donc rien pour CZT en tant que tel (rien à corriger
+puisqu'aucun NaN) — seule la construction du graphe canonique aurait pu être
+affectée si CZT avait eu une station dégénérée, ce qui n'est pas le cas.
+
+**Aucun entraînement lancé.** Ce prétraitement produit `data/czt_processed/`
+(PM2.5 + météo, format harmonisé 5 features) et confirme que la règle
+d'arrêt ne s'applique pas — la décision de lancer l'entraînement (E16)
+reste à prendre séparément.
+
+---
+
 *Enregistré avant tout entraînement. Ne pas modifier les sections 2 et 3.*

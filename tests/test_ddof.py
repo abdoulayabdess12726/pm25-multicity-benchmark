@@ -104,7 +104,8 @@ _ACQUISITION_SCRIPTS = {
     "01a_download_beijing.py", "01b_download_london.py",
     "01c_preprocess_london.py", "01d_download_london_weather.py",
     "01e_download_madrid.py", "01f_download_madrid_weather.py",
-    "01g_preprocess_madrid.py",
+    "01g_preprocess_madrid.py", "01h_download_czt.py",
+    "01i_preprocess_czt.py",
 }
 # Fichiers entiers légitimement hors périmètre (dispersion qui n'est PAS un
 # agrégat inter-seeds) :
