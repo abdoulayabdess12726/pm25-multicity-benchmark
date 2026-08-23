@@ -77,6 +77,29 @@ def paired_diff(df, city, model, topology, seed=SEED_PRIMARY):
     return diffs, list(common)
 
 
+def paired_diff_multiseed(df, city, model, topology, seeds):
+    """Diff appariée par station, MOYENNÉE sur `seeds` (jamais mélangée avec
+    le seed primaire dans la même quantité — utilisé uniquement quand le
+    seed primaire manque, cf. missing_reason). Pour chaque seed disponible,
+    calcule le diff par station, puis moyenne par station sur les seeds
+    communs — la paire (modèle, Linear) reste toujours au même seed à
+    chaque étape, jamais croisée entre seeds."""
+    per_seed = {}
+    for s in seeds:
+        res = paired_diff(df, city, model, topology, seed=s)
+        if res is not None:
+            diffs, stations = res
+            per_seed[s] = dict(zip(stations, diffs))
+    if not per_seed:
+        return None
+    common_stations = set.intersection(*[set(d.keys()) for d in per_seed.values()])
+    if not common_stations:
+        return None
+    common_stations = sorted(common_stations)
+    mean_diffs = np.array([np.mean([per_seed[s][st] for s in per_seed]) for st in common_stations])
+    return mean_diffs, common_stations, sorted(per_seed.keys())
+
+
 def missing_reason(df, city, model, topology):
     """Distingue : jamais entraîné, vs entraîné mais per-station non capturé
     pour ce run historique (seed 42, migration E7/P2 — capture per-station
@@ -107,43 +130,58 @@ def main():
         for model in ["stgcn", "graphwavenet"]:
             comparisons.append((city, model, "correlation"))
 
+    # 4 comparaisons sans per-station au seed primaire (Beijing/London x
+    # STGCN/GraphWaveNet, migration E7/P2) : repli sur un protocole 2-seeds
+    # (123, 777) explicitement étiqueté — décidé le 2026-08-25, jamais mélangé
+    # avec le seed primaire dans la même quantité dérivée.
+    MULTISEED_FALLBACK = {
+        ("beijing", "stgcn", "correlation"), ("beijing", "graphwavenet", "correlation"),
+        ("london", "stgcn", "correlation"), ("london", "graphwavenet", "correlation"),
+    }
+    FALLBACK_SEEDS = [123, 777]
+
     lines = [f"# P9.2 (R2.4) — Test d'équivalence pratique, marge ±{EQUIVALENCE_MARGIN:.2f} ΔR²\n"]
     lines.append(f"Marge validée le 2026-08-24, fixée AVANT ce calcul — cf. `PREREGISTRATION_CZT.md` "
-                 f"§3 (seuil déjà engagé, ΔR² ≥ −0.02). Différence appariée par station, seed primaire "
-                 f"{SEED_PRIMARY}, IC bootstrap {N_BOOT} tirages, {CI_LEVEL:.0%}.\n")
-    lines.append("| Réseau | Modèle | Topologie | n stations | Diff. moyenne | IC95% bootstrap | Verdict |")
-    lines.append("|---|---|---|---|---|---|---|")
+                 f"§3 (seuil déjà engagé, ΔR² ≥ −0.02). Différence appariée par station, IC bootstrap "
+                 f"{N_BOOT} tirages, {CI_LEVEL:.0%}. **Protocole** : seed primaire {SEED_PRIMARY} par "
+                 f"défaut ; repli 2-seeds ({'/'.join(map(str, FALLBACK_SEEDS))}, moyenne par station) "
+                 f"pour 4 comparaisons Beijing/London STGCN/GraphWaveNet où le seed primaire n'a pas de "
+                 f"per-station (migration E7/P2 historique, aggregate-only) — explicitement étiqueté "
+                 f"dans la colonne Protocole, jamais mélangé avec le seed primaire dans une même "
+                 f"quantité.\n")
+    lines.append("| Réseau | Modèle | Topologie | Protocole | n stations | Diff. moyenne | IC95% bootstrap | Verdict |")
+    lines.append("|---|---|---|---|---|---|---|---|")
 
     results = []
     for city, model, topo in comparisons:
-        res = paired_diff(df_gcn, city, model, topo)
-        if res is None:
-            reason = missing_reason(df_gcn, city, model, topo)
-            lines.append(f"| {city} | {model} | {topo} | — | — | — | MISSING DATA ({reason}) |")
-            print(f"{city}/{model}/{topo}: MISSING DATA -- {reason}")
-            # Info supplémentaire, PAS un substitut du seed primaire : si
-            # per-station existe à d'autres seeds, on le montre à part pour
-            # que la décision de l'utiliser reste explicite, pas automatique.
-            for alt_seed in [123, 777]:
-                alt = paired_diff(df_gcn, city, model, topo, seed=alt_seed)
-                if alt is not None:
-                    diffs, _ = alt
-                    m = float(diffs.mean())
-                    lo, hi = bootstrap_ci_mean(diffs)
-                    lines.append(f"  - *(hors convention seed primaire, à titre informatif : "
-                                 f"seed {alt_seed}, n={len(diffs)}, diff={m:+.4f}, "
-                                 f"IC=[{lo:+.4f},{hi:+.4f}], {equivalence_verdict(lo, hi)})*")
-                    print(f"    (info, seed {alt_seed}: diff={m:+.4f} IC=[{lo:+.4f},{hi:+.4f}])")
-            continue
-        diffs, stations = res
+        use_fallback = (city, model, topo) in MULTISEED_FALLBACK
+        if use_fallback:
+            res = paired_diff_multiseed(df_gcn, city, model, topo, FALLBACK_SEEDS)
+            if res is None:
+                lines.append(f"| {city} | {model} | {topo} | — | — | — | — | "
+                             f"MISSING DATA (repli 2-seeds tenté, échec) |")
+                print(f"{city}/{model}/{topo}: MISSING DATA (repli 2-seeds échoué)")
+                continue
+            diffs, stations, seeds_used = res
+            protocol = f"2-seeds ({'/'.join(map(str, seeds_used))}, moy./station)"
+        else:
+            res = paired_diff(df_gcn, city, model, topo)
+            if res is None:
+                reason = missing_reason(df_gcn, city, model, topo)
+                lines.append(f"| {city} | {model} | {topo} | — | — | — | — | MISSING DATA ({reason}) |")
+                print(f"{city}/{model}/{topo}: MISSING DATA -- {reason}")
+                continue
+            diffs, stations = res
+            protocol = f"seed {SEED_PRIMARY} (primaire)"
+
         mean_diff = float(diffs.mean())
         ci_lo, ci_hi = bootstrap_ci_mean(diffs)
         verdict = equivalence_verdict(ci_lo, ci_hi)
-        results.append(dict(city=city, model=model, topology=topo, n=len(diffs),
+        results.append(dict(city=city, model=model, topology=topo, protocol=protocol, n=len(diffs),
                             mean_diff=mean_diff, ci_lo=ci_lo, ci_hi=ci_hi, verdict=verdict))
-        lines.append(f"| {city} | {model} | {topo} | {len(diffs)} | {mean_diff:+.4f} | "
+        lines.append(f"| {city} | {model} | {topo} | {protocol} | {len(diffs)} | {mean_diff:+.4f} | "
                      f"[{ci_lo:+.4f}, {ci_hi:+.4f}] | {verdict} |")
-        print(f"{city:8s} {model:16s} {topo:12s} n={len(diffs):2d} "
+        print(f"{city:8s} {model:16s} {topo:12s} [{protocol}] n={len(diffs):2d} "
               f"diff={mean_diff:+.4f} IC=[{ci_lo:+.4f},{ci_hi:+.4f}]  {verdict}")
 
     res_df = pd.DataFrame(results)
