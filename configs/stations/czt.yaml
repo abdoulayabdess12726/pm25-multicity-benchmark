@@ -1,0 +1,184 @@
+# Source unique pour la liste des stations Chang-Zhu-Tan (CZT, E16) — voir
+# PREREGISTRATION_CZT.md et CHANGELOG_TABLES.md. Ordre alphabétique par code
+# CNEMC (identique à l'ordre numérique ici) — NE PAS RÉORDONNER, l'ordre
+# détermine l'indexation des nœuds du graphe, comme pour les 3 autres villes.
+#
+# `name` = code CNEMC (identifiant stable utilisé partout ailleurs dans le
+# pipeline CZT : en-têtes de colonnes de 01h_download_czt.py,
+# data/czt_raw/daily/czt_*.csv). Pas de nom de station traduit — CZT n'a pas
+# d'équivalent du nom "propre" utilisé pour Beijing/London/Madrid.
+#
+# Coordonnées : API CNEMC temps réel (POST air.cnemc.cn:18007/HourChangesPublish/
+# GetAllAQIPublishLive, 2026-08-22), filtrée sur les 22 codes cités dans
+# PREREGISTRATION_CZT.md §2 (source .npz MSDGNN). PAS de contre-vérification
+# METAIR (dataset Zenodo 10.5281/zenodo.15680868 non téléchargé localement,
+# décision du 2026-08-22 : retélécharger 15000 stations pour vérifier 20
+# points n'était pas rentable, l'API CNEMC est déjà une source primaire
+# officielle). Vérification interne substituée à la place : les 20
+# coordonnées tombent dans les limites municipales attendues (Changsha/
+# Xiangtan/Zhuzhou) et aucune paire de stations n'est à moins de 0.3 km ni
+# plus de 80 km (min réel 2.15 km, max réel 51.00 km, 190 paires vérifiées,
+# 0 anomalie) — aucune anomalie trouvée.
+#
+# `area` (ville) : valeur renvoyée par l'API CNEMC (`Area`), PAS déduite des
+# plages de codes — la déduction par plage était fausse (1508A-1514A
+# appartiennent à Xiangtan, pas Zhuzhou comme la numérotation le suggérait).
+#
+# ÉCART DOCUMENTÉ : 20 stations sur 22 attendues (PREREGISTRATION_CZT.md §2,
+# source .npz MSDGNN). 1344A et 1559A absents du flux temps réel CNEMC du
+# 2026-08-22 — confirmés présents et actifs dans les données historiques
+# CNEMC 2020-2023 déjà collectées (data/czt_raw/daily/, ~160-168/168 valeurs
+# horaires non nulles sur échantillon de 10 dates), donc existaient bien sur
+# la période d'étude : décommissionnement postérieur à 2023, pas une erreur
+# de code. 1559A est l'une des deux stations citées nommément dans l'article
+# MSDGNN (avec 1339A, cf. PREREGISTRATION_CZT.md §3) — absence non résolue
+# malgré recherche (aqicn, CNEMC) : aucune coordonnée trouvée avec confiance
+# suffisante. 1344A : piste trouvée mais NON retenue (confiance insuffisante)
+# — une station aqicn "长沙沙坪" (Changsha Shaping, 28.3586°N 112.9958°E)
+# correspond au motif attendu (10e station Changsha manquante) mais son code
+# CNEMC n'est affiché nulle part sur la page source — pas d'identification
+# positive, à ne pas confondre avec une confirmation. 20 stations restent le
+# plus grand de nos 4 réseaux (Beijing 12, London 8, Madrid 7).
+city: czt
+source: "API CNEMC temps réel (air.cnemc.cn:18007/HourChangesPublish/GetAllAQIPublishLive), filtrée sur PREREGISTRATION_CZT.md §2 ; historique PM2.5/AQI horaire 2020-2023 via 01h_download_czt.py"
+stations:
+  - name: "1335A"
+    area: 长沙市
+    position_name: 经开区环保局
+    lat: 28.2421
+    lon: 113.0820
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1336A"
+    area: 长沙市
+    position_name: 高开区环保局
+    lat: 28.2202
+    lon: 112.8873
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1337A"
+    area: 长沙市
+    position_name: 马坡岭
+    lat: 28.2012
+    lon: 113.0785
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1338A"
+    area: 长沙市
+    position_name: 湖南师范大学
+    lat: 28.1894
+    lon: 112.9448
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1339A"
+    area: 长沙市
+    position_name: 雨花区环保局
+    lat: 28.1322
+    lon: 113.0177
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1340A"
+    area: 长沙市
+    position_name: 伍家岭
+    lat: 28.2593
+    lon: 112.9795
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1341A"
+    area: 长沙市
+    position_name: 火车新站
+    lat: 28.1944
+    lon: 113.0020
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1342A"
+    area: 长沙市
+    position_name: 天心区环保局
+    lat: 28.1177
+    lon: 112.9846
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1343A"
+    area: 长沙市
+    position_name: 湖南中医药大学
+    lat: 28.1307
+    lon: 112.8906
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1508A"
+    area: 湘潭市
+    position_name: 板塘
+    lat: 27.8626
+    lon: 112.9508
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1511A"
+    area: 湘潭市
+    position_name: 市监测站
+    lat: 27.8404
+    lon: 112.9114
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1512A"
+    area: 湘潭市
+    position_name: 江麓
+    lat: 27.8729
+    lon: 112.8935
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1513A"
+    area: 湘潭市
+    position_name: 岳塘
+    lat: 27.8159
+    lon: 112.9227
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1514A"
+    area: 湘潭市
+    position_name: 科大
+    lat: 27.9118
+    lon: 112.9073
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1515A"
+    area: 株洲市
+    position_name: 天台山庄
+    lat: 27.8306
+    lon: 113.1265
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1518A"
+    area: 株洲市
+    position_name: 株冶医院
+    lat: 27.8919
+    lon: 113.0937
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1519A"
+    area: 株洲市
+    position_name: 市四中
+    lat: 27.8661
+    lon: 113.1709
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1520A"
+    area: 株洲市
+    position_name: 火车站
+    lat: 27.8265
+    lon: 113.1515
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1524A"
+    area: 株洲市
+    position_name: 市监测站
+    lat: 27.8491
+    lon: 113.1329
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
+  - name: "1562A"
+    area: 湘潭市
+    position_name: 昭山
+    lat: 27.9153
+    lon: 113.0048
+    include_in_benchmark: true
+    include_in_heterophily_analysis: true
