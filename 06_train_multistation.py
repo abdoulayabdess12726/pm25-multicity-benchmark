@@ -261,6 +261,56 @@ def load_london_data():
     return data
 
 
+def load_czt_data():
+    """Charge Chang-Zhu-Tan (E16) depuis le parquet enrichi (PM2.5 + TEMP +
+    PRES + DEWP + WSPM). Format identique à Beijing/London/Madrid : [T, N, 5].
+    Cf. PREREGISTRATION_CZT.md, 01i_preprocess_czt.py, configs/stations/czt.yaml."""
+    global STATION_COORDS, STATION_NAMES, N_STATIONS, FEATURES
+
+    parquet_path = "data/czt_processed/czt_full_hourly.parquet"
+    coords_path  = "data/czt_processed/station_coords_valid.csv"
+
+    if not os.path.exists(parquet_path):
+        raise FileNotFoundError(
+            f"Missing {parquet_path}. Run 01h_download_czt.py then 01i_preprocess_czt.py first."
+        )
+
+    full_df = pd.read_parquet(parquet_path)
+    coords_df = pd.read_csv(coords_path)
+
+    coord_map = {row['station']: (float(row['lat']), float(row['lon']))
+                 for _, row in coords_df.iterrows()}
+
+    FEATURES = ['PM2.5', 'TEMP', 'PRES', 'DEWP', 'WSPM']
+
+    valid_stations = sorted(full_df['station'].unique())
+    valid_stations = [s for s in valid_stations if s in coord_map]
+    STATION_NAMES  = valid_stations
+    STATION_COORDS = {s: coord_map[s] for s in valid_stations}
+    N_STATIONS     = len(valid_stations)
+
+    arrs = []
+    common_idx = None
+    for station in valid_stations:
+        sub = full_df[full_df['station'] == station].set_index('datetime').sort_index()
+        sub = sub[FEATURES].interpolate(method='linear', limit=6).ffill().bfill()
+        if common_idx is None:
+            common_idx = sub.index
+        else:
+            common_idx = common_idx.intersection(sub.index)
+
+    for station in valid_stations:
+        sub = full_df[full_df['station'] == station].set_index('datetime').sort_index()
+        sub = sub[FEATURES].interpolate(method='linear', limit=6).ffill().bfill()
+        sub = sub.loc[common_idx]
+        arrs.append(sub.values.astype(np.float32))
+
+    data = np.stack(arrs, axis=1)  # [T, N, F]
+    print(f"Chang-Zhu-Tan chargé : {data.shape[0]} timesteps, {N_STATIONS} stations, "
+          f"{data.shape[2]} features physiques (PM2.5 + TEMP + PRES + DEWP + WSPM)")
+    return data
+
+
 def load_madrid_data():
     """Charge Madrid depuis le parquet enrichi."""
     global STATION_COORDS, STATION_NAMES, N_STATIONS, FEATURES
@@ -866,7 +916,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Multi-station benchmark Beijing/London')
     parser.add_argument('--city', type=str, default='beijing',
-                    choices=['beijing', 'london', 'madrid'],
+                    choices=['beijing', 'london', 'madrid', 'czt'],
                         help='Ville à analyser')
     parser.add_argument('--data_dir',  type=str, default=None,
                         help='Dossier CSV (Beijing uniquement)')
@@ -898,6 +948,8 @@ def main():
         data = load_london_data()
     elif args.city == 'madrid':
         data = load_madrid_data()
+    elif args.city == 'czt':
+        data = load_czt_data()
     elif args.synthetic or args.data_dir is None:
         print("\n[Mode synthétique. Utilisez --data_dir pour vraies données.]")
         n_hours = 5000 if args.quick else 21994
