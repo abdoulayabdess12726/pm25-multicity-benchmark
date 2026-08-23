@@ -1,0 +1,11 @@
+city,model,topology,n,mean_diff,ci_lo,ci_hi,verdict
+beijing,GCN-Transformer,distance,12,-0.01813279896211008,-0.02914697002144847,-0.009506882526331804,NON CONCLUANT (IC chevauche la frontière de la marge)
+beijing,GCN-Transformer,correlation,12,-0.04055957810544403,-0.06179498947490932,-0.022188265814706815,NON ÉQUIVALENT — dégrade au-delà de la marge
+london,GCN-Transformer,distance,8,-0.7015505179532563,-1.1421957994396925,-0.33572871829075823,NON ÉQUIVALENT — dégrade au-delà de la marge
+london,GCN-Transformer,correlation,8,-0.8087616171082339,-1.2978557124928902,-0.4176995840641484,NON ÉQUIVALENT — dégrade au-delà de la marge
+madrid,GCN-Transformer,distance,7,-0.29086094593168055,-0.3906420191029326,-0.22057476238329277,NON ÉQUIVALENT — dégrade au-delà de la marge
+madrid,GCN-Transformer,correlation,7,-0.3987773354324085,-0.536426770692032,-0.2671442491194707,NON ÉQUIVALENT — dégrade au-delà de la marge
+czt,GCN-Transformer,distance,20,-0.021584526380057024,-0.024602370158468882,-0.018542549679719546,NON CONCLUANT (IC chevauche la frontière de la marge)
+czt,GCN-Transformer,correlation,20,-0.03094524638021163,-0.03512923896801728,-0.026803050264650796,NON ÉQUIVALENT — dégrade au-delà de la marge
+madrid,stgcn,correlation,7,-0.019505425895261226,-0.06645703903063868,0.009900199152253772,NON CONCLUANT (IC chevauche la frontière de la marge)
+madrid,graphwavenet,correlation,7,0.004616352456658764,0.0015177898315865532,0.007684458862400245,ÉQUIVALENT (IC entièrement dans ±0.02)
