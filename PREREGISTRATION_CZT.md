@@ -200,6 +200,49 @@ affectée si CZT avait eu une station dégénérée, ce qui n'est pas le cas.
 d'arrêt ne s'applique pas — la décision de lancer l'entraînement (E16)
 reste à prendre séparément.
 
+## 8. Ajout daté 2026-08-23 — résultat de l'entraînement, prédiction P1 réfutée
+
+*Section ajoutée après les sections 6 et 7 ci-dessus. Les sections 2 et 3
+sont inchangées et le restent.*
+
+**Protocole** : identique aux 3 autres réseaux (GCN-Transformer et
+Linear-Transformer, topologies distance et correlation, k=5, seeds
+42/123/777, splits chronologiques 70/15/15, MinMax train seul,
+`06_train_multistation.py --city czt --graph both`, 372,6 min).
+
+| Topologie | R² GCN | R² Linear | ΔR² |
+|---|---|---|---|
+| distance | 0,9375±0,0008 | 0,9586±0,0034 | **−0,0211** |
+| correlation | 0,9272±0,0010 | 0,9586±0,0034 | **−0,0314** |
+
+GCN supérieur au Linear-Transformer sur **0/20 stations** (seed primaire).
+
+**P1 réfutée, dans les deux topologies — rapporté tel quel, non lissé.**
+P1 prédisait ΔR² ≥ −0,02. Résultat : −0,0211 (distance, juste en dessous du
+seuil) et −0,0314 (correlation, plus nettement en dessous). h(D)=0,413
+prédisait correctement la **direction relative** (CZT moins dégradée que
+Beijing/London/Madrid, confirmé — cf. section suivante) mais pas le **signe
+absolu** annoncé par le seuil P1 (« neutre ou meilleur »). C'est la valeur
+même de ce pré-enregistrement : la prédiction était fausse sur ce point
+précis, et c'est publié tel quel, pas ajusté après coup.
+
+**Position sur la courbe h(D)↔ΔR², 4 réseaux :**
+
+| Ville | h(D) | ΔR² distance | ΔR² correlation |
+|---|---|---|---|
+| CZT | 0,413 | −0,0211 | −0,0314 |
+| Beijing | 0,497 | −0,0172 | −0,0375 |
+| London | 0,656 | −0,3754 | −0,4014 |
+| Madrid | 0,728 | −0,3213 | −0,4144 |
+
+Spearman h(D)↔ΔR², n=4 : **correlation topologie ρ=−1,000** (ordre
+parfaitement monotone — CZT < Beijing < London < Madrid en h(D), même ordre
+en ΔR² le moins au plus négatif). **Distance topologie ρ=−0,600, p=0,40**
+(non significatif à n=4) : CZT (−0,0211) légèrement plus dégradée que
+Beijing (−0,0172) malgré un h(D) plus bas — inversion locale mineure entre
+deux valeurs proches de zéro, pas comparable au renversement franc
+Madrid/London documenté en Table 2 (cf. `CHANGELOG_TABLES.md`).
+
 ---
 
 *Enregistré avant tout entraînement. Ne pas modifier les sections 2 et 3.*

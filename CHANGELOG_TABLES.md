@@ -1076,3 +1076,28 @@ topologie distance n'a jamais utilisé de corrélation, jamais concernée par
 ce correctif. Le point de rédaction §6.3 (ci-dessus) mis à jour en
 conséquence : la limite de l'indice à assumer ne concerne plus qu'une
 topologie sur deux.
+
+## E16 — Chang-Zhu-Tan, entraînement (2026-08-23)
+
+Protocole identique aux 3 réseaux du manuscrit (GCN-Transformer +
+Linear-Transformer, distance + correlation, k=5, seeds 42/123/777, splits
+70/15/15, MinMax train seul), lancé via `06_train_multistation.py --city czt
+--graph both` (20 stations, `configs/stations/czt.yaml`). Détail complet
+(prédiction P1, réfutation, position sur la courbe h(D)↔ΔR², n=4) dans
+`PREREGISTRATION_CZT.md` section 8 — ne pas dupliquer ici, seulement le
+point de rédaction demandé :
+
+**Note pour la rédaction — r̄ = 0,904 sur CZT contre 0,512 dans le `.npz`
+MSDGNN.** La forte corrélation inter-stations est le trait dominant de ce
+réseau et explique sa position à l'extrémité homophile de l'intervalle des
+4 réseaux (h(D)=0,413, le plus bas). Pour comparaison, r̄ sur les 3 réseaux
+du manuscrit (source : sorties `05_compute_heterogeneity_v2.py`, non
+reproduites ici en détail) est nettement plus faible à Londres/Madrid — CZT
+se distingue par une homogénéité spatiale de la corrélation PM2.5
+elle-même, pas seulement par un h(D) composite plus bas : les 20 stations
+de Changsha-Zhuzhou-Xiangtan varient de façon très synchronisée d'une
+station à l'autre, contrairement au `.npz` MSDGNN qui, avant reconstruction,
+sous-estimait cette synchronie (r̄=0,512) — cohérent avec les mécanismes
+déjà identifiés en section 6 de `PREREGISTRATION_CZT.md` (1335A lissée,
+comblement artificiel des manquants, tous deux mécaniquement réducteurs de
+corrélation mesurée).
