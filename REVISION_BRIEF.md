@@ -123,10 +123,10 @@ un CHANGELOG ne doit jamais inventer son propre numéro localement.
 | E10 | Pruning Madrid, 7 stations (5 niveaux×3 seeds) | **FAIT** (P5) |
 | E11 | Parité seeds STGCN/Graph WaveNet (2 modèles×3 villes×2 seeds, 12 runs) | **FAIT** (P5) |
 | E12 | Contrôles pruning : élagage aléatoire à densité appariée + élagage inverse (garder les arêtes les plus hétérophiles) | **FAIT** (P5) — niveaux réduits à {0.75, 0.25} (budget), 5 tirages aléatoires |
-| E13 | Table 8, over-smoothing/GAT (3 villes×4 variantes×3 seeds, 36 runs) | jamais lancée |
+| E13 | Table 8, over-smoothing/GAT (3 villes×4 variantes×3 seeds, 36 runs) | **FAIT** — corrigé 2026-08-24 (commits `0fa3f05`, `ebfc2f5` ; 360 lignes `config_path=09_controls_oversmoothing.py` dans `raw_results.csv`). Cette ligne marquait encore « jamais lancée » alors que l'expérience était terminée — cf. `configs/experiments/e13_oversmoothing_gat_control.yaml` |
 | E14 | Édition d'arêtes Beijing/London, seeds 123/777 (5 niveaux×2 seeds×2 villes, 20 runs) | **FAIT** (P5) |
 | E15 | AirPhyNet, baseline post-2024 | étude de faisabilité faite (reproduction <1% d'écart, coûts mesurés — `external/AIRPHYNET_FEASIBILITY.md`), runs non lancés (0/9 : 3 villes×3 seeds) — session parallèle |
-| E16 | Chang-Zhu-Tan, 4e réseau de validation externe de h(D) | pré-enregistrement fait (`PREREGISTRATION_CZT.md`, h(D)=0.312 mesuré avant entraînement), collecte de données en cours — session parallèle |
+| E16 | Chang-Zhu-Tan, 4e réseau de validation externe de h(D) | **FAIT** — corrigé 2026-08-24 (commits `4367e19`, `466046c`, `770f083` ; h(D)=0.413 mesuré, entraînement terminé, prédiction P1 réfutée ; 252 lignes `city=czt` dans `raw_results.csv`). Cette ligne marquait encore « collecte de données en cours » alors que l'entraînement était terminé — cf. `configs/experiments/e16_czt_validation.yaml` |
 
 **Note de correspondance** : le commit `51fd7f1` (« E11 faisabilité AirPhyNet »)
 utilisait un numéro provisoire attribué localement, avant que cette table ne
