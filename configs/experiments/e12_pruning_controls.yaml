@@ -1,0 +1,54 @@
+name: E12
+description: >
+  Contrôles de pruning à densité appariée avec le pruning guidé (E10/E14) :
+  (1) aléatoire (>=5 tirages indépendants), (2) inverse (retire les arêtes
+  les plus homophiles d'abord — opposé du pruning guidé). 3 villes. Niveaux
+  intermédiaires réduits à {0.75, 0.25} (budget) ; 1.0/0.0 partagés avec le
+  pruning guidé (identiques par construction, non réentraînés).
+script: 15_pruning_controls.py
+wrapper: e12_run_pruning_controls.sh
+cities: [beijing, london, madrid]
+topologies: [distance]   # part du même graphe distance k=5 que 13_edge_pruning.py
+seeds: [42, 123, 777]    # stratégie "inverse" (CANONICAL_SEEDS)
+keep_frac: [0.75, 0.25]  # LEVELS_REDUCED — niveaux réellement réentraînés ; 1.0/0.0 réutilisés depuis edge_pruning.csv
+
+cli_invocation: >
+  caffeinate -i python3 15_pruning_controls.py --cities <city> --strategies random --levels <level> --n_draws 5 --cpu
+  ET caffeinate -i python3 15_pruning_controls.py --cities <city> --strategies inverse --levels <level> --cpu
+other_params:
+  cpu: true
+  strategies: [random, inverse]
+  n_draws: 5   # --n_draws, tirages aléatoires par (ville, niveau) — PAS réduit malgré la réduction des niveaux
+  random_draw_seeds: [1001, 1002, 1003, 1004, 1005]   # RANDOM_DRAW_SEEDS, hors bande [42,123,777] (15_pruning_controls.py:64)
+  inverse_seeds: [42, 123, 777]   # CANONICAL_SEEDS
+  levels_shared_with_guided_pruning: [1.0, 0.0]   # non réentraînés, réutilisés de results/edge_pruning.csv
+  compute_budget_note: "(2 niveaux x 5 tirages + 2 niveaux x 3 seeds) x 3 villes = 48 entraînements (e12_run_pruning_controls.sh:713-714)"
+
+hyperparameters:
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+  base_graph_k: 5
+
+produces_rows_matching:
+  random_matched: {model: GCN-Transformer, variant: random_matched, topology: distance}
+  inverse: {model: GCN-Transformer, variant: inverse, topology: distance}
+  config_path: 15_pruning_controls.py
+  n_rows_observed: 480   # random_matched: 300, inverse: 180 — results/raw_results.csv 2026-08-24
+
+status: >
+  FAIT (P5) — REVISION_BRIEF.md, table E-series ligne 125 : "niveaux réduits à {0.75, 0.25} (budget),
+  5 tirages aléatoires" (copié verbatim).
+source:
+  - e12_run_pruning_controls.sh (invocation CLI exacte, lignes 704-730)
+  - 15_pruning_controls.py (docstring lignes 1-41, argparse lignes 128-138, constantes lignes 61-65)
+  - REVISION_BRIEF.md (table E-series ligne 125)
+  - results/raw_results.csv (vérification empirique)

@@ -20,10 +20,10 @@
 | London | Linear-Transformer | n/a (topology-independent) |  |  | 0.8422 ± 0.0040 | 3seed_mean |
 | London | STGCN | correlation |  |  | 0.8421 ± 0.0055 | 3seed_mean |
 | London | Graph WaveNet | correlation |  |  | 0.8425 ± 0.0081 | 3seed_mean |
-| Madrid | Persistence (t−1) |  | 2.8753 | 4.8603 | 0.7986 ± 0.0000 [SUSPECT] | deterministic |
-| Madrid | ARIMA |  | 2.8527 | 4.7038 | 0.8114 ± 0.0000 [SUSPECT] | deterministic |
-| Madrid | XGBoost |  | 3.0147 | 4.7688 | 0.8061 ± 0.0000 [SUSPECT] | primary_seed |
-| Madrid | LSTM |  | 2.8801 | 4.8551 | 0.7990 ± 0.0000 [SUSPECT] | 3seed_mean |
+| Madrid | Persistence (t−1) |  | 2.8726 | 4.8368 | 0.7961 ± 0.0000 | deterministic |
+| Madrid | ARIMA |  | 2.8533 | 4.7023 | 0.8073 ± 0.0000 | deterministic |
+| Madrid | XGBoost |  | 3.6147 | 6.0993 | 0.6758 ± 0.0000 | primary_seed |
+| Madrid | LSTM |  | 2.8771 | 4.8316 | 0.7965 ± 0.0000 | 3seed_mean |
 | Madrid | GCN-Transformer | distance |  |  | 0.4927 ± 0.0064 | 3seed_mean |
 | Madrid | GCN-Transformer | correlation |  |  | 0.3996 ± 0.0335 | 3seed_mean |
 | Madrid | Linear-Transformer | n/a (topology-independent) |  |  | 0.8140 ± 0.0013 | 3seed_mean |

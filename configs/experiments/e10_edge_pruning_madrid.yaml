@@ -1,0 +1,54 @@
+name: E10
+description: >
+  Élagage des arêtes hétérophiles (courbe de pruning) — Madrid, 7 stations
+  (MENDEZ ALVARO incluse), graphe distance complet, 5 niveaux d'arêtes
+  conservées x 3 seeds.
+script: 13_edge_pruning.py
+wrapper: e10_run_madrid_pruning.sh
+cities: [madrid]
+topologies: [distance]   # part du graphe DISTANCE k=5 canonique (13_edge_pruning.py:87), élague ensuite
+seeds: [42, 123, 777]
+keep_frac: [1.0, 0.75, 0.5, 0.25, 0.0]   # LEVELS, 13_edge_pruning.py:62
+
+cli_invocation: "caffeinate -i python3 13_edge_pruning.py --cities madrid --seeds <seed> --levels <level> --cpu"
+other_params:
+  cpu: true
+  pruning_rule: >
+    Élague par hétérophilie DÉCROISSANTE (garde les arêtes de plus forte corrélation train) —
+    het_e = 1 - corr_train(i,j) ; arêtes vers une station à corrélation NaN (MENDEZ ALVARO,
+    PM2.5 constant sur train) traitées comme les plus hétérophiles, élaguées en premier
+    (13_edge_pruning.py:97-108).
+
+hyperparameters:
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+  base_graph_k: 5   # K_NEIGHBORS, graphe distance de 06 avant élagage
+  n_stations_madrid: 7
+
+produces_rows_matching:
+  model: GCN-Transformer
+  variant: ""
+  city: madrid
+  topology: distance
+  keep_frac: [1.0, 0.75, 0.5, 0.25, 0.0]
+  seed: [42, 123, 777]
+  config_path: 13_edge_pruning.py
+  note: >
+    Ce config_path est partagé avec E14 (édition d'arêtes Beijing/London) — les deux expériences
+    utilisent le même script, distinguées ici par city=madrid.
+
+status: FAIT (P5) — REVISION_BRIEF.md, table E-series ligne 123
+source:
+  - e10_run_madrid_pruning.sh (invocation CLI exacte, lignes 660-678)
+  - 13_edge_pruning.py (docstring lignes 1-41, argparse lignes 158-166, prune() lignes 97-108)
+  - REVISION_BRIEF.md (table E-series ligne 123)
+  - results/raw_results.csv (vérification empirique, config_path=13_edge_pruning.py, n=450 lignes cumulées E10+E14)

@@ -1,0 +1,64 @@
+name: k_sensitivity_table7
+description: >
+  Sensibilité à k (voisins du graphe), Table 7 du papier — 3 villes x 2
+  topologies x k∈{3,5,8} x 3 seeds. Grille générale, complétée par étapes :
+  k=5 et Linear-Transformer relus du JSON canonique (aucun ré-entraînement) ;
+  k∈{3,8} ré-entraînés. Distinct d'E9 (configs/experiments/e9_k_sensitivity_madrid.yaml),
+  qui est un re-run CIBLÉ Madrid seul pour corriger l'exclusion erronée de
+  MENDEZ ALVARO dans ce même pipeline (voir "status" ci-dessous).
+script: e8_k_sensitivity_3seeds.py
+wrapper: e8_run_all.sh
+cities: [beijing, london, madrid]
+topologies: [distance, correlation]
+seeds: [42, 123, 777]
+k: [3, 5, 8]   # KS, e8_k_sensitivity_3seeds.py:339 ; k=5 pull JSON, k∈{3,8} ré-entraînés (RECOMPUTE_KS)
+
+cli_invocation: "python3 e8_k_sensitivity_3seeds.py --city <city> --topology <topo> --k <3|5|8> --seed <42|123|777> --cpu"
+other_params:
+  cpu: true   # --cpu, default=True dans le script
+  force_retrain: false   # --force-retrain — false ici (grille générale) ; true pour E9 (Madrid) et le correctif e17
+  aggregate_step: "python3 e8_k_sensitivity_3seeds.py --aggregate"   # recalcule results/table7_k_sensitivity.csv (mean±std ddof=1)
+  predecessor_script: e6_k_sensitivity.py   # version single-seed (k∈{3,8}, seed 42 uniquement), archivée dans
+                                             # results/e6_k_sensitivity_seed42_only.csv, réutilisée comme référence seed=42
+
+hyperparameters:   # protocole 06 identique, réimporté via load_bench() ; seul k varie
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+
+produces_rows_matching:
+  model: GCN-Transformer
+  variant: ""
+  topology: [distance, correlation]
+  k: [3, 5, 8]
+  config_path: ["e6_k_sensitivity.py/e8_k_sensitivity_3seeds.py", "e8_k_sensitivity_3seeds.py"]
+  n_rows_observed: 39   # 24 (config_path composite) + 15 (config_path seul), results/raw_results.csv 2026-08-24
+  output_csv: [results/e6_k_sensitivity.csv, results/table7_k_sensitivity.csv]
+
+status: >
+  Non numéroté dans le tableau "E-series" figé de REVISION_BRIEF.md (E9-E16) — antérieur au gel de la
+  numérotation, référencé sous des numéros informels "E6"/"E8" dans les messages de commit
+  (e7ba08a "E6: k-sensitivity (k=3,8) single-seed robustness check", 18aef77 "E8: Table 7 extended to
+  3 seeds 42/123/777"), cf. REVISION_BRIEF.md note de correspondance ligne 131-135 sur ce type de
+  décalage. FAIT pour Beijing/London dès l'origine (jamais concernés par le bug MENDEZ ALVARO) ;
+  Madrid correctement réparé par E9 (7 stations, --force-retrain) puis, pour la topologie correlation
+  uniquement, par le correctif e17_run_correlation_fix.sh (bug de tri NaN dans build_correlation_graph,
+  cf. commits 9992793/ca626dc). Le script 08_sensitivity_k.py (référencé par README.md comme
+  "canonique") est ABANDONNÉ INCOMPLET (results/sensitivity_k_canonical_NOTE.md : arrêt volontaire,
+  saturation swap MPS ; aucune ligne dans raw_results.csv) — superseded par ce pipeline e6/e8.
+source:
+  - e8_k_sensitivity_3seeds.py (docstring lignes 1-32, argparse lignes 581-604, constantes lignes 337-344)
+  - e6_k_sensitivity.py (docstring lignes 1-33, script prédécesseur single-seed)
+  - e8_run_all.sh (invocation CLI exacte)
+  - e17_run_correlation_fix.sh (re-run correctif Madrid/correlation, lignes 786-793)
+  - results/table7_k_sensitivity.csv, results/sensitivity_k_canonical_NOTE.md
+  - README.md (section Reproducing, Table 7 — note "canonical, currently incomplete" concerne 08_sensitivity_k.py, pas ce pipeline)
+  - results/raw_results.csv (vérification empirique des combos model/k/topology/config_path)

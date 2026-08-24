@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-regenerate_figures.py — P10 : régénère les figures DE DONNÉES du manuscrit
-en vectoriel (PDF + SVG), depuis raw_results.csv.
+regenerate_figures.py — P10 : régénère les 5 figures du manuscrit en
+vectoriel (PDF + SVG).
 
-⚠️ Le manuscrit a 5 figures numérotées, mais seules 3 sont des graphiques de
-données : Figure 3 (h(D) vs ΔR², 3→4 réseaux), Figure 4 (per-station h_i vs
-ΔR²), Figure 5 (courbe de pruning). Figures 1 et 2 sont des illustrations
-conceptuelles / un schéma de pipeline — rien à régénérer depuis
-raw_results.csv, elles n'ont pas de données sous-jacentes. Ce script ne
-produit donc que 3 figures, pas 5 — signalé explicitement, pas de figures
-fantômes générées pour faire le compte.
+Figures 3, 4, 5 sont des graphiques de données, générés depuis
+raw_results.csv. Figures 1 (illustration conceptuelle homogène/hétérogène)
+et 2 (schéma du pipeline) N'ONT PAS de données sous-jacentes — ce sont des
+illustrations, recréées ici en code à partir du même contenu conceptuel que
+l'original (retrouvé seulement en PNG bitmap dans le .docx du manuscrit,
+aucun script source dans ce dépôt), pas depuis raw_results.csv. Signalé
+explicitement pour ne pas laisser croire qu'elles sortent des résultats.
 
 Gabarit IJIES (source : (Ver. 2025.5.18) IJIES_Format (2).docx, A4,
 marges 0.75in, 2 colonnes, espace inter-colonnes 0.3in) :
@@ -24,7 +24,9 @@ recalculé ici à l'identique de analysis/build_per_station_dataset.py /
 12_per_station_heterophily.py (même méthode sûre, masquage NaN avant tri).
 ΔR² vient exclusivement de raw_results.csv.
 
-Sorties : figures/fig3_h_index_vs_delta_r2.{pdf,svg}
+Sorties : figures/fig1_conceptual_illustration.{pdf,svg}   (pas de données)
+          figures/fig2_pipeline.{pdf,svg}                   (pas de données)
+          figures/fig3_h_index_vs_delta_r2.{pdf,svg}
           figures/fig4_per_station_heterophily.{pdf,svg}
           figures/fig5_edge_pruning_curve.{pdf,svg}
 """
@@ -158,6 +160,190 @@ def gcn_lin_delta_3seed(df, city, topo):
 
 
 # --------------------------------------------------------------------------- #
+# Figure 1 — illustration conceptuelle (homogène vs hétérogène)
+# --------------------------------------------------------------------------- #
+# Existait seulement en PNG bitmap intégré dans le .docx du manuscrit (pas de
+# script source retrouvé dans ce dépôt — recherché, aucun match). Le style
+# déjà en place (serif, axes en boîte) montre qu'elle avait déjà été produite
+# par un outil de tracé (probablement matplotlib) plutôt que dessinée à la
+# main — donc refaisable en code. Contenu conceptuel identique à l'original
+# (2 panneaux, courbes synthétiques illustratives, PAS des données réelles —
+# à ne jamais confondre avec un graphique de résultats), mis à jour avec CZT
+# comme second exemple homogène (r̄=0.904, encore plus homogène que Beijing).
+def fig1():
+    rng = np.random.default_rng(0)
+    t = np.linspace(0, 4 * np.pi, 300)
+    base = np.sin(t) + 0.3 * np.sin(2.3 * t)
+
+    fig, axes = plt.subplots(1, 2, figsize=(FULL_WIDTH, FULL_WIDTH * 0.42))
+    # Marges explicites (pas tight_layout, qui recalcule les positions et
+    # entre en conflit avec les blocs de texte placés manuellement en
+    # dessous — corrigé après un premier rendu où titre/légendes/texte se
+    # chevauchaient en cascade).
+    fig.subplots_adjust(left=0.06, right=0.98, top=0.72, bottom=0.30, wspace=0.12)
+    fig.suptitle(r"Spatial (graph) encoding of PM$_{2.5}$ across IoT stations",
+                fontsize=FONT_SIZE + 1, y=0.98)
+
+    # Panneau homogène : 4 séries quasi identiques (bruit minime autour de
+    # la même série de base) — Beijing/CZT, r̄≈0.88-0.90.
+    ax = axes[0]
+    colors = [CITY_COLORS[c] for c in ["beijing", "czt", "madrid", "london"]]
+    for c in colors:
+        y = base + rng.normal(0, 0.03, size=t.shape)
+        ax.plot(t, y, color=c, lw=1.0, alpha=0.85)
+    ax.set_title("Homogeneous network\n(e.g. Beijing / CZT, " r"$\bar r \approx 0.88\text{-}0.90$)",
+                fontsize=FONT_SIZE, pad=8)
+    ax.set_xlabel("time", fontsize=FONT_SIZE, labelpad=4)
+
+    # Panneau hétérogène : 4 séries dissimilaires (marches aléatoires
+    # indépendantes + faible composante commune) — London/Madrid, r̄≈0.4-0.5.
+    ax = axes[1]
+    colors = [CITY_COLORS[c] for c in ["beijing", "london", "madrid", "czt"]]
+    for c in colors:
+        walk = np.cumsum(rng.normal(0, 0.12, size=t.shape))
+        y = 0.3 * base + walk
+        y = (y - y.mean()) / y.std()
+        ax.plot(t, y, color=c, lw=1.0, alpha=0.85)
+    ax.set_title("Heterogeneous network\n(e.g. London / Madrid, " r"$\bar r \approx 0.4\text{-}0.5$)",
+                fontsize=FONT_SIZE, pad=8)
+    ax.set_xlabel("time", fontsize=FONT_SIZE, labelpad=4)
+
+    for ax in axes:
+        ax.set_xticks([]); ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_linewidth(0.8)
+
+    # Blocs de texte du bas, en coordonnées FIGURE (pas axes) — centrés sur
+    # chaque panneau via sa position réelle après subplots_adjust, pour ne
+    # jamais dépendre d'un décalage devinable en coordonnées axes.
+    for ax, txt in zip(axes, [
+        "neighbours nearly identical\n$\\Rightarrow$ aggregation redundant\n$\\Rightarrow$ small penalty",
+        "neighbours dissimilar\n$\\Rightarrow$ averaging mixes signals\n$\\Rightarrow$ large penalty",
+    ]):
+        pos = ax.get_position()
+        xc = (pos.x0 + pos.x1) / 2
+        fig.text(xc, 0.16, txt, ha="center", va="top", fontsize=FONT_SIZE)
+
+    save_fig(fig, "fig1_conceptual_illustration")
+
+
+# --------------------------------------------------------------------------- #
+# Figure 2 — schéma du pipeline
+# --------------------------------------------------------------------------- #
+# Même situation que Figure 1 : bitmap seul retrouvé, style déjà cohérent
+# avec matplotlib, aucun script source dans ce dépôt. Contenu mis à jour :
+# la liste des stations dans la case « Input » incluait seulement Beijing/
+# London/Madrid — Chang-Zhu-Tan (20 stations, E16) ajoutée pour rester
+# exacte après la révision. Le reste (protocole, architecture) inchangé.
+def _text_width_in(fig, s, fontsize, weight="normal"):
+    """Largeur réelle (pouces) de la ligne la plus longue de `s`, mesurée
+    par rendu — pas devinée. Nécessaire ici : un premier essai à largeur de
+    boîte uniforme (6 boîtes égales) a débordé sur les boîtes voisines,
+    seulement ~10 caractères tenant par ligne à 9pt sur 6.77in/6 boîtes."""
+    renderer = fig.canvas.get_renderer()
+    widths = []
+    for line in s.split("\n"):
+        t = fig.text(0, 0, line, fontsize=fontsize, fontweight=weight)
+        bbox = t.get_window_extent(renderer=renderer)
+        widths.append(bbox.width / fig.dpi)
+        t.remove()
+    return max(widths) if widths else 0.0
+
+
+def _text_height_in(fig, s, fontsize, weight="normal", linespacing=1.0):
+    """Hauteur réelle (pouces) du bloc multi-ligne `s`, mesurée par rendu —
+    nécessaire car un box_h uniforme avec un corps centré verticalement a
+    fait déborder le corps le plus long (6 lignes, boîte « Output &
+    evaluation ») dans le titre au-dessus."""
+    renderer = fig.canvas.get_renderer()
+    t = fig.text(0, 0, s, fontsize=fontsize, fontweight=weight, linespacing=linespacing)
+    bbox = t.get_window_extent(renderer=renderer)
+    t.remove()
+    return bbox.height / fig.dpi
+
+
+def fig2():
+    boxes = [
+        ("Input", "Beijing: 12\nLondon: 8\nMadrid: 7\nCZT: 20\n5 features,\nhourly", "#E8ECF7"),
+        ("Preprocessing", "Interpolation;\nMinMax\n(train fit);\n70/15/15\nsplit", "#E8ECF7"),
+        ("Graph\nconstruction", "k-NN, k=5\ndistance /\ncorrelation\n(GCN/GAT\nonly)", "#F0EBD8"),
+        ("Spatial\nencoder", "Linear / GCN\n/ GAT\n(per\ntimestep)", "#DCEEDD"),
+        ("Temporal\nTransformer", "24h window;\n2 layers,\n4 heads,\nd=64", "#F7E9D7"),
+        ("Output &\nevaluation", r"PM$_{2.5}$ at" "\n" r"$t{+}1$;" "\nRMSE, MAE,\n$R^2$;\nWilcoxon+\nHolm, $d$", "#F5E1E4"),
+    ]
+    n = len(boxes)
+    fig, ax = plt.subplots(figsize=(FULL_WIDTH, FULL_WIDTH * 0.42))
+    # L'axe occupe (quasi) toute la figure : les largeurs de boîte calculées
+    # en pouces ci-dessous sont utilisées directement comme coordonnées data,
+    # ce qui ne correspond aux pouces réels à l'écran QUE si l'axe couvre
+    # bien 100% de la largeur figure — sinon les boîtes seraient mises à
+    # l'échelle sans que le texte mesuré ne le soit, et redéborderaient.
+    ax.set_position([0.0, 0.02, 1.0, 0.96])
+    fig.canvas.draw()  # nécessaire avant toute mesure de texte
+
+    pad_in = 0.10  # marge interne gauche/droite par boîte, en pouces
+    gap_in = 0.20
+    widths_in = []
+    for title, body, _ in boxes:
+        w = max(_text_width_in(fig, title, FONT_SIZE, "bold"),
+               _text_width_in(fig, body, FONT_SIZE))
+        widths_in.append(w + 2 * pad_in)
+    scale = (FULL_WIDTH - (n - 1) * gap_in) / sum(widths_in)
+    widths_in = [w * scale for w in widths_in]  # remplit exactement FULL_WIDTH
+
+    # box_h et l'ancrage vertical titre/corps sont mesurés, pas devinés : le
+    # corps le plus long (6 lignes, « Output & evaluation ») centré dans une
+    # boîte de hauteur uniforme débordait dans le titre au-dessus. Ici le
+    # titre est ancré en haut, le corps ancré juste en dessous (va="top"
+    # pour les deux) — un corps plus long grandit vers le bas de la boîte,
+    # jamais vers le titre.
+    top_pad = 0.14
+    title_body_gap = 0.10
+    bottom_pad = 0.14
+    title_h = max(_text_height_in(fig, t, FONT_SIZE, "bold") for t, _, _ in boxes)
+    body_h = max(_text_height_in(fig, b, FONT_SIZE, linespacing=1.5) for _, b, _ in boxes)
+    box_h = top_pad + title_h + title_body_gap + body_h + bottom_pad
+    title_y = box_h - top_pad
+    body_y = title_y - title_h - title_body_gap
+    gap = gap_in  # unités data == pouces (axes positionnée pour occuper toute la figure, cf. plus bas)
+    xs = []
+    x_cursor = 0.0
+    for w in widths_in:
+        xs.append(x_cursor)
+        x_cursor += w + gap
+
+    from matplotlib.patches import FancyBboxPatch
+    total_w = x_cursor - gap
+    for i, ((title, body, color), x, w) in enumerate(zip(boxes, xs, widths_in)):
+        highlight = ("encoder" in title)
+        box = FancyBboxPatch((x, 0), w, box_h,
+                             boxstyle="round,pad=0.02,rounding_size=0.05",
+                             linewidth=1.4 if highlight else 0.9,
+                             edgecolor=CITY_COLORS["madrid"] if highlight else "0.15",
+                             facecolor=color, zorder=2)
+        ax.add_patch(box)
+        ax.text(x + w / 2, title_y, title, ha="center", va="top",
+               fontsize=FONT_SIZE, fontweight="bold", zorder=3)
+        ax.text(x + w / 2, body_y, body, ha="center", va="top",
+               fontsize=FONT_SIZE, zorder=3, linespacing=1.5)
+        if i < n - 1:
+            xm = x + w + gap / 2
+            ax.annotate("", xy=(xm + gap / 2 - 0.015, box_h / 2), xytext=(xm - gap / 2 + 0.015, box_h / 2),
+                       arrowprops=dict(arrowstyle="-|>", color="0.15", lw=1.1), zorder=1)
+        if highlight:
+            ax.annotate("component under test", xy=(x + w / 2, 0), xytext=(x + w / 2, -0.32),
+                       ha="center", va="top", fontsize=FONT_SIZE, style="italic",
+                       color=CITY_COLORS["madrid"],
+                       arrowprops=dict(arrowstyle="-", color=CITY_COLORS["madrid"], lw=1.0))
+
+    ax.set_xlim(-0.05, total_w + 0.05)
+    ax.set_ylim(-0.55, box_h + 0.15)
+    ax.set_aspect("auto")
+    ax.axis("off")
+    save_fig(fig, "fig2_pipeline")
+
+
+# --------------------------------------------------------------------------- #
 # Figure 3 — h(D) vs ΔR², 4 réseaux, 2 panneaux topologie
 # --------------------------------------------------------------------------- #
 def fig3(df):
@@ -286,7 +472,14 @@ def fig5(df):
     ax.invert_xaxis()
     ax.set_xlabel("Fraction of edges retained")
     ax.set_ylabel(r"Aggregate $R^2$ (GCN-Transformer)")
-    ax.legend(frameon=False, loc="lower right", handletextpad=0.4)
+    # CZT explicitement déclarée absente, dans la figure elle-même — pas
+    # seulement dans la légende texte du manuscrit (consigne 2026-08-25 :
+    # le lecteur ne doit pas avoir à le remarquer par lui-même).
+    handles, labels = ax.get_legend_handles_labels()
+    handles.append(plt.Line2D([], [], color="none"))
+    labels.append("(Chang-Zhu-Tan: no pruning\nexperiment run on this network)")
+    ax.legend(handles, labels, frameon=False, loc="lower right", handletextpad=0.4,
+             fontsize=FONT_SIZE)
     fig.tight_layout()
     save_fig(fig, "fig5_edge_pruning_curve")
 
@@ -294,6 +487,12 @@ def fig5(df):
 def main():
     set_style()
     df = load_raw_results()
+
+    print("Figure 1 (illustration conceptuelle)...")
+    fig1()
+
+    print("Figure 2 (schéma pipeline)...")
+    fig2()
 
     print("Figure 3 (h(D) vs ΔR², 4 réseaux)...")
     fig3(df)
@@ -311,9 +510,9 @@ def main():
     print("Figure 5 (courbe de pruning guidé, 3 villes)...")
     fig5(df)
 
-    print("\n⚠️ Figures 1 et 2 non régénérées : illustrations conceptuelles / "
-          "schéma de pipeline, aucune donnée sous-jacente dans raw_results.csv "
-          "— hors périmètre de ce script (cf. docstring).")
+    print("\n⚠️ Figures 1 et 2 : illustrations recréées en code (même contenu "
+          "conceptuel que l'original), PAS depuis raw_results.csv — aucune "
+          "donnée sous-jacente, cf. docstring.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,47 @@
+name: E14
+description: >
+  Édition d'arêtes (courbe de pruning) — Beijing/London, seeds 123/777,
+  complète la parité de seeds avec Madrid (E10, déjà 3 seeds). Même script
+  et même règle d'élagage que E10 ; distinguée ici par ville/seeds car
+  E10 (wrapper séparé) porte sur Madrid uniquement.
+script: 13_edge_pruning.py
+wrapper: e14_run_edge_editing.sh
+cities: [beijing, london]
+topologies: [distance]
+seeds: [123, 777]   # seed 42 déjà couvert par l'ancre de pruning d'origine (avant E10/E14), non relancé ici
+keep_frac: [1.0, 0.75, 0.5, 0.25, 0.0]
+
+cli_invocation: "caffeinate -i python3 13_edge_pruning.py --cities <beijing|london> --seeds <123|777> --levels <level> --cpu"
+other_params:
+  cpu: true
+
+hyperparameters:
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+  base_graph_k: 5
+
+produces_rows_matching:
+  model: GCN-Transformer
+  variant: ""
+  city: [beijing, london]
+  topology: distance
+  keep_frac: [1.0, 0.75, 0.5, 0.25, 0.0]
+  seed: [123, 777]
+  config_path: 13_edge_pruning.py
+  note: "config_path partagé avec E10 (Madrid) — même script, 450 lignes cumulées dans raw_results.csv"
+
+status: FAIT (P5) — REVISION_BRIEF.md, table E-series ligne 127
+source:
+  - e14_run_edge_editing.sh (invocation CLI exacte, lignes 753-773)
+  - 13_edge_pruning.py (identique à E10, cf. configs/experiments/e10_edge_pruning_madrid.yaml)
+  - REVISION_BRIEF.md (table E-series ligne 127)
+  - results/raw_results.csv (vérification empirique)

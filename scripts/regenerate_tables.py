@@ -137,6 +137,7 @@ def load():
     df["variant"] = df["variant"].fillna("")
     df["topology"] = df["topology"].fillna("")
     df["provenance_note"] = df["provenance_note"].fillna("")
+    df = resolve_superseded_suspect_rows(df)
     return df
 
 
@@ -150,6 +151,42 @@ def _is_suspect(notes):
     déclenchait [SUSPECT] sur toute note non vide, ce qui flaggait à tort des
     lignes Beijing jamais concernées par MENDEZ ALVARO — corrigé avant E9."""
     return notes.fillna("").str.contains("|".join(_SUSPECT_MARKERS), regex=True).any()
+
+
+def resolve_superseded_suspect_rows(df):
+    """Exclut de la génération des tables les lignes SUSPECT_6STATION/
+    UNRECOVERABLE quand un re-run propre existe pour la MÊME condition
+    logique (IDENTITY_COLS) sous un run_id différent — cas d'un script
+    corrigé (ex. 10_external_baselines.py, MENDEZ ALVARO réintégrée) relancé
+    après le run initial fautif. raw_results.csv n'est jamais modifié : ce
+    filtre n'agit qu'en mémoire, sur la vue utilisée pour les tables.
+
+    Ne touche à AUCUN autre cas de doublon : si un groupe est 100% SUSPECT
+    ou 100% propre malgré plusieurs run_id, il reste tel quel et
+    `assert_no_duplicate_conditions_across_run_ids` le signalera comme
+    avant — c'est délibéré, cette assertion existe pour attraper les VRAIS
+    bugs (incident k=5, cf. CHANGELOG_TABLES.md) et ne doit pas être
+    affaiblie par ce mécanisme de supersession volontaire."""
+    key_str = df[IDENTITY_COLS].fillna("__NA__").astype(str).agg("||".join, axis=1)
+    is_suspect = df["provenance_note"].fillna("").str.contains("|".join(_SUSPECT_MARKERS), regex=True)
+    tmp = pd.DataFrame({"key": key_str, "run_id": df["run_id"].values, "suspect": is_suspect.values},
+                       index=df.index)
+    drop_idx = []
+    superseded = []
+    for k, g in tmp.groupby("key"):
+        if g["run_id"].nunique() <= 1:
+            continue
+        if g["suspect"].all() or (~g["suspect"]).all():
+            continue  # pas un cas de supersession — laissé à l'assertion existante
+        bad = g[g["suspect"]]
+        drop_idx.extend(bad.index.tolist())
+        superseded.append((k, sorted(bad["run_id"].unique()), sorted(g.loc[~g["suspect"], "run_id"].unique())))
+    if superseded:
+        print(f"  {len(superseded)} condition(s) SUSPECT supersédée(s) par un re-run propre "
+             f"(lignes SUSPECT exclues des tables, conservées telles quelles dans raw_results.csv) :")
+        for k, old_ids, new_ids in superseded[:10]:
+            print(f"    {k} -> run_id(s) exclu(s) : {old_ids} ; retenu(s) : {new_ids}")
+    return df.drop(index=drop_idx) if drop_idx else df
 
 
 def agg_rows(df, model, variant="", topology=None, k=None, keep_frac=None):

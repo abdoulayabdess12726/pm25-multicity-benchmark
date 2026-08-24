@@ -1,0 +1,51 @@
+name: E4_E5_diagnostics_controls
+description: >
+  Contrôles diagnostiques — Étape 7 (E4/E5) : (a) shuffled-graph, permutation
+  d'arêtes à degrés préservés ; (b) no-meteorology, PM2.5 seul (1 feature).
+  Table 9 du papier. Une seule invocation par ville calcule les deux
+  contrôles ensemble (pas de flag séparé pour chacun) — fusionnés dans ce
+  fichier plutôt que scindés artificiellement.
+script: 11_diagnostics.py
+wrapper: null
+cities: [beijing, london, madrid]
+topologies: [distance, correlation]
+seeds: [42]   # SEED module-level fixe, 11_diagnostics.py:41 — pas de --seed en CLI, primary seed uniquement
+
+cli_invocation: "python3 11_diagnostics.py --cities <beijing|london|madrid ...>"
+other_params:
+  shuffle_degree_preserving_n_factor: 30   # nombre de tentatives de double-edge-swap = 30 * n_edges, ligne 84
+  no_meteorology_features: [PM2.5]         # b.FEATURES temporairement réduit à 1 feature pendant ce contrôle
+
+hyperparameters:   # protocole 06 identique (splits/scaling/early-stopping), réimporté via load_bench()
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features_full: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  k_neighbors: 5   # K_NEIGHBORS de 06, réutilisé pour le graphe réel (real_graph())
+
+produces_rows_matching:
+  shuffled_graph:
+    model: GCN-Transformer
+    variant: shuffled_graph
+    topology: [distance, correlation]
+  no_meteorology_gcn:
+    model: GCN-Transformer
+    variant: no_meteorology
+    topology: [distance, correlation]
+  no_meteorology_linear:
+    model: Linear-Transformer
+    variant: no_meteorology
+    topology: [distance, correlation]   # même valeur dupliquée sur les 2 topos (indépendant du graphe)
+  real_baseline_reused:
+    model: GCN-Transformer
+    variant: real
+    topology: [distance, correlation]
+    note: "ΔR² réel réutilisé du JSON canonique (seed 42), pas un nouveau run — sert de référence de comparaison"
+  config_path: 11_diagnostics.py
+  n_rows_observed: 24   # results/raw_results.csv 2026-08-24 (agrégats seulement, pas de per-station, cf. script)
+
+status: FAIT (Étape 7 (E4/E5), CLAUDE.md — commits c0649d9/b556240, "3 villes, seed 42")
+source:
+  - 11_diagnostics.py (docstring lignes 1-21, argparse ligne 134-138, shuffle_degree_preserving lignes 84-101)
+  - CLAUDE.md (Étape 7 — E4/E5 : contrôles diagnostiques)
+  - README.md (section Reproducing, Table 9)
+  - results/raw_results.csv (vérification empirique des combos model/variant/topology)

@@ -1,0 +1,61 @@
+name: E16
+description: >
+  Chang-Zhu-Tan (CZT), 4e réseau de validation externe de h(D) — même
+  protocole que les 3 réseaux du manuscrit (GCN-Transformer +
+  Linear-Transformer, distance + correlation, k=5, 3 seeds), 20 stations
+  (configs/stations/czt.yaml). Même script/invocation que le benchmark
+  canonique (06_train_multistation.py), gardé séparé de
+  canonical_benchmark.yaml car reporté comme une expérience distincte
+  (pré-enregistrement, PREREGISTRATION_CZT.md) plutôt qu'une 4e ligne du
+  Table 2 original.
+script: 06_train_multistation.py
+wrapper: null
+cities: [czt]
+topologies: [distance, correlation]
+seeds: [42, 123, 777]
+k: [5]
+
+cli_invocation: "python3 06_train_multistation.py --city czt --graph both"
+other_params:
+  quick: false
+  control: false
+  data_dir: null   # sans objet pour czt (load_czt_data() lit un chemin fixe, cf. 06_train_multistation.py:270-271)
+
+hyperparameters:
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+  k_neighbors: 5
+  n_stations_czt: 20   # le plus grand des 4 réseaux (Beijing 12, London 8, Madrid 7) — configs/stations/czt.yaml
+
+produces_rows_matching:
+  model: [Linear-Transformer, GCN-Transformer]
+  variant: ""
+  city: czt
+  topology: [distance, correlation]
+  config_path: 06_train_multistation.py
+  note: >
+    Non isolable numériquement dans le groupby(model,variant,topology) de raw_results.csv sans filtrer
+    sur city="czt" (même config_path que canonical_benchmark.yaml, partagé par les 4 villes).
+
+status: >
+  FAIT (entraînement terminé 2026-08-23 — CHANGELOG_TABLES.md section "E16 — Chang-Zhu-Tan,
+  entraînement (2026-08-23)"). ATTENTION — DIVERGENCE AVEC REVISION_BRIEF.md : le tableau E-series
+  (daté 2026-08-16) marque encore E16 "collecte de données en cours". Ce document est PÉRIMÉ sur ce
+  point (commits 4367e19/466046c/770f083, postérieurs, montrent le prétraitement puis l'entraînement
+  terminés). Signalé tel quel, non réconcilié.
+source:
+  - CHANGELOG_TABLES.md (section "E16 — Chang-Zhu-Tan, entraînement (2026-08-23)", lignes 1080-1095)
+  - 06_train_multistation.py (load_czt_data lignes 264-275, argparse ligne 919)
+  - PREREGISTRATION_CZT.md (section 8 — détail complet des résultats, h(D)=0.413)
+  - configs/stations/czt.yaml (20 stations, source unique)
+  - REVISION_BRIEF.md (table E-series ligne 129 — statut périmé, voir note ci-dessus)
+  - git log (commits 4367e19, 466046c, 770f083)

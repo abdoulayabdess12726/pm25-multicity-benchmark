@@ -1,0 +1,54 @@
+name: canonical_benchmark
+description: >
+  Benchmark principal par ville (Linear-Transformer vs GCN-Transformer,
+  2 topologies, 3 seeds) — Table 2 du papier. Script principal réutilisé
+  (via import) par presque tous les autres scripts numérotés de ce dépôt.
+script: 06_train_multistation.py
+wrapper: null   # aucun wrapper shell — invoqué directement par ville, une fois par ville
+cities: [beijing, london, madrid]
+topologies: [distance, correlation]
+seeds: [42, 123, 777]   # module-level SEEDS constant, 06_train_multistation.py:49 — pas un flag CLI
+k: [5]   # K_NEIGHBORS, 06_train_multistation.py:60 — fixe pour le benchmark canonique
+
+cli_invocation: "python3 06_train_multistation.py --city <beijing|london|madrid> --graph both"
+# Flags observés dans argparse (06_train_multistation.py:916-930), valeurs par défaut sauf mention :
+other_params:
+  data_dir: null       # --data_dir, Beijing uniquement, override optionnel (défaut: chemin PRSA codé en dur)
+  synthetic: false      # --synthetic (store_true), non utilisé pour le benchmark canonique
+  quick: false           # --quick (store_true) — DOIT être false : réduit SEEDS/MAX_EPOCHS/D_MODEL/SEQ_LEN,
+                          # c'est le schedule réduit qui a produit l'artefact Beijing k=3 documenté dans
+                          # results/sensitivity_k_canonical_NOTE.md (non représentatif du protocole publié)
+  graph: both            # --graph, choix parmi [distance, correlation, both] ; both = comportement par défaut
+  control: false          # --control (store_true) — ajoute GCN1+GAT+Dirichlet ; PAS utilisé ici, cf.
+                           # 09_controls_oversmoothing.py (E13) qui est l'implémentation retenue pour ce contrôle
+
+hyperparameters:   # constantes module-level 06_train_multistation.py:49-60, non exposées en CLI (sauf sous --quick)
+  seq_len_hours: 24
+  horizon_hours: 1
+  batch_size: 64
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+  k_neighbors: 5
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  scaling: MinMax (fit train uniquement)
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}   # split_and_scale(), 06_train_multistation.py:401-408
+
+produces_rows_matching:
+  model: [Linear-Transformer, GCN-Transformer]
+  variant: ""   # NaN/vide dans raw_results.csv — distingue du contrôle 1layer/2layer (09) et des variants diagnostics (11)
+  topology: [distance, correlation]
+  config_path: 06_train_multistation.py
+  n_rows_observed: 609   # results/raw_results.csv, groupby(model,variant,topology), 2026-08-24
+
+status: FAIT (résultat historique du papier, Table 2 — antérieur au cycle de révision 20265149)
+source:
+  - 06_train_multistation.py (constantes lignes 49-60, argparse lignes 916-930, split_and_scale lignes 401-408, train_model lignes 644-656)
+  - README.md (section "Reproducing the paper's tables", Table 2)
+  - REVISION_BRIEF.md (conventions générales : seeds, ddof, source unique des stations)
+  - results/raw_results.csv (vérification empirique des combos model/variant/topology réellement présents)

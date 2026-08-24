@@ -1,0 +1,57 @@
+name: E9
+description: >
+  Sensibilité k Madrid, configuration canonique 7 stations (MENDEZ ALVARO
+  incluse). Re-run ciblé pour corriger l'exclusion erronée de cette station
+  dans le pipeline général de k-sensitivity (voir
+  configs/experiments/k_sensitivity_table7.yaml) — 12 cellules :
+  {distance,correlation} x k∈{3,8} x seed∈{42,123,777}. k=5 (7 stations,
+  déjà correct) n'est pas relancé.
+script: e8_k_sensitivity_3seeds.py
+wrapper: e9_run_madrid.sh
+cities: [madrid]
+topologies: [distance, correlation]
+seeds: [42, 123, 777]
+k: [3, 8]
+
+cli_invocation: "caffeinate -i python3 e8_k_sensitivity_3seeds.py --city madrid --topology <distance|correlation> --k <3|8> --seed <42|123|777> --cpu --force-retrain"
+other_params:
+  cpu: true
+  force_retrain: true   # --force-retrain — CRITIQUE : ignore l'archive seed=42 à 6 stations (bug MENDEZ ALVARO),
+                          # ré-entraîne même seed=42 (e9_run_madrid.sh commentaire ligne 642)
+  caffeinate: true       # empêche la mise en veille (cause du dépassement 3h observé sur une expérience antérieure "E7")
+
+hyperparameters:
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+  n_stations_madrid: 7   # garde-fou : MENDEZ ALVARO incluse, cf. src.stations.load_stations(city, "benchmark")
+
+produces_rows_matching:
+  model: GCN-Transformer
+  variant: ""
+  city: madrid
+  topology: [distance, correlation]
+  k: [3, 8]
+  seed: [42, 123, 777]
+  config_path: e8_k_sensitivity_3seeds.py
+  n_rows_observed: 15   # sur 15 attendus config_path="e8_k_sensitivity_3seeds.py" (12 madrid k∈{3,8} + 3 k=5 correctif e17, cf. note)
+  note: >
+    Une partie des lignes Madrid/correlation a été RE-écrite par e17_run_correlation_fix.sh
+    (bug de tri NaN dans build_correlation_graph découvert après E9) — les 15 lignes observées
+    dans raw_results.csv sous ce config_path mêlent donc E9 et ce correctif ultérieur ; les deux
+    utilisent exactement la même invocation --force-retrain.
+
+status: FAIT (P5) — REVISION_BRIEF.md, table E-series ligne 122
+source:
+  - e9_run_madrid.sh (invocation CLI exacte, lignes 638-658)
+  - e8_k_sensitivity_3seeds.py (argparse lignes 581-604, run_single lignes 467-528)
+  - REVISION_BRIEF.md (table E-series ligne 122 ; deux causes racines, section MENDEZ ALVARO)
+  - results/raw_results.csv (vérification empirique)

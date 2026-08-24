@@ -1,0 +1,60 @@
+name: E13
+description: >
+  Table 8 : contrôle over-smoothing (1-layer GCN vs 2-layer GCN vs
+  Linear-Transformer, énergie de Dirichlet) + baseline GAT-Transformer.
+  Une invocation --city couvre déjà les 4 variantes (linear1L, gcn1L, gcn2L,
+  gat2L) x 3 seeds en interne — fusionnées ici, pas de fichier séparé pour
+  "GAT" et "1-layer GCN".
+script: 09_controls_oversmoothing.py
+wrapper: e13_run_oversmoothing.sh
+cities: [beijing, london, madrid]
+topologies: [distance]   # topologie distance uniquement, cf. manuscrit Table 8 caption (wrapper ligne 736-738)
+seeds: [42, 123, 777]   # SEEDS module-level, 09_controls_oversmoothing.py:57
+
+cli_invocation: "caffeinate -i python3 09_controls_oversmoothing.py --city <beijing|london|madrid> --topology distance --cpu"
+other_params:
+  cpu: true    # --cpu, ajouté cette session (E13) ; auparavant device auto MPS/CUDA/CPU jamais testé sur run long
+  variants: [["linear", 1], ["gcn", 1], ["gcn", 2], ["gat", 2]]   # (kind, n_layers), 09_controls_oversmoothing.py:337
+  k_neighbors: 5   # constante K locale au script, ligne 58 (indépendante de b.K_NEIGHBORS mais même valeur)
+
+hyperparameters:
+  # IMPORTANT : ce script est une RÉIMPLÉMENTATION AUTONOME du protocole (pas un import de
+  # b.train_model/b.SpatioTemporalModel), avec les MÊMES valeurs numériques que 06 (cf. docstring
+  # lignes 21-23 : "reuses the SAME protocol as the paper").
+  seq_len_hours: 24
+  batch_size: 64
+  d_model: 64
+  n_heads: 4
+  n_layers_temporal_transformer: 2
+  dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 8
+  max_epochs: 50
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  scaling: MinMax (fit train uniquement)
+
+produces_rows_matching:
+  linear_1layer: {model: Linear-Transformer, variant: 1layer, topology: distance}
+  gcn_1layer: {model: GCN-Transformer, variant: 1layer, topology: distance}
+  gcn_2layer: {model: GCN-Transformer, variant: 2layer, topology: distance}
+  gat_2layer: {model: GAT-Transformer, variant: 2layer, topology: distance}
+  config_path: 09_controls_oversmoothing.py
+  n_rows_observed: 360   # 90 par variante x 4 variantes, results/raw_results.csv 2026-08-24
+
+status: >
+  FAIT — constaté empiriquement (results/raw_results.csv : 360 lignes, config_path=09_controls_oversmoothing.py)
+  et par les commits 0fa3f05 ("P5: E11 (parité seeds STGCN/GWN) + E13 (Table 8 over-smoothing/GAT)")
+  et ebfc2f5 ("E13 : cloture l'investigation Table 8, documente le point de redaction S6.3").
+  ATTENTION — DIVERGENCE AVEC REVISION_BRIEF.md : le tableau "Numérotation des expériences (E-series)"
+  de REVISION_BRIEF.md (daté 2026-08-16) marque encore E13 "jamais lancée". Ce document est PÉRIMÉ sur
+  ce point (des commits postérieurs à cette date montrent l'expérience terminée). Signalé tel quel,
+  non réconcilié, conformément à REVISION_BRIEF.md ("si un re-run contredit une affirmation... le
+  signaler explicitement").
+source:
+  - 09_controls_oversmoothing.py (docstring lignes 1-35, argparse ligne 322-329, constantes lignes 54-58)
+  - e13_run_oversmoothing.sh (invocation CLI exacte, commentaire lignes 733-741)
+  - REVISION_BRIEF.md (table E-series, ligne 126 — statut périmé, voir note ci-dessus)
+  - CHANGELOG_TABLES.md / git log (commits 0fa3f05, ebfc2f5)
+  - results/raw_results.csv (vérification empirique des combos model/variant/topology)

@@ -1,0 +1,62 @@
+name: E11
+description: >
+  Baselines SOTA spatio-temporelles STGCN (Yu, Yin & Zhu, IJCAI 2018) et
+  Graph WaveNet (Wu, Pan, Long, Jiang & Zhang, IJCAI 2019), ajoutées à la
+  Table 3. Fusionne le run primary-seed (référencé "E7" dans les commits,
+  antérieur au gel de la numérotation E-series) et l'extension multi-seed
+  E11 (wrapper dédié) : même script, même invocation --model, seule la
+  couverture des seeds diffère entre les deux passes.
+script: 14_sota_baselines.py
+wrapper: e11_run_sota_parity.sh   # seeds 123/777 uniquement ; seed 42 (primary, "E7") invoqué directement sans wrapper
+cities: [beijing, london, madrid]
+topologies: [correlation]   # adjacence prédéfinie = topologie CORRÉLATION uniquement (14_sota_baselines.py:47-48)
+seeds: [42, 123, 777]
+k: [5]   # K_NEIGHBORS, adjacence correlation k=5 identique à 06_train_multistation.py
+
+cli_invocation: "caffeinate -i python3 14_sota_baselines.py --city <city> --model <stgcn|graphwavenet> --seed <42|123|777> --cpu"
+other_params:
+  cpu: true   # device=cpu IMPOSÉ (run_single lève une exception si cpu=False, 14_sota_baselines.py:391-393)
+  models: [stgcn, graphwavenet]
+  seed_42_source: >
+    Run primary seed (git commit aa6d97c "E7: STGCN + Graph WaveNet SOTA baselines, primary seed
+    (R1.11/R2.1-2)") — invoqué directement (python3 14_sota_baselines.py --city <city> --model <model>
+    --seed 42 --cpu), sans wrapper shell dédié retrouvé dans le dépôt.
+  seeds_123_777_source: "e11_run_sota_parity.sh — 12 cellules {stgcn,graphwavenet} x 3 villes x seeds {123,777}"
+  stop_rules:   # RÈGLES D'ARRÊT, docstring 14_sota_baselines.py:55-62
+    madrid_n_nodes_must_equal: 7   # sinon exception (garde-fou MENDEZ ALVARO incluse)
+    beijing_r2_min: 0.75           # sinon exception ("bug de pipeline, pas un résultat")
+    nan_or_non_convergence: "exception"
+    r2_beats_linear_in_heterophilic_regime: "PAS une exception — résultat scientifique valide, flag beats_linear"
+  correlation_fix_rerun: >
+    e17_run_correlation_fix.sh a re-lancé les 3 seeds Madrid/stgcn et Madrid/graphwavenet après
+    correction du bug de tri NaN dans build_correlation_graph (commits 9992793/ca626dc) — mêmes
+    hyperparamètres, mêmes invocations, simple correctif de données en amont.
+
+hyperparameters:   # protocole 06 identique (via b.*), device=cpu imposé
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  patience: 8
+  max_epochs: 50
+  stgcn_architecture: "2 blocs ST-Conv (TemporalGatedConv->ChebGraphConv(K=3)->TemporalGatedConv) + sortie temporelle + FC"
+  graphwavenet_architecture: "TCN dilatée gated (dilations 1,2,1,2) + diffusion conv (ordre 2) + adjacence adaptative apprise"
+
+produces_rows_matching:
+  model: [stgcn, graphwavenet]
+  variant: ""
+  topology: correlation
+  k: 5
+  config_path: 14_sota_baselines.py
+  n_rows_observed: 140   # stgcn 70 + graphwavenet 70, results/raw_results.csv 2026-08-24
+
+status: >
+  FAIT (P5) — REVISION_BRIEF.md, table E-series ligne 124 (E11 : "Parité seeds STGCN/Graph WaveNet
+  (2 modèles×3 villes×2 seeds, 12 runs)"). Le run seed=42 sous-jacent ("E7") est antérieur au gel de
+  la numérotation E9-E16 et n'a pas de wrapper dédié.
+source:
+  - 14_sota_baselines.py (docstring lignes 1-69, argparse lignes 472-479, run_single lignes 389-469)
+  - e11_run_sota_parity.sh (invocation CLI exacte, lignes 680-702)
+  - e17_run_correlation_fix.sh (re-run correctif Madrid, lignes 795-801)
+  - REVISION_BRIEF.md (table E-series ligne 124)
+  - git log (commit aa6d97c "E7: STGCN + Graph WaveNet SOTA baselines, primary seed")
+  - results/raw_results.csv (vérification empirique)

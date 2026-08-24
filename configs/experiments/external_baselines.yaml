@@ -1,0 +1,68 @@
+name: E1_external_baselines
+description: >
+  Baselines externes (Persistence, ARIMA, XGBoost, LSTM) sous protocole
+  identique à 06_train_multistation.py — Table 3 du papier (avec
+  Linear-Transformer/GCN-Transformer relus depuis le JSON canonique, et
+  STGCN/Graph WaveNet ajoutés séparément par 14_sota_baselines.py).
+script: 10_external_baselines.py
+wrapper: null   # invoqué directement ; validé d'abord sur Madrid (CLAUDE.md Étape 4), puis les 3 villes
+cities: [beijing, london, madrid]
+topologies: []   # sans objet — ARIMA/XGBoost/LSTM/Persistence sont temporels purs, pas de graphe
+seeds: [42, 123, 777]   # SEEDS module-level, 10_external_baselines.py:76 — LSTM uniquement (voir other_params)
+
+cli_invocation: "python3 10_external_baselines.py --cities <beijing|london|madrid ...>"
+other_params:
+  seeds_per_model:
+    Persistence: null          # calcul direct (PM2.5[t]=PM2.5[t-1]), aucun modèle, pas de seed
+    ARIMA: null                # déterministe, statsmodels, ordre (2,1,2) avec repli (1,1,1)/(1,1,0)/(0,1,1)
+    XGBoost: 42                # seed fixe unique (random_state=42), pas multi-seed
+    LSTM: [42, 123, 777]       # seul modèle stochastique multi-seed de ce script
+  arima_order_primary: [2, 1, 2]
+  arima_order_fallbacks: [[1, 1, 1], [1, 1, 0], [0, 1, 1]]
+  xgboost_params:
+    n_estimators: 400
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+    n_jobs: 4
+    objective: reg:squarederror
+    features: "lags PM2.5 t-1..t-24 + 4 covariables météo à t-1"
+  lstm_params:
+    hidden_size: 64
+    num_layers: 2
+    dropout: 0.1
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-5
+    batch_size: 64
+    max_epochs: 50
+    patience: 8
+    architecture_note: >
+      Paramétrisation résiduelle (skip de persistance) : pred = PM2.5[t-1] + LSTM(...).
+      Sans ce skip, un LSTM vanilla sous-performe la persistance triviale
+      (R²≈0.17 vs 0.80 sur Madrid) — cf. docstring LSTMReg, 10_external_baselines.py:220-235.
+
+hyperparameters:   # protocole partagé avec 06 (splits/features/fenêtres), réimporté via load_bench()
+  seq_len_hours: 24
+  split_fractions: {train: 0.70, val: 0.15, test: 0.15}
+  features: [PM2.5, TEMP, PRES, DEWP, WSPM]
+  scaling: MinMax (fit train uniquement, pour le LSTM)
+
+produces_rows_matching:
+  model: [Persistence, ARIMA, XGBoost, LSTM]
+  variant: ""
+  topology: ""   # vide dans raw_results.csv (pas de graphe pour ces modèles)
+  config_path: 10_external_baselines.py
+  n_rows_observed: 174   # ARIMA 29 + LSTM 87 + Persistence 29 + XGBoost 29, results/raw_results.csv 2026-08-24
+
+status: >
+  FAIT (Étape 4 / Expérience E1 selon CLAUDE.md) — protocole MENDEZ ALVARO/7-stations réparé
+  dans le script courant. Note : les lignes ARIMA/XGBoost/LSTM déjà présentes dans
+  results/external_baselines.csv datent potentiellement de l'ANCIEN protocole 6-stations Madrid
+  tant qu'un re-run n'a pas été confirmé — voir docstring 10_external_baselines.py:25-34.
+source:
+  - 10_external_baselines.py (docstring lignes 1-42, argparse ligne 392-396, constantes lignes 75-77)
+  - CLAUDE.md (Étape 4 — E1 : baselines externes)
+  - README.md (section Pipeline, ligne 65 ; section Reproducing, Table 3)
+  - results/raw_results.csv (vérification empirique des combos model réellement présents)
