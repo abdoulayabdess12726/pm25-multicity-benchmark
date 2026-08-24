@@ -138,6 +138,7 @@ def load():
     df["topology"] = df["topology"].fillna("")
     df["provenance_note"] = df["provenance_note"].fillna("")
     df = resolve_superseded_suspect_rows(df)
+    df = resolve_madrid_correlation_nan_bug_per_station_rows(df)
     return df
 
 
@@ -187,6 +188,50 @@ def resolve_superseded_suspect_rows(df):
         for k, old_ids, new_ids in superseded[:10]:
             print(f"    {k} -> run_id(s) exclu(s) : {old_ids} ; retenu(s) : {new_ids}")
     return df.drop(index=drop_idx) if drop_idx else df
+
+
+# Incident spécifique (P11.6, 2026-08-24) : les 15 reruns du correctif
+# NaN-sort (build_correlation_graph, commit 9992793) n'ont persisté QUE
+# l'agrégat pour Madrid/correlation/k=5/GCN-Transformer —
+# e8_k_sensitivity_3seeds.py (l'outil utilisé pour ce rerun) n'écrit jamais
+# de lignes par-station, seulement station="__aggregate__". Table 4
+# (Cohen's d/Wilcoxon, calculés par station) et Table 6 continuaient donc de
+# lire les lignes par-station de l'ancien run migrated_06_train_multistation_madrid
+# (graphe pré-correctif, 24 arêtes au lieu de 30 à k=5) — trouvé en vérifiant
+# ce changelog, pas une régression de ce commit-ci. Un rerun dédié
+# (06_train_multistation.py --city madrid --graph correlation) fournit des
+# lignes par-station fraîches sous le graphe corrigé.
+#
+# Linear-Transformer est topology-independent (vérifié : ses 7 valeurs par
+# station sont identiques entre l'ancien run et ce rerun) — ses lignes ne
+# sont pas remplacées, seulement les 21 lignes par-station GCN-Transformer.
+# L'agrégat GCN de ce rerun (0.4033±0.0215, backend MPS, 3 seeds) N'EST PAS
+# utilisé comme référence Table 2/4/7 : cette place reste occupée par
+# l'agrégat déjà établi par le rerun e8 (0.3996±0.0335, backend CPU) pour ne
+# pas introduire une seconde valeur candidate sur un chiffre déjà documenté
+# dans CHANGELOG_TABLES.md — l'écart entre les deux (0.0037, très inférieur
+# aux deux écarts-types) est cohérent avec la non-déterminisme MPS vs CPU
+# déjà toléré ailleurs (cf. assert_pruning_anchor_equals_t2, tolérance
+# 3×std inter-seeds).
+_MADRID_CORR_NAN_BUG_STALE_RUN_ID = "migrated_06_train_multistation_madrid"
+_MADRID_CORR_NAN_BUG_FRESH_RUN_ID = "06_madrid_1787591639_ab7abd7b"
+
+
+def resolve_madrid_correlation_nan_bug_per_station_rows(df):
+    stale = ((df.run_id == _MADRID_CORR_NAN_BUG_STALE_RUN_ID) &
+            (df.city == "madrid") & (df.topology == "correlation") &
+            (df.model == "GCN-Transformer") & (df.station != "__aggregate__"))
+    fresh_run = (df.run_id == _MADRID_CORR_NAN_BUG_FRESH_RUN_ID)
+    fresh_keep = fresh_run & (df.model == "GCN-Transformer") & (df.station != "__aggregate__")
+    fresh_drop = fresh_run & ~fresh_keep
+    drop = stale | fresh_drop
+    if drop.any():
+        print(f"  Madrid/correlation/GCN-Transformer par-station : {int(stale.sum())} ligne(s) "
+             f"pré-correctif NaN-sort exclues (run_id={_MADRID_CORR_NAN_BUG_STALE_RUN_ID}), "
+             f"remplacées par {int(fresh_keep.sum())} ligne(s) du rerun "
+             f"{_MADRID_CORR_NAN_BUG_FRESH_RUN_ID} (agrégat/Linear-Transformer de ce rerun exclus, "
+             f"référence Table 2/4/7 inchangée).")
+    return df.drop(index=df.index[drop]) if drop.any() else df
 
 
 def agg_rows(df, model, variant="", topology=None, k=None, keep_frac=None):

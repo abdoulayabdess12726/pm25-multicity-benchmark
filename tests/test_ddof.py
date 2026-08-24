@@ -79,22 +79,31 @@ def test_london_table4_table7_reconciliation():
 
 
 def test_table7_k5_matches_table4_exactly():
-    """Table 7 (k=5) et Table 4 doivent maintenant être calculées sur EXACTEMENT
-    les mêmes 3 valeurs GCN-Linear (k=5 = benchmark canonique) — même mean,
-    même std, ddof=1 partout."""
-    import json
-    import pandas as pd
-    table7 = pd.read_csv(ROOT / "results/table7_k_sensitivity.csv")
-    for city in ["beijing", "london", "madrid"]:
-        js = json.loads((ROOT / f"results/{city}/multistation_results.json").read_text())
-        for topo in ["distance", "correlation"]:
-            gcn = js["graphs"][topo]["GCN+Transformer"]["R2"]
-            lin = js["graphs"][topo]["Linear+Transformer"]["R2"]
-            mean, std = agg_mean_std(np.array(gcn) - np.array(lin))
-            row = table7[(table7.city == city) & (table7.topology == topo) & (table7.k == 5)]
-            assert len(row) == 1, f"{city}/{topo}/k=5 absent de table7_k_sensitivity.csv"
-            assert row.delta_R2_mean.iloc[0] == pytest.approx(mean, abs=1e-4)
-            assert row.delta_R2_std.iloc[0] == pytest.approx(std, abs=1e-4)
+    """Table 7 (k=5) et Table 4 doivent être calculées sur EXACTEMENT les
+    mêmes 3 valeurs GCN-Linear (k=5 = benchmark canonique) — même mean,
+    même std, ddof=1 partout.
+
+    Vérifié sur le PIPELINE RÉEL (raw_results.csv -> regenerate_tables.py),
+    pas sur results/{city}/multistation_results.json ni sur
+    results/table7_k_sensitivity.csv : ces deux fichiers sont des artefacts
+    intermédiaires écrits directement par des scripts historiques
+    (06_train_multistation.py, e8_k_sensitivity_3seeds.py) et déconnectés de
+    la régénération — trouvé le 2026-08-24 en corrigeant Madrid/correlation
+    (cause racine « tri NaN de build_correlation_graph », P11.6) : les deux
+    étaient gelés au MÊME état intermédiaire (-0.3795, une valeur antérieure
+    à la version finale -0.4144 actuellement dans le manuscrit), donc
+    cohérents entre eux sans être corrects — ce test passait par coïncidence,
+    pas par protection réelle. Table 7(k=5)==Table 4 sur le pipeline réel est
+    déjà vérifié par regenerate_tables.assert_t7_k5_equals_t4 ; ce test
+    délègue à la même fonction plutôt que dupliquer une comparaison sur des
+    fichiers qui peuvent diverger silencieusement du pipeline."""
+    import scripts.regenerate_tables as rt
+    rt.ASSERTIONS.clear()
+    df = rt.load()
+    rt.assert_t7_k5_equals_t4(df)
+    for a in rt.ASSERTIONS:
+        assert a["status"] == "PASS", f"{a['name']}: {a['detail']}"
+    rt.ASSERTIONS.clear()
 
 
 # --------------------------------------------------------------------------- #

@@ -49,10 +49,10 @@
 | Madrid | distance | MENDEZ ALVARO | 0.6293 | 0.7928 | -0.1635 |
 | Madrid | distance | PLAZA CASTILLA-CANAL | 0.5248 | 0.7667 | -0.2419 |
 | Madrid | distance | PLAZA ELÍPTICA | 0.4934 | 0.7366 | -0.2432 |
-| Madrid | correlation | CASA DE CAMPO | -0.0415 | 0.6481 | -0.6896 |
-| Madrid | correlation | CASTELLANA | 0.2894 | 0.8922 | -0.6028 |
-| Madrid | correlation | CUATRO CAMINOS-PABLO | 0.4943 | 0.8283 | -0.3340 |
-| Madrid | correlation | ESCUELAS AGUIRRE | 0.4956 | 0.7489 | -0.2534 |
-| Madrid | correlation | MENDEZ ALVARO | 0.6524 | 0.7928 | -0.1404 |
-| Madrid | correlation | PLAZA CASTILLA-CANAL | 0.4768 | 0.7667 | -0.2898 |
-| Madrid | correlation | PLAZA ELÍPTICA | 0.2550 | 0.7366 | -0.4815 |
+| Madrid | correlation | CASA DE CAMPO | 0.1909 | 0.6481 | -0.4572 |
+| Madrid | correlation | CASTELLANA | 0.1638 | 0.8922 | -0.7284 |
+| Madrid | correlation | CUATRO CAMINOS-PABLO | 0.4980 | 0.8283 | -0.3302 |
+| Madrid | correlation | ESCUELAS AGUIRRE | 0.3975 | 0.7489 | -0.3514 |
+| Madrid | correlation | MENDEZ ALVARO | 0.6590 | 0.7928 | -0.1338 |
+| Madrid | correlation | PLAZA CASTILLA-CANAL | 0.4860 | 0.7667 | -0.2807 |
+| Madrid | correlation | PLAZA ELÍPTICA | 0.2757 | 0.7366 | -0.4609 |
