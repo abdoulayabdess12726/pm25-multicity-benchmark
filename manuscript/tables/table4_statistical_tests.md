@@ -8,5 +8,7 @@
 | London | correlation | -0.4014 ± 0.0061 | 1.562e-02 | -1.18 | 8/8 |  |
 | Madrid | distance | -0.3213 ± 0.0061 | 1.562e-02 | -2.24 | 7/7 |  |
 | Madrid | correlation | -0.4144 ± 0.0325 | 1.562e-02 | -2.11 | 7/7 |  |
+| Chang-Zhu-Tan | distance | -0.0211 ± 0.0041 | 7.629e-06 | -3.07 | 20/20 |  |
+| Chang-Zhu-Tan | correlation | -0.0314 ± 0.0034 | 7.629e-06 | -3.16 | 20/20 |  |
 
 _Seed primaire 42 pour Wilcoxon/Cohen's d (per-station) ; 3 seeds ddof=1 pour ΔR² agrégé. Holm-Bonferroni sur l'ensemble des tests disponibles._

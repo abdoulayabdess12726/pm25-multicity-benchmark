@@ -53,6 +53,12 @@ OUT_DIR = ROOT / "manuscript" / "tables"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 CITIES = ["beijing", "london", "madrid"]
+# T8 (over-smoothing/GAT, E13) et T9 (diagnostics, E4/E5) restent à 3 réseaux :
+# CZT n'a ni contrôle over-smoothing ni pruning, jamais lancés pour ce réseau
+# (E16 : protocole limité à GCN-Transformer + Linear-Transformer). CITIES_4NET
+# couvre T1/T2/T4/T5/T6/T7, où CZT est applicable.
+CITIES_4NET = CITIES + ["czt"]
+CITY_LABEL = {"beijing": "Beijing", "london": "London", "madrid": "Madrid", "czt": "Chang-Zhu-Tan"}
 TOPOS = ["distance", "correlation"]
 SEEDS = [42, 123, 777]
 KS = [3, 5, 8]
@@ -304,16 +310,73 @@ def gcn_lin_3seed(df, city, topology):
 
 
 # --------------------------------------------------------------------------- #
+# T[PROVISOIRE T1] — Caractérisation des réseaux (§3, demande R2.7)
+# --------------------------------------------------------------------------- #
+# Numéro provisoire — proposé T1, cascade T1..T9 existants -> T2..T10 (cf.
+# rapport de tâche livré à l'utilisateur). Nom de fichier volontairement
+# hors-séquence (table_R2.7_characterization, pas table1_...) tant que la
+# renumérotation n'est pas confirmée puis appliquée à l'ensemble du script.
+CHARACTERIZATION_CSV = ROOT / "analysis" / "p9_3_characterization.csv"
+
+
+def table_characterization():
+    if not CHARACTERIZATION_CSV.exists():
+        write_missing("table_R2.7_characterization",
+                      "Table [T1 proposée] — Caractérisation des réseaux (R2.7)", 4)
+        return
+    cdf = pd.read_csv(CHARACTERIZATION_CSV)
+    cdf["city"] = cdf.city.str.lower()
+    rows = []
+    for _, r in cdf.sort_values("city").iterrows():
+        rows.append([
+            CITY_LABEL.get(r.city, r.city.capitalize()),
+            r.period,
+            int(r.n_stations),
+            r.provider,
+            r.weather_source,
+            f"{r.pm25_mean:.2f}",
+            f"{r.pm25_var:.2f}",
+            f"{r.train_var_mean:.2f} [{r.train_var_min:.2f}, {r.train_var_max:.2f}]",
+            f"{r.lag1_autocorr:.4f}",
+            f"{r.r2_persistence:.4f}",
+            f"{r.raw_missing_rate:.4f}",
+            f"{r.density_distance:.4f}",
+            f"{r.density_correlation:.4f}",
+            f"{r.degree_eff_distance:.2f}",
+            f"{r.degree_eff_correlation:.2f}",
+            f"{r.r_bar:.4f}",
+        ])
+    write_table("table_R2.7_characterization",
+               "Table [T1 proposée] — Caractérisation des réseaux (R2.7)",
+               ["City", "Period", "Stations", "Provider", "Weather source",
+                "PM2.5 mean", "PM2.5 var", "Train var/station [min,max]",
+                "Lag-1 autocorr", "R² persistence", "Raw missing rate",
+                "Density (distance)", "Density (correlation)",
+                "Degree eff. (distance)", "Degree eff. (correlation)", "r̄"],
+               rows,
+               "Source : analysis/p9_3_characterization.csv (P9.3). Train var/station : "
+               "variance PM2.5 par station sur la période train (70% initiaux), "
+               "moyenne puis [min, max] inter-stations — Madrid min=0.00 correspond à "
+               "MENDEZ ALVARO (PM2.5 constant sur train, cf. REVISION_BRIEF.md). r̄ et "
+               "densité/degré effectif calculés sur la période train (70% initiaux), "
+               "à ne pas confondre avec h(D) (jeu complet, Table 1/T2 proposée).")
+
+
+# --------------------------------------------------------------------------- #
 # T1 — h(D)  [EXCEPTION : source = results/heterogeneity_index_v2.csv]
 # --------------------------------------------------------------------------- #
+_H_INDEX_CITY_CODE = {"chang-zhu-tan": "czt"}  # label CSV (affichage) -> code city (raw_results.csv)
+
+
 def table1():
     if not H_INDEX_PATH.exists():
-        write_missing("table1_h_index", "Table 1 — Indice d'hétérophilie spatiale h(D)", 3)
+        write_missing("table1_h_index", "Table 1 — Indice d'hétérophilie spatiale h(D)", 4)
         return None
     hdf = pd.read_csv(H_INDEX_PATH)
-    hdf["city"] = hdf.city.str.lower()
-    rows = [[r.city.capitalize(), r.n_stations, f"{r.r_bar:.3f}", f"{r.moran_I:.3f}",
-             f"{r.cv_raw:.3f}", f"{r.h:.3f}"] for _, r in hdf.sort_values("h").iterrows()]
+    hdf["city"] = hdf.city.str.lower().map(lambda c: _H_INDEX_CITY_CODE.get(c, c))
+    rows = [[CITY_LABEL.get(r.city, r.city.capitalize()), r.n_stations, f"{r.r_bar:.3f}",
+             f"{r.moran_I:.3f}", f"{r.cv_raw:.3f}", f"{r.h:.3f}"]
+            for _, r in hdf.sort_values("h").iterrows()]
     write_table("table1_h_index", "Table 1 — Indice d'hétérophilie spatiale h(D)",
                ["City", "Stations", "r̄", "Moran's I", "CV", "h(D)"], rows,
                "Source : results/heterogeneity_index_v2.csv — EXCEPTION documentée, "
@@ -326,13 +389,13 @@ def table1():
 # --------------------------------------------------------------------------- #
 def table2(df):
     rows = []
-    for city in CITIES:
+    for city in CITIES_4NET:
         for topo in TOPOS:
             r = gcn_lin_3seed(df, city, topo)
             if r is None:
-                rows.append([city.capitalize(), topo, "MISSING", "MISSING", "MISSING"])
+                rows.append([CITY_LABEL[city], topo, "MISSING", "MISSING", "MISSING"])
                 continue
-            rows.append([city.capitalize(), topo,
+            rows.append([CITY_LABEL[city], topo,
                         f"{r['lin_mean']:.4f} ± {r['lin_std']:.4f}",
                         f"{r['gcn_mean']:.4f} ± {r['gcn_std']:.4f}",
                         f"{r['delta_mean']:+.4f} ± {r['delta_std']:.4f}"])
@@ -405,7 +468,7 @@ def table3(df):
 def table4(df):
     raw_p = []
     entries = []
-    for city in CITIES:
+    for city in CITIES_4NET:
         for topo in TOPOS:
             gcn_ps = station_rows(df, "GCN-Transformer", topology=topo, k=5, seed=PRIMARY_SEED)
             gcn_ps = gcn_ps[gcn_ps.city == city]
@@ -449,10 +512,10 @@ def table4(df):
     rows = []
     for e in entries:
         if e["missing"]:
-            rows.append([e["city"].capitalize(), e["topology"], "MISSING", "MISSING",
+            rows.append([CITY_LABEL[e["city"]], e["topology"], "MISSING", "MISSING",
                         "MISSING", "MISSING", "MISSING"])
             continue
-        rows.append([e["city"].capitalize(), e["topology"],
+        rows.append([CITY_LABEL[e["city"]], e["topology"],
                     f"{e['delta_mean']:+.4f} ± {e['delta_std']:.4f}",
                     f"{corrected[pi]:.3e}", f"{e['cohens_d']:+.2f}",
                     f"{e['n_worse']}/{e['n_total']}", ""])
@@ -477,7 +540,7 @@ def table5(df, h_index):
         return
     for topo in TOPOS:
         h_vals, d_vals, cities_ok = [], [], []
-        for city in CITIES:
+        for city in CITIES_4NET:
             r = gcn_lin_3seed(df, city, topo)
             if r is None or city not in h_index:
                 continue
@@ -497,7 +560,7 @@ def table5(df, h_index):
 # --------------------------------------------------------------------------- #
 def table6(df):
     rows = []
-    for city in CITIES:
+    for city in CITIES_4NET:
         for topo in TOPOS:
             gcn_ps = station_rows(df, "GCN-Transformer", topology=topo, k=5, seed=PRIMARY_SEED)
             gcn_ps = gcn_ps[gcn_ps.city == city]
@@ -505,12 +568,12 @@ def table6(df):
             lin_ps = lin_ps[lin_ps.city == city]
             common = sorted(set(gcn_ps.station) & set(lin_ps.station))
             if not common:
-                rows.append([city.capitalize(), topo, "MISSING", "", "", ""])
+                rows.append([CITY_LABEL[city], topo, "MISSING", "", "", ""])
                 continue
             g = gcn_ps.set_index("station").loc[common].r2.astype(float)
             l = lin_ps.set_index("station").loc[common].r2.astype(float)
             for st in common:
-                rows.append([city.capitalize(), topo, st, f"{g[st]:.4f}", f"{l[st]:.4f}",
+                rows.append([CITY_LABEL[city], topo, st, f"{g[st]:.4f}", f"{l[st]:.4f}",
                             f"{g[st]-l[st]:+.4f}"])
     write_table("table6_per_station", "Table 6 — ΔR² par station (seed primaire 42)",
                ["City", "Topology", "Station", "GCN R²", "Linear R²", "ΔR²"], rows)
@@ -521,7 +584,7 @@ def table6(df):
 # --------------------------------------------------------------------------- #
 def table7(df):
     rows = []
-    for city in CITIES:
+    for city in CITIES_4NET:
         for topo in TOPOS:
             cells = []
             for k in KS:
@@ -536,11 +599,14 @@ def table7(df):
                     continue
                 flag = " [SUSPECT]" if r["suspect"] else ""
                 cells.append(f"{r['delta_mean']:+.4f}±{r['delta_std']:.4f}{flag}")
-            rows.append([city.capitalize(), topo] + cells)
+            rows.append([CITY_LABEL[city], topo] + cells)
     write_table("table7_k_sensitivity", "Table 7 — Sensibilité k (ΔR², 3 seeds, ddof=1)",
                ["City", "Topology", "k=3", "k=5", "k=8"], rows,
                "[SUSPECT] : au moins une ligne source porte un provenance_note "
-               "(SUSPECT_6STATION/UNRECOVERABLE) — cf. CHANGELOG_TABLES.md.")
+               "(SUSPECT_6STATION/UNRECOVERABLE) — cf. CHANGELOG_TABLES.md. "
+               "CZT : k=5 uniquement (benchmark canonique) — aucun balayage k-sensitivity "
+               "lancé sur ce réseau (E16 : protocole limité à GCN-Transformer + "
+               "Linear-Transformer), k=3/k=8 MISSING par construction.")
 
 
 # --------------------------------------------------------------------------- #
@@ -566,9 +632,12 @@ def table8(df):
                 continue
             m, s = agg_mean_std(sub.r2.values)
             cells.append(f"{m:.4f}±{s:.4f}")
-        rows.append([city.capitalize()] + cells)
+        rows.append([CITY_LABEL[city]] + cells)
     write_table("table8_oversmoothing", "Table 8 — Over-smoothing / GAT",
-               ["City", "Linear (1L)", "GCN (1L)", "GCN (2L)", "GAT (2L)"], rows)
+               ["City", "Linear (1L)", "GCN (1L)", "GCN (2L)", "GAT (2L)"], rows,
+               "Beijing/London/Madrid uniquement (E13) — Chang-Zhu-Tan (CZT) n'a pas de "
+               "contrôle over-smoothing/GAT : jamais lancé sur ce réseau (E16 : protocole "
+               "limité à GCN-Transformer + Linear-Transformer), pas une omission.")
 
 
 # --------------------------------------------------------------------------- #
@@ -594,9 +663,13 @@ def table9(df):
                     continue
                 d = float(gcn.r2.iloc[0]) - float(lin.r2.mean())
                 cells.append(f"{d:+.4f}")
-            rows.append([city.capitalize(), topo] + cells)
+            rows.append([CITY_LABEL[city], topo] + cells)
     write_table("table9_diagnostics", "Table 9 — Contrôles diagnostiques (E4/E5, seed 42)",
-               ["City", "Topology", "ΔR² real", "ΔR² shuffled_graph", "ΔR² no_meteorology"], rows)
+               ["City", "Topology", "ΔR² real", "ΔR² shuffled_graph", "ΔR² no_meteorology"], rows,
+               "Beijing/London/Madrid uniquement (E4/E5) — Chang-Zhu-Tan (CZT) n'a pas de "
+               "contrôle diagnostique (shuffled-graph/no-meteorology) : jamais lancé sur ce "
+               "réseau (E16 : protocole limité à GCN-Transformer + Linear-Transformer), "
+               "pas une omission.")
 
 
 # --------------------------------------------------------------------------- #
@@ -608,7 +681,7 @@ def assert_t7_k5_equals_t4(df):
     séparément de la même quantité (ΔR² GCN k=5 vs Linear, 3 seeds, ddof=1) —
     une divergence ici indique un vrai bug (mauvais filtrage de seed, mauvais
     ddof, désalignement), pas une tautologie de code partagé."""
-    for city in CITIES:
+    for city in CITIES_4NET:
         for topo in TOPOS:
             name = f"T7(k=5) == T4 [{city}/{topo}]"
             t4 = gcn_lin_3seed(df, city, topo)
@@ -662,7 +735,7 @@ def assert_pruning_anchor_equals_t2(df):
 
 
 def assert_single_linear_reference(df, t3_rows, t4_entries):
-    for city in CITIES:
+    for city in CITIES_4NET:
         for topo in TOPOS:
             name = f"référence Linear-Transformer unique [{city}/{topo}, 3seed_mean]"
             lin = agg_rows(df, "Linear-Transformer", topology=topo)
@@ -782,6 +855,7 @@ def main():
     print(f"{len(df)} lignes.\n")
 
     print("=== Génération des tables ===")
+    table_characterization()
     h_index = table1()
     table2(df)
     t3_rows = table3(df)

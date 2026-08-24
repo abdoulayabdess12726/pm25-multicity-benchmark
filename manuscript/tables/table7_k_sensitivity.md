@@ -8,5 +8,7 @@
 | London | correlation | -0.3471±0.0144 | -0.4014±0.0061 | -0.5059±0.0288 |
 | Madrid | distance | -0.2828±0.0187 | -0.3213±0.0061 | -0.3478±0.0076 |
 | Madrid | correlation | -0.3692±0.0239 | -0.4144±0.0325 | -0.4144±0.0325 |
+| Chang-Zhu-Tan | distance | MISSING | -0.0211±0.0041 | MISSING |
+| Chang-Zhu-Tan | correlation | MISSING | -0.0314±0.0034 | MISSING |
 
-_[SUSPECT] : au moins une ligne source porte un provenance_note (SUSPECT_6STATION/UNRECOVERABLE) — cf. CHANGELOG_TABLES.md._
+_[SUSPECT] : au moins une ligne source porte un provenance_note (SUSPECT_6STATION/UNRECOVERABLE) — cf. CHANGELOG_TABLES.md. CZT : k=5 uniquement (benchmark canonique) — aucun balayage k-sensitivity lancé sur ce réseau (E16 : protocole limité à GCN-Transformer + Linear-Transformer), k=3/k=8 MISSING par construction._

@@ -245,4 +245,43 @@ Madrid/London documenté en Table 2 (cf. `CHANGELOG_TABLES.md`).
 
 ---
 
+## 9. Ajout daté 2026-08-24 — incohérence de convention trouvée, h(D)=0,469 (jeu complet) devient la valeur de Table 1/5
+
+En préparant Table 1/Table 5 (4 réseaux, tâche de livraison manuscrit),
+`05_compute_heterogeneity_v2.py` — le script qui produit les h(D) publiés de
+Beijing/London/Madrid (0,497/0,656/0,728) — a été étendu à CZT (même
+fonction `heterogeneity()`, non modifiée ; nouveau bloc de chargement
+uniquement, cf. commit de cette session). Résultat sur le **jeu complet** :
+**h(D) = 0,469** (r̄=0,9068, Moran's I=0,0930, CV_norm=0,4080), pas 0,413.
+
+**Cause identifiée avec certitude.** La valeur 0,413 de la §7 ci-dessus a
+été calculée sur le **slice train uniquement (70% initiaux)**, malgré la
+mention « convention identique à `05_compute_heterogeneity_v2.py` » — cette
+mention était inexacte : ce script ne slice jamais le train pour
+Beijing/London/Madrid, il utilise le jeu complet partout. Vérifié en
+recalculant les deux slices sur les mêmes données CZT : train-only reproduit
+0,413 quasi exactement (r̄=0,9036, Moran's I=0,2615, h=0,4131) ; jeu complet
+donne 0,469. L'écart vient presque entièrement de Moran's I (0,262 vs
+0,093) — la structure spatiale des valeurs moyennes par station diffère
+sensiblement entre la fenêtre train et la période complète.
+
+**Décision (validée par l'utilisateur, 2026-08-24)** : Table 1, Table 5,
+Figure 3 et toute analyse comparant h(D) entre les 4 réseaux utilisent
+désormais **h(D)=0,469** pour CZT — cohérent avec la convention jeu-complet
+utilisée pour les 3 autres réseaux. Les valeurs 0,312 (§2, pré-enregistrée)
+et 0,413 (§6-§8, reconstruite train-only) restent dans ce document telles
+qu'écrites à l'époque — ne pas les réécrire — mais ne sont plus la référence
+utilisée dans le manuscrit à partir de cette date.
+
+**Effet sur la conclusion de P1 (§8 ci-dessus)** : le sens ne change pas —
+0,469 &lt; 0,497 (Beijing), CZT reste le réseau le moins hétérophile des 4,
+« P1 réfutée sur le signe absolu, pas sur la direction relative » reste
+valide mot pour mot. La marge se réduit cependant nettement (0,084 → 0,028)
+et doit être présentée comme telle, pas arrondie vers l'écart précédent.
+Le tableau « Position sur la courbe h(D)↔ΔR² » et le Spearman à 4 réseaux
+de la §8 doivent être recalculés avec 0,469 avant citation dans le
+manuscrit — non refaits ici (cf. matériau §5.9 livré séparément).
+
+---
+
 *Enregistré avant tout entraînement. Ne pas modifier les sections 2 et 3.*

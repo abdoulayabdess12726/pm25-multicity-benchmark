@@ -107,10 +107,26 @@ if madrid_csv.exists() and madrid_coords_csv.exists():
 else:
     print("\n(Madrid data not found, skipping)")
 
+# === CHANG-ZHU-TAN (E16) ===
+czt_csv = Path("data/czt_processed/czt_pm25_hourly.csv")
+h_czt = None
+if czt_csv.exists():
+    print("\nLoading Chang-Zhu-Tan data...")
+    czt_wide = pd.read_csv(czt_csv, index_col=0, parse_dates=True)
+    czt_coords = pd.DataFrame([
+        {"station": s["name"], "lat": s["lat"], "lon": s["lon"]}
+        for s in station_metadata("czt")
+    ])
+    h_czt = heterogeneity(czt_wide, czt_coords, label="Chang-Zhu-Tan")
+else:
+    print("\n(Chang-Zhu-Tan data not found, skipping)")
+
 # === COMPARAISON ===
 results_list = [h_beijing, h_london]
 if h_madrid:
     results_list.append(h_madrid)
+if h_czt:
+    results_list.append(h_czt)
 
 print(f"\n{'='*60}")
 print(f"SUMMARY OF HETEROGENEITY INDICES")

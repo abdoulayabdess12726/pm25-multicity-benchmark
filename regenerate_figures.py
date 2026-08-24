@@ -66,7 +66,12 @@ CITY_COLORS = {
     "czt": "#CC79A7",       # rose/violet
 }
 CITY_MARKERS = {"beijing": "o", "london": "s", "madrid": "^", "czt": "D"}
-H_INDEX = {"beijing": 0.497, "london": 0.656, "madrid": 0.728, "czt": 0.413}
+H_INDEX = {"beijing": 0.497, "london": 0.656, "madrid": 0.728, "czt": 0.469}
+# czt=0.469 (jeu complet, results/heterogeneity_index_v2.csv, 05_compute_heterogeneity_v2.py
+# étendu à CZT) — PAS 0.313/0.413, valeurs pré-enregistrées/reconstruites de
+# PREREGISTRATION_CZT.md calculées sur le slice train-only, une convention
+# différente de celle utilisée pour Beijing/London/Madrid (jeu complet).
+# Incohérence trouvée et documentée le 2026-08-24, cf. PREREGISTRATION_CZT.md §8.
 
 
 def set_style():

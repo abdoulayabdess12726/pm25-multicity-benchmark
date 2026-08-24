@@ -8,3 +8,5 @@
 | London | correlation | -0.3987 | -0.4594 | -0.4344 |
 | Madrid | distance | -0.3287 | -0.4155 | -0.2481 |
 | Madrid | correlation | -0.3918 | -0.4005 | -0.2876 |
+
+_Beijing/London/Madrid uniquement (E4/E5) — Chang-Zhu-Tan (CZT) n'a pas de contrôle diagnostique (shuffled-graph/no-meteorology) : jamais lancé sur ce réseau (E16 : protocole limité à GCN-Transformer + Linear-Transformer), pas une omission._

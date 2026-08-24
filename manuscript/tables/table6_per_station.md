@@ -56,3 +56,43 @@
 | Madrid | correlation | MENDEZ ALVARO | 0.6590 | 0.7928 | -0.1338 |
 | Madrid | correlation | PLAZA CASTILLA-CANAL | 0.4860 | 0.7667 | -0.2807 |
 | Madrid | correlation | PLAZA ELÍPTICA | 0.2757 | 0.7366 | -0.4609 |
+| Chang-Zhu-Tan | distance | 1335A | 0.9559 | 0.9672 | -0.0114 |
+| Chang-Zhu-Tan | distance | 1336A | 0.9634 | 0.9813 | -0.0179 |
+| Chang-Zhu-Tan | distance | 1337A | 0.9503 | 0.9640 | -0.0137 |
+| Chang-Zhu-Tan | distance | 1338A | 0.9335 | 0.9645 | -0.0310 |
+| Chang-Zhu-Tan | distance | 1339A | 0.9646 | 0.9842 | -0.0196 |
+| Chang-Zhu-Tan | distance | 1340A | 0.9302 | 0.9509 | -0.0207 |
+| Chang-Zhu-Tan | distance | 1341A | 0.9377 | 0.9527 | -0.0151 |
+| Chang-Zhu-Tan | distance | 1342A | 0.9357 | 0.9616 | -0.0259 |
+| Chang-Zhu-Tan | distance | 1343A | 0.9454 | 0.9599 | -0.0145 |
+| Chang-Zhu-Tan | distance | 1508A | 0.9020 | 0.9345 | -0.0324 |
+| Chang-Zhu-Tan | distance | 1511A | 0.9375 | 0.9604 | -0.0229 |
+| Chang-Zhu-Tan | distance | 1512A | 0.9355 | 0.9638 | -0.0283 |
+| Chang-Zhu-Tan | distance | 1513A | 0.9313 | 0.9509 | -0.0196 |
+| Chang-Zhu-Tan | distance | 1514A | 0.9283 | 0.9597 | -0.0314 |
+| Chang-Zhu-Tan | distance | 1515A | 0.9248 | 0.9502 | -0.0254 |
+| Chang-Zhu-Tan | distance | 1518A | 0.9387 | 0.9619 | -0.0232 |
+| Chang-Zhu-Tan | distance | 1519A | 0.9250 | 0.9352 | -0.0103 |
+| Chang-Zhu-Tan | distance | 1520A | 0.9180 | 0.9443 | -0.0263 |
+| Chang-Zhu-Tan | distance | 1524A | 0.9350 | 0.9638 | -0.0288 |
+| Chang-Zhu-Tan | distance | 1562A | 0.9600 | 0.9733 | -0.0133 |
+| Chang-Zhu-Tan | correlation | 1335A | 0.9405 | 0.9672 | -0.0267 |
+| Chang-Zhu-Tan | correlation | 1336A | 0.9515 | 0.9813 | -0.0299 |
+| Chang-Zhu-Tan | correlation | 1337A | 0.9453 | 0.9640 | -0.0186 |
+| Chang-Zhu-Tan | correlation | 1338A | 0.9346 | 0.9645 | -0.0299 |
+| Chang-Zhu-Tan | correlation | 1339A | 0.9509 | 0.9842 | -0.0333 |
+| Chang-Zhu-Tan | correlation | 1340A | 0.9069 | 0.9509 | -0.0441 |
+| Chang-Zhu-Tan | correlation | 1341A | 0.9288 | 0.9527 | -0.0239 |
+| Chang-Zhu-Tan | correlation | 1342A | 0.9144 | 0.9616 | -0.0473 |
+| Chang-Zhu-Tan | correlation | 1343A | 0.9237 | 0.9599 | -0.0363 |
+| Chang-Zhu-Tan | correlation | 1508A | 0.9011 | 0.9345 | -0.0334 |
+| Chang-Zhu-Tan | correlation | 1511A | 0.9370 | 0.9604 | -0.0234 |
+| Chang-Zhu-Tan | correlation | 1512A | 0.9336 | 0.9638 | -0.0302 |
+| Chang-Zhu-Tan | correlation | 1513A | 0.9236 | 0.9509 | -0.0273 |
+| Chang-Zhu-Tan | correlation | 1514A | 0.9212 | 0.9597 | -0.0385 |
+| Chang-Zhu-Tan | correlation | 1515A | 0.9248 | 0.9502 | -0.0254 |
+| Chang-Zhu-Tan | correlation | 1518A | 0.9173 | 0.9619 | -0.0446 |
+| Chang-Zhu-Tan | correlation | 1519A | 0.9226 | 0.9352 | -0.0126 |
+| Chang-Zhu-Tan | correlation | 1520A | 0.9188 | 0.9443 | -0.0254 |
+| Chang-Zhu-Tan | correlation | 1524A | 0.9438 | 0.9638 | -0.0201 |
+| Chang-Zhu-Tan | correlation | 1562A | 0.9252 | 0.9733 | -0.0481 |
