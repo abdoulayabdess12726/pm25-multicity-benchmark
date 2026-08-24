@@ -11,3 +11,5 @@ libpysal
 esda
 # station config source of truth (configs/stations/*.yaml, src/stations.py)
 pyyaml
+# lecture des données London/CZT (data/london_real_combined.parquet, czt_full_hourly.parquet)
+pyarrow

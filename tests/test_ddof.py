@@ -122,6 +122,10 @@ _EXEMPT_FILES = {ROOT / name for name in _ACQUISITION_SCRIPTS} | {
 # (dispersion inter-STATION, pas inter-seed) :
 _EXEMPT_LINE_SUBSTRINGS = [
     (ROOT / "07_statistical_analysis.py", "diff.std()"),
+    # Figure 1 (fig1()) : z-score d'une série synthétique fabriquée pour
+    # l'illustration conceptuelle (pas de données réelles, pas de seeds,
+    # aucun agrégat inter-seed) — hors périmètre de la convention ddof.
+    (ROOT / "regenerate_figures.py", "y = (y - y.mean()) / y.std()"),
 ]
 
 _SKIP_DIRS = {"venv", "__pycache__", ".git", "node_modules", "tests", "external"}

@@ -23,7 +23,7 @@ import scripts.regenerate_tables as rt  # noqa: E402
 def _base_row(**overrides):
     row = dict(city="madrid", model="GCN-Transformer", topology="distance", k=5,
               keep_frac=None, variant="", seed=42, station="__aggregate__", split="test",
-              r2=0.49, run_id="run_a")
+              r2=0.49, run_id="run_a", provenance_note="")
     row.update(overrides)
     return row
 
@@ -79,11 +79,63 @@ def test_handles_nan_identity_columns():
     assert rt.ASSERTIONS[0]["status"] == "PASS"
 
 
+# --------------------------------------------------------------------------- #
+# resolve_superseded_suspect_rows (P11.2) — supersession volontaire d'une
+# ligne SUSPECT_6STATION par un re-run propre, sans affaiblir la détection
+# des vrais doublons ci-dessus.
+# --------------------------------------------------------------------------- #
+def test_resolve_drops_suspect_row_when_clean_rerun_exists():
+    """Même condition, une ligne SUSPECT + une ligne propre sous un run_id
+    différent : la ligne SUSPECT doit être exclue, la propre conservée."""
+    df = pd.DataFrame([
+        _base_row(model="ARIMA", run_id="migrated_old", provenance_note="SUSPECT_6STATION: ..."),
+        _base_row(model="ARIMA", run_id="10_external_baselines_new", provenance_note=""),
+    ])
+    out = rt.resolve_superseded_suspect_rows(df)
+    assert len(out) == 1
+    assert out.iloc[0]["run_id"] == "10_external_baselines_new"
+
+
+def test_resolve_leaves_pure_duplicate_bug_untouched():
+    """Deux lignes PROPRES (ni l'une ni l'autre SUSPECT), même condition,
+    run_id différents : ce n'est PAS une supersession — doit rester intact
+    pour qu'assert_no_duplicate_conditions_across_run_ids le détecte
+    toujours comme avant (régression sur l'incident k=5)."""
+    df = pd.DataFrame([
+        _base_row(run_id="run_a", provenance_note=""),
+        _base_row(run_id="run_b", provenance_note=""),
+    ])
+    out = rt.resolve_superseded_suspect_rows(df)
+    assert len(out) == 2
+    rt.assert_no_duplicate_conditions_across_run_ids(out)
+    assert rt.ASSERTIONS[0]["status"] == "FAIL"
+
+
+def test_resolve_leaves_all_suspect_group_untouched():
+    """Deux lignes SUSPECT, même condition, run_id différents : aucun re-run
+    propre n'existe encore pour cette condition — rien à superséder, le
+    groupe reste tel quel (signalé par l'assertion principale)."""
+    df = pd.DataFrame([
+        _base_row(run_id="run_a", provenance_note="SUSPECT_6STATION: ..."),
+        _base_row(run_id="run_b", provenance_note="SUSPECT_6STATION: ..."),
+    ])
+    out = rt.resolve_superseded_suspect_rows(df)
+    assert len(out) == 2
+
+
 def test_current_raw_results_has_zero_duplicates():
-    """Régression sur le fichier réel, post-correctif P4 : doit rester à 0."""
+    """Régression sur le fichier réel, post-correctif P4 : doit rester à 0
+    SUR LA VUE UTILISÉE PAR LES TABLES (rt.load(), qui applique
+    resolve_superseded_suspect_rows) — pas sur le CSV brut. Depuis P11.2,
+    raw_results.csv contient légitimement 42 conditions à deux run_id
+    (Madrid ARIMA/XGBoost/LSTM/Persistence : ligne SUSPECT_6STATION
+    pré-correctif + re-run propre 7 stations) ; c'est l'objet même de
+    resolve_superseded_suspect_rows de les résoudre avant génération des
+    tables. Utiliser load_results() nu ici redeviendrait un faux positif à
+    chaque supersession légitime future — rt.load() est la vue qui compte."""
     from src.results_io import load_results
-    df = load_results()
-    if len(df) == 0:
+    if len(load_results()) == 0:
         pytest.skip("raw_results.csv absent")
+    df = rt.load()
     rt.assert_no_duplicate_conditions_across_run_ids(df)
     assert rt.ASSERTIONS[0]["status"] == "PASS", rt.ASSERTIONS[0]["detail"]
