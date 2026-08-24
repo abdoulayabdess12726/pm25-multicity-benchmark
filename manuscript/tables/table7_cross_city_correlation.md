@@ -1,4 +1,4 @@
-# Table 5 — Corrélation inter-villes h(D) vs ΔR² (Spearman)
+# Table 7 — Corrélation inter-villes h(D) vs ΔR² (Spearman)
 
 | Topology | ρ | p | Note |
 |---|---|---|---|

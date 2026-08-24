@@ -1,4 +1,4 @@
-# Table 9 — Contrôles diagnostiques (E4/E5, seed 42)
+# Table 11 — Contrôles diagnostiques (E4/E5, seed 42)
 
 | City | Topology | ΔR² real | ΔR² shuffled_graph | ΔR² no_meteorology |
 |---|---|---|---|---|

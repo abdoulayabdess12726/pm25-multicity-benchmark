@@ -1,4 +1,4 @@
-# Table 3 — Baselines externes + SOTA (4 décimales)
+# Table 5 — Baselines externes + SOTA (4 décimales)
 
 | City | Model | Topology | MAE | RMSE | R² | Provenance |
 |---|---|---|---|---|---|---|

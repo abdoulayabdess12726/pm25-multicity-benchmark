@@ -1,4 +1,4 @@
-# Table 4 — Tests statistiques (Wilcoxon, Holm-Bonferroni, Cohen's d)
+# Table 6 — Tests statistiques (Wilcoxon, Holm-Bonferroni, Cohen's d)
 
 | City | Topology | ΔR² (3 seeds, ddof=1) | Wilcoxon p (Holm-Bonf) | Cohen's d | GCN<Linear / total |  |
 |---|---|---|---|---|---|---|

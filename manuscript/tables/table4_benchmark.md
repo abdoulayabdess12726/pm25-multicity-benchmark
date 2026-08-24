@@ -1,4 +1,4 @@
-# Table 2 — Benchmark canonique (k=5, 3 seeds, ddof=1)
+# Table 4 — Benchmark canonique (k=5, 3 seeds, ddof=1)
 
 | City | Topology | Linear-Transformer R² | GCN-Transformer R² | ΔR² |
 |---|---|---|---|---|

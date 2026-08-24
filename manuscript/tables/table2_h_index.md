@@ -1,4 +1,4 @@
-# Table 1 — Indice d'hétérophilie spatiale h(D)
+# Table 2 — Indice d'hétérophilie spatiale h(D)
 
 | City | Stations | r̄ | Moran's I | CV | h(D) |
 |---|---|---|---|---|---|

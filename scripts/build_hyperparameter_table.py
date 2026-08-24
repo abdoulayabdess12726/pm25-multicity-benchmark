@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-build_hyperparameter_table.py — Table R2.3 : hyperparamètres par modèle
+build_hyperparameter_table.py — Table 3 : hyperparamètres par modèle (R2.3)
 ==========================================================================
 Réponse à la demande R2.3 du reviewer (manuscrit §4) : un tableau unique
-couvrant les 10 modèles de la Table 3, avec pour chacun l'architecture, le
-schedule d'entraînement, la construction du graphe, le nombre total de
-paramètres et la PROVENANCE de chaque jeu d'hyperparamètres.
+couvrant les 10 modèles de la Table 5 (baselines externes + SOTA), avec pour
+chacun l'architecture, le schedule d'entraînement, la construction du
+graphe, le nombre total de paramètres et la PROVENANCE de chaque jeu
+d'hyperparamètres. Numéro T3 : placée avant les tables de résultats
+(T4..T11) car §4 (méthodologie) précède §5+ (résultats) dans le texte —
+cf. rapport de tâche livré à l'utilisateur pour la table de correspondance
+complète.
 
 CE SCRIPT NE CALCULE RIEN : il ne fait que mettre en forme des valeurs
 relevées directement dans le code source (fichier + ligne cités en
@@ -14,9 +18,9 @@ results/raw_results.csv et ne modifie aucune logique de calcul existante.
 
 Sources primaires (source de vérité = le .py, pas les YAML) :
   - 06_train_multistation.py        Linear-Transformer, GCN-Transformer
-  - 09_controls_oversmoothing.py    GAT (2L), GCN 1L         (E13 / Table 8)
+  - 09_controls_oversmoothing.py    GAT (2L), GCN 1L         (E13 / Table 10)
   - 10_external_baselines.py        Persistence, ARIMA, XGBoost, LSTM  (E1)
-  - 14_sota_baselines.py            STGCN, Graph WaveNet     (E11 / Table 3)
+  - 14_sota_baselines.py            STGCN, Graph WaveNet     (E11 / Table 5)
 Recoupement (non normatif) : configs/experiments/{canonical_benchmark,
 e13_oversmoothing_gat_control,external_baselines,sota_stgcn_graphwavenet}.yaml
 
@@ -33,7 +37,7 @@ partagés entre nœuds, l'adjacence est un buffer et non un paramètre).
 Usage :
     python3 scripts/build_hyperparameter_table.py
 Sortie :
-    manuscript/tables/table_R2.3_hyperparameters.md + .docx
+    manuscript/tables/table3_hyperparameters.md + .docx
 """
 import sys
 from pathlib import Path
@@ -79,7 +83,7 @@ _GRAPH_06 = ("k-NN dirigé, k=5 (k_eff = min(k, N-1) ; jamais plafonné ici car 
              "Â = D^-1/2 (A+I) D^-1/2")
 # Graphe k-NN de 09 (build_edges 09:135-153) — réimplémentation locale, K=5 (09:58).
 _GRAPH_09 = ("k-NN dirigé, k=5 (constante K locale, 09:58) ; topologie distance "
-             "uniquement pour les runs de la Table 8 (wrapper e13_run_oversmoothing.sh) ; "
+             "uniquement pour les runs de la Table 10 (wrapper e13_run_oversmoothing.sh) ; "
              "poids min-max normalisés ; self-loops ajoutés par la couche PyG "
              "(add_self_loops=True par défaut)")
 
@@ -88,7 +92,7 @@ _PROV_SCHED = ("schedule fixé par nous pour cohérence de protocole (Adam 1e-3 
                "identiques pour tous les modèles entraînés)")
 
 # --------------------------------------------------------------------------- #
-# Une entrée par modèle de la Table 3 (ordre du manuscrit).
+# Une entrée par modèle de la Table 5 (ordre du manuscrit).
 # --------------------------------------------------------------------------- #
 MODELS = [
     dict(  # -------------------------------------------------- Persistence --
@@ -240,7 +244,7 @@ MODELS = [
         params="67 393 (Beijing N=12 ; invariant en N)",
         selection=_SEL_ES,
         provenance="Architecture : couche GCNConv de PyTorch Geometric ; la profondeur 1 n'est PAS un "
-                   "réglage mais la variable manipulée du contrôle anti-over-smoothing (E13, Table 8) — "
+                   "réglage mais la variable manipulée du contrôle anti-over-smoothing (E13, Table 10) — "
                    "seule la profondeur change vs le GCN 2 couches de la même implémentation ; "
                    + _PROV_SCHED + ". Mêmes écarts d'implémentation vs 06 que la ligne GAT "
                    "(FFN 2 x d_model, pas de clipping, min_delta 1e-5)",
@@ -322,7 +326,7 @@ KEYS = ["model", "arch", "optimizer", "lr", "schedule", "epochs", "early_stop",
 NOTE = (
     "Table R2.3 — hyperparamètres relevés directement dans le code source, sans re-run : "
     "06_train_multistation.py (Linear-Transformer, GCN-Transformer), "
-    "09_controls_oversmoothing.py (GAT, GCN 1L — E13/Table 8), "
+    "09_controls_oversmoothing.py (GAT, GCN 1L — E13/Table 10), "
     "10_external_baselines.py (Persistence, ARIMA, XGBoost, LSTM — E1), "
     "14_sota_baselines.py (STGCN, Graph WaveNet — E11). "
     "Protocole commun à tous les modèles entraînés : SEQ_LEN 24 h, horizon 1 h, 5 features "
@@ -357,20 +361,20 @@ NOTE = (
     "autonome du protocole (et non un import de 06) : son Transformer temporel utilise "
     "dim_feedforward = 2 x d_model (128) au lieu de 4 x d_model (256), n'applique pas de "
     "clip_grad_norm, et son early stopping impose un min_delta de 1e-5. Les lignes GAT et GCN 1L "
-    "ne sont donc pas strictement iso-capacité avec le GCN-Transformer canonique de la Table 2/3 "
+    "ne sont donc pas strictement iso-capacité avec le GCN-Transformer canonique de la Table 4/5 "
     "(71 809 / 67 393 vs 104 577 paramètres) — rapporté tel quel."
 )
 
 
 def main():
     rows = [[m[k] for k in KEYS] for m in MODELS]
-    assert len(rows) == 10, f"10 modèles attendus (Table 3), {len(rows)} trouvés"
+    assert len(rows) == 10, f"10 modèles attendus (Table 5), {len(rows)} trouvés"
     for r in rows:
         assert len(r) == len(HEADERS), f"largeur de ligne incohérente : {r[0]}"
         assert not any("|" in str(c) for c in r), f"pipe interdit dans une cellule : {r[0]}"
     write_table(
-        "table_R2.3_hyperparameters",
-        "Table [T? proposée] — Hyperparamètres par modèle (R2.3)",
+        "table3_hyperparameters",
+        "Table 3 — Hyperparamètres par modèle (R2.3)",
         HEADERS,
         rows,
         note=NOTE,

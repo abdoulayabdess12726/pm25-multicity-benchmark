@@ -1101,3 +1101,67 @@ sous-estimait cette synchronie (r̄=0,512) — cohérent avec les mécanismes
 déjà identifiés en section 6 de `PREREGISTRATION_CZT.md` (1335A lissée,
 comblement artificiel des manquants, tous deux mécaniquement réducteurs de
 corrélation mesurée).
+
+## Correction h(D) CZT : 0,413 → 0,469 (2026-08-24)
+
+`05_compute_heterogeneity_v2.py` (source de h(D) pour Beijing/London/Madrid,
+Table 2) a été étendu à CZT : **h(D) = 0,469** sur le jeu complet, pas 0,413.
+La valeur 0,413 (section E16 ci-dessus, `PREREGISTRATION_CZT.md` §7-8)
+venait d'un calcul sur le slice train uniquement (70 %) — une convention
+différente de celle réellement utilisée pour les 3 autres réseaux (jeu
+complet), malgré une mention contraire dans le pré-enregistrement. Détail
+complet, cause identifiée avec certitude, décision et conséquence sur la
+conclusion P1 : `PREREGISTRATION_CZT.md` §9 — ne pas dupliquer ici. Sections
+historiques (§2, §6, §7, §8 du pré-enregistrement, et la section E16
+ci-dessus) non réécrites, incohérence documentée telle quelle. h(D)=0,469
+est la valeur utilisée dans Table 2, Table 7 (Spearman 4 réseaux) et
+Figure 3 à partir de cette date.
+
+## Non-iso-capacité du contrôle over-smoothing (Table 10) — confondant pour §6.2 (2026-08-24)
+
+`09_controls_oversmoothing.py` (E13, Table 10 — 1-layer GCN, 2-layer GCN,
+GAT, Linear) est une réimplémentation autonome du protocole, pas un import
+de `06_train_multistation.py` (Table 4, benchmark canonique). Trouvé en
+construisant la table d'hyperparamètres R2.3 (`scripts/
+build_hyperparameter_table.py`), vérifié directement dans le code des deux
+scripts : le Transformer temporel de `09` utilise `dim_feedforward =
+2 × d_model` (128) contre `4 × d_model` (256) dans `06` ; `09` n'applique
+aucun `clip_grad_norm_` (présent dans `06`) ; l'early stopping de `09`
+utilise un `min_delta` de 1e-5 (absent de `06`, comparaison stricte `<`).
+
+**Écart de capacité chiffré** (instantiation seule, aucun entraînement,
+`sum(p.numel() for p in model.parameters())`, Beijing N=12) :
+
+| Modèle | Paramètres |
+|---|---|
+| GCN-Transformer canonique (`06`, 2 couches, FFN=256) | 104 577 |
+| GCN 1-couche, contrôle (`09`, FFN=128) | 67 393 |
+| GCN 2-couches, contrôle (`09`, FFN=128) | 71 553 |
+
+Écart total (canonique − contrôle 1-couche) : **37 184 paramètres, soit
+35,6 % de moins**. Décomposition (canonique vs contrôle 2-couches, pour
+isoler la variable réellement testée par E13) :
+- **33 024 paramètres (88,8 % de l'écart total)** viennent de la largeur du
+  FFN Transformer (256 vs 128) — **sans rapport avec la profondeur du GCN**,
+  la variable que le contrôle est censé isoler.
+- **4 160 paramètres (11,2 % de l'écart)** viennent réellement de la
+  profondeur du GCN (1 couche vs 2 couches, une couche `GCNConv`
+  supplémentaire 64→64) — attendu, c'est la variable manipulée.
+
+**Verdict, tel que demandé par l'utilisateur** : l'écart brut (35,6 %)
+n'est **pas** faible et doit être reconnu comme limite, mais sa quasi-
+totalité (89 %) ne concerne pas la question posée par E13. Conséquence
+pratique : les comparaisons **internes** à Table 10 (1-couche vs 2-couches
+vs GAT, qui partagent toutes le même FFN réduit) restent valides pour
+répondre à la question de l'over-smoothing — même protocole appliqué aux
+4 lignes. En revanche, toute comparaison **entre Table 10 et Table 4**
+(GCN-Transformer canonique) qui traiterait implicitement leurs architectures
+comme équivalentes en capacité est confondue par cet écart de 35,6 %, dont
+la quasi-totalité vient du FFN et non du GCN — **à déclarer explicitement
+dans le manuscrit partout où §6.2 rapproche les deux tables**.
+
+**Aucun re-run à capacité appariée** (budget non disponible, décision de
+l'utilisateur 2026-08-24) : le résultat déjà publié de Table 10 reste
+valide sous cette réserve déclarée, pas invalidé par la trouvaille — la
+réserve porte sur la comparabilité inter-tables, pas sur la validité du
+contrôle 1-couche vs 2-couches lui-même.

@@ -71,11 +71,11 @@ python 01g_preprocess_madrid.py
 python 01h_download_czt.py                # CNEMC 2020-2023, 20 stations (~93 min, one-time)
 python 01i_preprocess_czt.py              # coverage filter S3.2 + Open-Meteo join
 
-# 2. Heterogeneity index h(D) (Table 1)
+# 2. Heterogeneity index h(D) (Table 2)
 python 05_compute_heterogeneity_v2.py
 
 # 3. Canonical benchmark: one call per city (seeds 42/123/777 are hardcoded
-#    module-level constants, not a CLI flag), 2 topologies x 2 models each (Table 2)
+#    module-level constants, not a CLI flag), 2 topologies x 2 models each (Table 4)
 python 06_train_multistation.py --city beijing
 python 06_train_multistation.py --city london
 python 06_train_multistation.py --city madrid
@@ -103,37 +103,53 @@ from your own reruns above), every table and figure is a pure function of
 that one file — no number is ever hand-typed into the manuscript:
 
 ```bash
-python3 scripts/regenerate_tables.py    # Tables 1-9 -> manuscript/tables/*.{md,docx}
-python3 regenerate_figures.py           # Figures 1-5 -> figures/*.{pdf,svg}
+python3 scripts/regenerate_tables.py         # Tables 1,2,4-11 -> manuscript/tables/*.{md,docx}
+python3 scripts/build_hyperparameter_table.py  # Table 3 -> manuscript/tables/table3_hyperparameters.{md,docx}
+python3 regenerate_figures.py                # Figures 1-5 -> figures/*.{pdf,svg}
 ```
 
 `regenerate_tables.py` ends with a block of blocking assertions (structural
-uniqueness of run conditions, Table 7(k=5) == Table 4, pruning anchor ==
-Table 2, single Linear-Transformer reference per city/topology, effective
+uniqueness of run conditions, Table 9(k=5) == Table 6, pruning anchor ==
+Table 4, single Linear-Transformer reference per city/topology, effective
 degree capping, etc.) — it exits non-zero if any assertion fails. As of the
 current `HEAD`, both scripts run clean from a fresh `git clone` and a venv
-resolved to the exact pinned versions below: **25/25 assertions PASS, 0
-FAIL, 0 MISSING DATA**, all 5 figures render without error.
+resolved to the exact pinned versions below: **29/29 assertions PASS, 0
+FAIL, 0 MISSING DATA**, all 5 figures render without error. (25/25 → 29/29
+on 2026-08-24 when Chang-Zhu-Tan coverage was added to Tables 2/4/6/7/8/9 —
+4 new cross-network consistency checks, not a change to the assertions
+themselves.)
 
 ## Reproducing the paper's tables
 
 **Numbering below is for Paper ID 20265149 (current revision cycle,
-confirmed against the submitted manuscript).** It differs from the table
-numbers used in this repo's history up to and including Paper ID 20264131
-— see the correspondence table further down if you are cross-referencing
-older commits, issues, or notes.
+confirmed against the submitted manuscript), renumbered 2026-08-24 to
+insert the network-characterization table (R2.7) and the hyperparameter
+table (R2.3).** It differs both from the table numbers used in this repo's
+history up to and including Paper ID 20264131, and from this same cycle's
+numbering earlier on 2026-08-24 — see the two correspondence tables further
+down if you are cross-referencing older commits, issues, or notes.
 
-| Paper table | Content | Script |
-|---|---|---|
-| Table 1 | h(D) components per city | `05_compute_heterogeneity_v2.py` |
-| Table 2 | Per-city benchmark (Linear/GCN-Transformer, 3 seeds) | `06_train_multistation.py` |
-| Table 3 | External baselines (ARIMA, XGBoost, LSTM, Persistence, STGCN, Graph WaveNet) | `10_external_baselines.py`, `14_sota_baselines.py` |
-| Table 4 | Statistical tests (Wilcoxon, Holm-Bonferroni, bootstrap CI, Cohen's d) | `07_statistical_analysis.py` |
-| Table 5 | Cross-city Spearman correlation, h(D) vs ΔR² | `07_statistical_analysis.py` |
-| Table 6 | ΔR² per station | `results/export_per_station.py` → `results/per_station_seed_topology.csv` |
-| Table 7 | k-sensitivity (k ∈ {3,5,8}, capped at N−1) | `e8_k_sensitivity_3seeds.py` (canonical, full 3-seed protocol — `08_sensitivity_k.py` is an earlier, abandoned attempt under a reduced `--quick` schedule that produced a Beijing-k=3 anomaly later shown to be a schedule artifact, see `results/sensitivity_k_canonical_NOTE.md`; not used for any reported number) |
-| Table 8 | Over-smoothing controls (1-layer GCN, GAT, Dirichlet energy) | `09_controls_oversmoothing.py` |
-| Table 9 | Diagnostic controls (shuffled-graph, no-meteorology ablation) | `11_diagnostics.py` |
+| Paper table | Content | Script | Networks |
+|---|---|---|---|
+| Table 1 | Network characterization (period, provider, weather source, PM2.5 stats, train variance, missing rate, graph density/degree, r̄) | `scripts/regenerate_tables.py` (`table_characterization`) from `analysis/p9_3_characterization.csv` | 4 |
+| Table 2 | h(D) components per network | `05_compute_heterogeneity_v2.py` | 4 |
+| Table 3 | Hyperparameters per model (architecture, optimizer, schedule, graph construction, parameter count, provenance) | `scripts/build_hyperparameter_table.py` | n/a (per-model) |
+| Table 4 | Per-network benchmark (Linear/GCN-Transformer, 3 seeds) | `06_train_multistation.py` | 4 |
+| Table 5 | External baselines (ARIMA, XGBoost, LSTM, Persistence, STGCN, Graph WaveNet) | `10_external_baselines.py`, `14_sota_baselines.py` | 3 (CZT never had external/SOTA baselines run — E16 protocol limited to GCN-Transformer + Linear-Transformer) |
+| Table 6 | Statistical tests (Wilcoxon, Holm-Bonferroni, bootstrap CI, Cohen's d) | `scripts/regenerate_tables.py` | 4 |
+| Table 7 | Cross-network Spearman correlation, h(D) vs ΔR² | `scripts/regenerate_tables.py` | 4 |
+| Table 8 | ΔR² per station | `scripts/regenerate_tables.py` | 4 |
+| Table 9 | k-sensitivity (k ∈ {3,5,8}, capped at N−1) | `e8_k_sensitivity_3seeds.py` (canonical, full 3-seed protocol — `08_sensitivity_k.py` is an earlier, abandoned attempt under a reduced `--quick` schedule that produced a Beijing-k=3 anomaly later shown to be a schedule artifact, see `results/sensitivity_k_canonical_NOTE.md`; not used for any reported number) | 4 (CZT: k=5 only, no k-sensitivity sweep ever run on this network) |
+| Table 10 | Over-smoothing controls (1-layer GCN, GAT, Dirichlet energy) | `09_controls_oversmoothing.py` | 3 (CZT never had this control run — declared in the table's own caption, not a silent omission) |
+| Table 11 | Diagnostic controls (shuffled-graph, no-meteorology ablation) | `11_diagnostics.py` | 3 (same reason as Table 10) |
+
+Tables 1, 2, 4, 6, 7, 8, 9 cover all 4 networks (Beijing, London, Madrid,
+Chang-Zhu-Tan) where the underlying experiment was actually run on all 4;
+Tables 5, 10, 11 stay at 3 networks because CZT's protocol was deliberately
+narrower (E16: canonical GCN-Transformer vs Linear-Transformer benchmark
+only — no external baselines, no over-smoothing/GAT control, no diagnostic
+control, no pruning, no k-sensitivity sweep). This is declared in each of
+those tables' own caption.
 
 ### Reproducing all experiments from scratch
 
@@ -169,26 +185,54 @@ preprocessed per-city datasets from step 1 above.
 seconds to low minutes once `raw_results.csv` exists — see [Regenerating
 tables and figures](#regenerating-tables-and-figures) above.
 
+### Correspondence — 2026-08-24 renumbering (current, within Paper ID 20265149)
+
+Table 1 (network characterization, R2.7) and Table 3 (hyperparameters,
+R2.3) were inserted in response to reviewer requests R2.7 and R2.3; every
+other table shifts down. Table 3 sits right after Table 2 (h(D)), not at
+the end of the sequence, because it belongs to the methodology section
+(§4), which precedes every results section (§5+) in the manuscript text —
+table numbers follow order of first appearance in the text, not order of
+creation.
+
+| Table earlier today (this cycle, pre-renumbering) | Final table (this cycle, post-renumbering) |
+|---|---|
+| — (new, R2.7) | **Table 1** |
+| Table 1 (h(D)) | Table 2 |
+| — (new, R2.3) | **Table 3** |
+| Table 2 (benchmark) | Table 4 |
+| Table 3 (external baselines) | Table 5 |
+| Table 4 (statistical tests) | Table 6 |
+| Table 5 (cross-city correlation) | Table 7 |
+| Table 6 (per station) | Table 8 |
+| Table 7 (k-sensitivity) | Table 9 |
+| Table 8 (over-smoothing) | Table 10 |
+| Table 9 (diagnostics) | Table 11 |
+
 ### Correspondence with the previous numbering (Paper ID 20264131)
 
-Table 3 (external baselines) and Table 9 (diagnostic controls) were added
+Table 5 (external baselines) and Table 11 (diagnostic controls) were added
 during this revision cycle in response to reviewers and did not exist as
-numbered tables before; everything from the old Table 3 onward shifts by
-+1. Table 5 (cross-city Spearman correlation) is the new number for
-content that existed in the prior manuscript but wasn't separately
-reproducible from this repo's README at the time.
+numbered tables before the cycle began; Table 7 (cross-city Spearman
+correlation) is the new number for content that existed in the prior
+manuscript but wasn't separately reproducible from this repo's README at
+the time. Table 1 (characterization) and Table 3 (hyperparameters) are new
+to this cycle's 2026-08-24 renumbering (see above) and have no equivalent
+in Paper ID 20264131 at all.
 
-| Old table (20264131) | New table (20265149) |
+| Old table (20264131) | New table (20265149, current) |
 |---|---|
-| Table 1 | Table 1 |
-| Table 2 | Table 2 |
+| — (new) | **Table 1** |
+| Table 1 | Table 2 |
 | — (new) | **Table 3** |
-| Table 3 | Table 4 |
-| — (new / split out) | **Table 5** |
-| Table 5 | Table 6 |
-| Table 6 | Table 7 |
-| Table 7 | Table 8 |
-| — (new) | **Table 9** |
+| Table 2 | Table 4 |
+| — (new) | **Table 5** |
+| Table 3 | Table 6 |
+| — (new / split out) | **Table 7** |
+| Table 5 | Table 8 |
+| Table 6 | Table 9 |
+| Table 7 | Table 10 |
+| — (new) | **Table 11** |
 
 Full per-station results: [`results/per_station_seed_topology.csv`](results/) (27 stations × 3 seeds × 2 topologies = 162 rows). Adjacency matrices used in the paper: [`graphs/adjacency/`](graphs/) — `{city}_{topology}_k{3|5|8}.npy`.
 
@@ -228,9 +272,10 @@ Full per-station results: [`results/per_station_seed_topology.csv`](results/) (2
   ```
 
   Verified 2026-08-24: a clean `git clone` + a venv resolved to exactly
-  these versions runs `scripts/regenerate_tables.py` (25/25 assertions
-  PASS) and `regenerate_figures.py` (5/5 figures) without modification, and
-  the full `pytest` suite (67/67) passes.
+  these versions runs `scripts/regenerate_tables.py`, `scripts/
+  build_hyperparameter_table.py`, and `regenerate_figures.py` without
+  modification — 29/29 assertions PASS, all 11 tables + 5 figures render,
+  and the full `pytest` suite (67/67) passes.
 
 ## License
 

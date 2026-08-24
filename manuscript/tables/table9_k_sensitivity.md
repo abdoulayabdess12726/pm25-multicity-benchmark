@@ -1,4 +1,4 @@
-# Table 7 — Sensibilité k (ΔR², 3 seeds, ddof=1)
+# Table 9 — Sensibilité k (ΔR², 3 seeds, ddof=1)
 
 | City | Topology | k=3 | k=5 | k=8 |
 |---|---|---|---|---|

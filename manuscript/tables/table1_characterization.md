@@ -1,4 +1,4 @@
-# Table [T1 proposée] — Caractérisation des réseaux (R2.7)
+# Table 1 — Caractérisation des réseaux (R2.7)
 
 | City | Period | Stations | Provider | Weather source | PM2.5 mean | PM2.5 var | Train var/station [min,max] | Lag-1 autocorr | R² persistence | Raw missing rate | Density (distance) | Density (correlation) | Degree eff. (distance) | Degree eff. (correlation) | r̄ |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -7,4 +7,4 @@
 | London | 2020-01-01 -> 2023-12-31 (48 mois) | 8 | London Air Quality Network (LAQN) | Open-Meteo Historical Weather | 9.86 | 52.60 | 56.62 [34.14, 88.41] | 0.9272 | 0.8286 | 0.4207 | 0.7143 | 0.7143 | 5.00 | 5.00 | 0.5673 |
 | Madrid | 2020-01-01 -> 2023-12-31 (48 mois) | 7 | OpenAQ API v3 | Open-Meteo Historical Weather | 9.82 | 71.42 | 63.95 [0.00, 117.23] | 0.9357 | 0.7986 | 0.5391 | 0.8333 | 0.7143 | 5.00 | 4.29 | 0.4784 |
 
-_Source : analysis/p9_3_characterization.csv (P9.3). Train var/station : variance PM2.5 par station sur la période train (70% initiaux), moyenne puis [min, max] inter-stations — Madrid min=0.00 correspond à MENDEZ ALVARO (PM2.5 constant sur train, cf. REVISION_BRIEF.md). r̄ et densité/degré effectif calculés sur la période train (70% initiaux), à ne pas confondre avec h(D) (jeu complet, Table 1/T2 proposée)._
+_Source : analysis/p9_3_characterization.csv (P9.3). Train var/station : variance PM2.5 par station sur la période train (70% initiaux), moyenne puis [min, max] inter-stations — Madrid min=0.00 correspond à MENDEZ ALVARO (PM2.5 constant sur train, cf. REVISION_BRIEF.md). r̄ et densité/degré effectif calculés sur la période train (70% initiaux), à ne pas confondre avec h(D) (jeu complet, Table 2)._

@@ -14,7 +14,7 @@
 | 2026-08-23 | Ajout §7 : prétraitement réel (`01i_preprocess_czt.py`), 20/20 stations retenues (décommissionnement 1344A/1559A post-2023), h(D) reconstruit = 0,413 (calculé sur slice **train-only**, 70% initiaux) | `4367e19` (prétraitement) |
 | 2026-08-23 | Intégration CZT dans `06_train_multistation.py`, lancement entraînement | `466046c` |
 | 2026-08-23 | Ajout §8 : résultat entraînement (372,6 min), P1 réfutée dans les 2 topologies | `770f083` |
-| 2026-08-24 | Ajout §9 : incohérence trouvée — h(D)=0,413 utilisait un slice train-only alors que `05_compute_heterogeneity_v2.py` (source de Beijing/London/Madrid) utilise le jeu complet. Recalculé sur jeu complet : **h(D) = 0,469**. Devient la valeur de référence Table 1/5/Figure 3. | commit de cette session (05_compute_heterogeneity_v2.py étendu à CZT) |
+| 2026-08-24 | Ajout §9 : incohérence trouvée — h(D)=0,413 utilisait un slice train-only alors que `05_compute_heterogeneity_v2.py` (source de Beijing/London/Madrid) utilise le jeu complet. Recalculé sur jeu complet : **h(D) = 0,469**. Devient la valeur de référence Table 2/7/Figure 3. | commit de cette session (05_compute_heterogeneity_v2.py étendu à CZT) |
 
 ## 2. Les trois valeurs de h(D) CZT — ne pas en confondre une pour une autre
 
@@ -22,7 +22,7 @@
 |---|---|---|---|
 | Pré-enregistrée | **0,312** | `.npz` MSDGNN (22 stations), slice train 70%, AVANT tout entraînement | Historique, jamais réécrite (§2 du pré-enregistrement) |
 | Reconstruite (§7) | **0,413** | Source CNEMC propre (20 stations), slice train 70% — même slice que la valeur pré-enregistrée, mais PAS la même convention que Beijing/London/Madrid | Historique, jamais réécrite ; incohérence documentée §9 |
-| **Finale (utilisée manuscrit)** | **0,469** | Source CNEMC propre (20 stations), **jeu complet** — même convention que Beijing (0,497), London (0,656), Madrid (0,728) | **Valeur à citer dans Table 1, Table 5, Figure 3, §5.9** |
+| **Finale (utilisée manuscrit)** | **0,469** | Source CNEMC propre (20 stations), **jeu complet** — même convention que Beijing (0,497), London (0,656), Madrid (0,728) | **Valeur à citer dans Table 2, Table 7, Figure 3, §5.9** |
 
 Composantes de la valeur finale (jeu complet, `results/heterogeneity_index_v2.csv`) :
 r̄=0,9068 · Moran's I=0,0930 · CV_normalisé=0,4080 · h(D)=0,4694
@@ -49,7 +49,7 @@ Résultat : **0/20 stations** ont ΔR² ≥ 0 (seed 42, distance) — confirmé 
 | distance | 0,9375 ± 0,0008 | 0,9586 ± 0,0034 | **−0,0211 ± 0,0041** | 7,629e-06 | −3,07 | 20/20 |
 | correlation | 0,9272 ± 0,0010 | 0,9586 ± 0,0034 | **−0,0314 ± 0,0034** | 7,629e-06 | −3,16 | 20/20 |
 
-_Source : `manuscript/tables/table4_statistical_tests.md` (régénéré depuis `raw_results.csv`, commit de cette session). Protocole d'entraînement : `06_train_multistation.py --city czt --graph both`, seeds 42/123/777, k=5, splits chronologiques 70/15/15, MinMax train seul, durée mesurée 372,6 min (`results/e16_run.log`)._
+_Source : `manuscript/tables/table6_statistical_tests.md` (régénéré depuis `raw_results.csv`, commit de cette session). Protocole d'entraînement : `06_train_multistation.py --city czt --graph both`, seeds 42/123/777, k=5, splits chronologiques 70/15/15, MinMax train seul, durée mesurée 372,6 min (`results/e16_run.log`)._
 
 ## 5. Spearman h(D) ↔ ΔR², 4 réseaux (valeurs manuscrit actuelles, h(D) CZT=0,469)
 
@@ -58,7 +58,7 @@ _Source : `manuscript/tables/table4_statistical_tests.md` (régénéré depuis `
 | distance | −0,600 | 0,4000 | 4 |
 | correlation | **−1,000** | **0,0000** | 4 |
 
-_Source : `manuscript/tables/table5_cross_city_correlation.md`. Rang h(D) inchangé par la correction 0,413→0,469 : CZT (0,469) < Beijing (0,497) < London (0,656) < Madrid (0,728) — CZT reste le réseau le moins hétérophile des 4 dans les deux calculs de h(D)._
+_Source : `manuscript/tables/table7_cross_city_correlation.md`. Rang h(D) inchangé par la correction 0,413→0,469 : CZT (0,469) < Beijing (0,497) < London (0,656) < Madrid (0,728) — CZT reste le réseau le moins hétérophile des 4 dans les deux calculs de h(D)._
 
 Tableau de position, 4 réseaux (h(D) le plus bas au plus haut) :
 
@@ -91,11 +91,11 @@ Tableau de position, 4 réseaux (h(D) le plus bas au plus haut) :
 
 ## 7. Portée du protocole CZT — ce qui n'a jamais été lancé sur ce réseau
 
-Rappel explicite (déjà en légende Table 3/7/8/9, à répéter en §5.9) : CZT n'a
+Rappel explicite (déjà en légende Table 5/9/10/11, à répéter en §5.9) : CZT n'a
 **ni baselines externes** (ARIMA/XGBoost/LSTM/STGCN/Graph WaveNet — E16
 limité à GCN-Transformer + Linear-Transformer), **ni contrôle
 over-smoothing/GAT** (E13, 3 villes seulement), **ni contrôle diagnostique**
 (E4/E5, shuffled-graph/no-meteorology, 3 villes seulement), **ni expérience
 de pruning** (Figure 5, déclaré dans la légende), **ni balayage
-k-sensitivity** (Table 7, k=5 uniquement). Seul le benchmark canonique
+k-sensitivity** (Table 9, k=5 uniquement). Seul le benchmark canonique
 (GCN-Transformer vs Linear-Transformer, 2 topologies, 3 seeds) a été lancé.

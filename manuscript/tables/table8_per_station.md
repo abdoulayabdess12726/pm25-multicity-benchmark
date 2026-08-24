@@ -1,4 +1,4 @@
-# Table 6 — ΔR² par station (seed primaire 42)
+# Table 8 — ΔR² par station (seed primaire 42)
 
 | City | Topology | Station | GCN R² | Linear R² | ΔR² |
 |---|---|---|---|---|---|
