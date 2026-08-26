@@ -28,6 +28,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from scripts.regenerate_tables import load as load_resolved_raw_results  # noqa: E402
 
 PERIODS = {
     "beijing": "2013-03-01 -> 2017-02-28 (48 mois)",
@@ -137,6 +138,13 @@ def main():
     b = load_bench()
     rows = []
     het_details = {}
+    # scripts.regenerate_tables.load() — SOURCE UNIQUE. Une lecture
+    # indépendante ici (pd.read_csv brut, .iloc[0] sur un résultat non
+    # dédupliqué) a fait piocher R² persistance Madrid = 0.7986
+    # (SUSPECT_6STATION, pré-correctif MENDEZ ALVARO) plutôt que 0.7961
+    # (résolu) — valeur fausse déjà propagée dans Table 1 (caractérisation)
+    # avant ce correctif (trouvé 2026-08-2x, cf. CHANGELOG_TABLES.md).
+    df_rr = load_resolved_raw_results()
 
     for city in ["beijing", "london", "madrid", "czt"]:
         print(f"[{city}] chargement...", file=sys.stderr)
@@ -174,8 +182,6 @@ def main():
         if city == "czt":
             r2_persist = persistence_r2_czt(data, pm_idx)
         else:
-            df_rr = pd.read_csv(ROOT / "results/raw_results.csv", dtype=str)
-            df_rr["r2"] = pd.to_numeric(df_rr["r2"], errors="coerce")
             sub = df_rr[(df_rr.city == city) & (df_rr.model == "Persistence") & (df_rr.station == "__aggregate__")]
             r2_persist = float(sub.r2.iloc[0]) if len(sub) else np.nan
 

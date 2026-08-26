@@ -29,6 +29,9 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from scripts.regenerate_tables import load as load_resolved_raw_results  # noqa: E402
+
 K = 5
 CITIES = ["beijing", "london", "madrid", "czt"]
 
@@ -90,10 +93,16 @@ def main():
             het[(city, name)] = h_i
             ncount[(city, name)] = nn
 
-    df = pd.read_csv(ROOT / "results" / "raw_results.csv", dtype=str)
-    df["r2"] = pd.to_numeric(df["r2"], errors="coerce")
+    # scripts.regenerate_tables.load() — SOURCE UNIQUE de la vue résolue de
+    # raw_results.csv (supersession SUSPECT_6STATION, doublon d'agrégat/
+    # par-station Madrid/correlation post-correctif NaN-sort). Une lecture
+    # indépendante ici (pd.read_csv brut) a laissé ce fichier stale avec les
+    # valeurs par-station PRÉ-correctif NaN-sort pour Madrid/correlation
+    # (trouvé 2026-08-2x en vérifiant Figure 4 après l'incident Figure 3 —
+    # cf. CHANGELOG_TABLES.md) : la ligne migrated_06_train_multistation_madrid
+    # (24 arêtes au lieu de 30 à k=5) restait indexée avant le rerun correctif.
+    df = load_resolved_raw_results()
     df["variant"] = df["variant"].fillna("")
-    df["k"] = pd.to_numeric(df["k"], errors="coerce")
 
     rows = []
     for city in CITIES:

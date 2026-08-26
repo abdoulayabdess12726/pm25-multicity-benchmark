@@ -4,7 +4,7 @@ beijing,GCN-Transformer,correlation,seed 42 (primaire),12,-0.04055957810544403,-
 london,GCN-Transformer,distance,seed 42 (primaire),8,-0.7015505179532563,-1.1421957994396925,-0.33572871829075823,NON ÉQUIVALENT — dégrade au-delà de la marge
 london,GCN-Transformer,correlation,seed 42 (primaire),8,-0.8087616171082339,-1.2978557124928902,-0.4176995840641484,NON ÉQUIVALENT — dégrade au-delà de la marge
 madrid,GCN-Transformer,distance,seed 42 (primaire),7,-0.29086094593168055,-0.3906420191029326,-0.22057476238329277,NON ÉQUIVALENT — dégrade au-delà de la marge
-madrid,GCN-Transformer,correlation,seed 42 (primaire),7,-0.3987773354324085,-0.536426770692032,-0.2671442491194707,NON ÉQUIVALENT — dégrade au-delà de la marge
+madrid,GCN-Transformer,correlation,seed 42 (primaire),7,-0.39179838822643276,-0.5225594772598904,-0.27074339483932786,NON ÉQUIVALENT — dégrade au-delà de la marge
 czt,GCN-Transformer,distance,seed 42 (primaire),20,-0.021584526380057024,-0.024602370158468882,-0.018542549679719546,NON CONCLUANT (IC chevauche la frontière de la marge)
 czt,GCN-Transformer,correlation,seed 42 (primaire),20,-0.03094524638021163,-0.03512923896801728,-0.026803050264650796,NON ÉQUIVALENT — dégrade au-delà de la marge
 beijing,stgcn,correlation,"2-seeds (123/777, moy./station)",12,0.007861775120272155,0.004871334153455767,0.010388485980688028,ÉQUIVALENT (IC entièrement dans ±0.02)

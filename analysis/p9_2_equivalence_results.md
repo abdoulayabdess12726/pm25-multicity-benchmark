@@ -9,7 +9,7 @@ Marge validée le 2026-08-24, fixée AVANT ce calcul — cf. `PREREGISTRATION_CZ
 | london | GCN-Transformer | distance | seed 42 (primaire) | 8 | -0.7016 | [-1.1422, -0.3357] | NON ÉQUIVALENT — dégrade au-delà de la marge |
 | london | GCN-Transformer | correlation | seed 42 (primaire) | 8 | -0.8088 | [-1.2979, -0.4177] | NON ÉQUIVALENT — dégrade au-delà de la marge |
 | madrid | GCN-Transformer | distance | seed 42 (primaire) | 7 | -0.2909 | [-0.3906, -0.2206] | NON ÉQUIVALENT — dégrade au-delà de la marge |
-| madrid | GCN-Transformer | correlation | seed 42 (primaire) | 7 | -0.3988 | [-0.5364, -0.2671] | NON ÉQUIVALENT — dégrade au-delà de la marge |
+| madrid | GCN-Transformer | correlation | seed 42 (primaire) | 7 | -0.3918 | [-0.5226, -0.2707] | NON ÉQUIVALENT — dégrade au-delà de la marge |
 | czt | GCN-Transformer | distance | seed 42 (primaire) | 20 | -0.0216 | [-0.0246, -0.0185] | NON CONCLUANT (IC chevauche la frontière de la marge) |
 | czt | GCN-Transformer | correlation | seed 42 (primaire) | 20 | -0.0309 | [-0.0351, -0.0268] | NON ÉQUIVALENT — dégrade au-delà de la marge |
 | beijing | stgcn | correlation | 2-seeds (123/777, moy./station) | 12 | +0.0079 | [+0.0049, +0.0104] | ÉQUIVALENT (IC entièrement dans ±0.02) |

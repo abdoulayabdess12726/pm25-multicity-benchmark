@@ -47,6 +47,7 @@ from scipy import stats
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stats import agg_mean_std  # noqa: E402
+from scripts.regenerate_tables import load as load_resolved_raw_results  # noqa: E402
 
 # --------------------------------------------------------------------------- #
 # Style commun aux 3 figures
@@ -66,12 +67,47 @@ CITY_COLORS = {
     "czt": "#CC79A7",       # rose/violet
 }
 CITY_MARKERS = {"beijing": "o", "london": "s", "madrid": "^", "czt": "D"}
-H_INDEX = {"beijing": 0.497, "london": 0.656, "madrid": 0.728, "czt": 0.469}
-# czt=0.469 (jeu complet, results/heterogeneity_index_v2.csv, 05_compute_heterogeneity_v2.py
-# étendu à CZT) — PAS 0.313/0.413, valeurs pré-enregistrées/reconstruites de
-# PREREGISTRATION_CZT.md calculées sur le slice train-only, une convention
-# différente de celle utilisée pour Beijing/London/Madrid (jeu complet).
-# Incohérence trouvée et documentée le 2026-08-24, cf. PREREGISTRATION_CZT.md §8.
+
+
+def _load_h_index_from_table2():
+    """h(D) tracé en Figure 3 DOIT être celui de Table 2, pas une copie —
+    lit directement manuscript/tables/table2_h_index.md (déjà régénéré par
+    scripts/regenerate_tables.py depuis results/heterogeneity_index_v2.csv,
+    l'EXCEPTION documentée hors raw_results.csv, cf. P3) plutôt qu'un dict
+    recopié à la main dans ce fichier.
+
+    Un H_INDEX = {...} en dur ici a exactement causé le risque que le
+    relecteur 1 traque : le 2026-08-24, h(D) CZT est passé de 0.413 à 0.469
+    (PREREGISTRATION_CZT.md §9 — 0.413 venait d'un calcul train-only
+    incohérent avec la convention jeu-complet des 3 autres réseaux) ; la
+    copie en dur avait bien été mise à jour à la main ce jour-là, mais nous
+    étions à un accident près d'une figure et d'une table en désaccord sans
+    aucun garde-fou. Lire Table 2 directement élimine la classe de bug —
+    un futur recalcul de h(D) se propage automatiquement à la figure."""
+    path = ROOT / "manuscript" / "tables" / "table2_h_index.md"
+    if not path.exists():
+        raise RuntimeError(
+            "manuscript/tables/table2_h_index.md introuvable — lancer "
+            "scripts/regenerate_tables.py avant regenerate_figures.py : "
+            "Figure 3 lit h(D) depuis Table 2, jamais une copie indépendante."
+        )
+    label_to_code = {v: k for k, v in CITY_LABELS.items()}
+    out = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("|") or line.startswith("|---"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        code = label_to_code.get(cells[0])
+        if code is None:
+            continue
+        out[code] = float(cells[-1])
+    missing = set(CITIES) - set(out)
+    if missing:
+        raise RuntimeError(f"Table 2 (h(D)) n'a pas de ligne pour : {sorted(missing)}")
+    return out
+
+
+H_INDEX = _load_h_index_from_table2()
 
 
 def set_style():
@@ -143,11 +179,21 @@ def heterophily_for_city(b, city):
 
 
 def load_raw_results():
-    df = pd.read_csv(ROOT / "results" / "raw_results.csv", dtype=str)
+    """Délègue à scripts.regenerate_tables.load() — SOURCE UNIQUE de la vue
+    résolue de raw_results.csv (supersession SUSPECT_6STATION, doublon
+    d'agrégat Madrid/correlation post-correctif NaN-sort, etc.).
+
+    Une lecture indépendante ici (pd.read_csv brut, sans passer par ces
+    résolutions) a exactement fait disparaître Madrid du panneau corrélation
+    de Figure 3 (trouvé 2026-08-2x, cf. CHANGELOG_TABLES.md) : ce fichier
+    lisait raw_results.csv sans le nettoyage déjà appliqué côté tables,
+    tombait sur 6 lignes d'agrégat concurrentes au lieu de 3 pour
+    Madrid/correlation/k=5, et gcn_lin_delta_3seed() rejetait la condition
+    entière (len(gcn) != 3). Ne JAMAIS réimplémenter ce filtrage ici —
+    passer par regenerate_tables.load(), le seul endroit où il est
+    maintenu."""
+    df = load_resolved_raw_results()
     df["r2"] = pd.to_numeric(df["r2"], errors="coerce")
-    df["k"] = pd.to_numeric(df["k"], errors="coerce")
-    df["variant"] = df["variant"].fillna("")
-    df["topology"] = df["topology"].fillna("")
     return df
 
 
@@ -351,7 +397,75 @@ def fig2():
 # --------------------------------------------------------------------------- #
 # Figure 3 — h(D) vs ΔR², 4 réseaux, 2 panneaux topologie
 # --------------------------------------------------------------------------- #
+def _load_table4_network_counts():
+    """Nombre de réseaux avec une ligne ΔR² non-MISSING dans Table 4, par
+    topologie — sert à vérifier que Figure 3 ne perd silencieusement aucun
+    point (cf. incident Madrid absent du panneau corrélation, 2026-08-2x :
+    l'assertion h(D)==Table 2 seule ne l'aurait pas attrapée, puisque le
+    problème n'était pas la valeur de h(D) mais l'absence totale du point)."""
+    path = ROOT / "manuscript" / "tables" / "table4_benchmark.md"
+    if not path.exists():
+        raise RuntimeError("manuscript/tables/table4_benchmark.md introuvable — "
+                           "lancer scripts/regenerate_tables.py avant regenerate_figures.py.")
+    counts = {"distance": 0, "correlation": 0}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("|") or line.startswith("|---"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if cells[0] == "City" or len(cells) < 5:
+            continue
+        topo, delta = cells[1], cells[4]
+        if topo in counts and delta != "MISSING":
+            counts[topo] += 1
+    return counts
+
+
+def _load_table7_coefficients():
+    """Spearman ρ/p par topologie depuis Table 7 (rendue) — Table 7 ne
+    rapporte pas Pearson, donc seul ρ/p est comparable ; Pearson r/p reste
+    annoté sur la figure mais sans contrepartie tabulaire à vérifier."""
+    path = ROOT / "manuscript" / "tables" / "table7_cross_city_correlation.md"
+    if not path.exists():
+        raise RuntimeError("manuscript/tables/table7_cross_city_correlation.md introuvable — "
+                           "lancer scripts/regenerate_tables.py avant regenerate_figures.py.")
+    out = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("|") or line.startswith("|---"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if cells[0] == "Topology" or len(cells) < 3:
+            continue
+        try:
+            out[cells[0]] = (float(cells[1]), float(cells[2]))
+        except ValueError:
+            continue
+    return out
+
+
 def fig3(df):
+    # Assertion de cohérence figure/table #1, indépendante du chargement de
+    # H_INDEX ci-dessus (re-lit Table 2 depuis zéro plutôt que de réutiliser
+    # le dict déjà en mémoire) : protège contre une divergence future même
+    # si un refactor introduit un second chemin de calcul pour h(D) dans ce
+    # fichier. Exactement le type d'incohérence table/figure que le
+    # relecteur 1 traque (cf. incident H_INDEX en dur, 2026-08-24).
+    h_index_table2 = _load_h_index_from_table2()
+    for city in CITIES:
+        assert H_INDEX[city] == h_index_table2[city], (
+            f"Figure 3 : h(D) pour {city} ({H_INDEX[city]}) != Table 2 "
+            f"({h_index_table2[city]}) — régénérer Table 2 avant Figure 3."
+        )
+    print(f"  h(D) vérifié == Table 2 pour les 4 réseaux : {H_INDEX}")
+
+    # Assertions #2/#3 : nombre de points par panneau == Table 4, et
+    # coefficients affichés == Table 7. Ajoutées après l'incident Madrid
+    # (absent du panneau corrélation : gcn_lin_delta_3seed rejetait la
+    # condition à cause d'un doublon d'agrégat non résolu ici — l'assertion
+    # h(D)==Table 2 n'aurait rien détecté, puisque Madrid n'était simplement
+    # jamais ajouté à la liste des points tracés).
+    table4_counts = _load_table4_network_counts()
+    table7_coeffs = _load_table7_coefficients()
+
     fig, axes = plt.subplots(1, 2, figsize=(FULL_WIDTH, FULL_WIDTH * 0.42))
     for ax, topo in zip(axes, ["distance", "correlation"]):
         hs, ds, es = [], [], []
@@ -365,15 +479,30 @@ def fig3(df):
             ax.errorbar(h, delta, yerr=err, fmt=CITY_MARKERS[city], color=CITY_COLORS[city],
                        markersize=6, capsize=3, markeredgecolor="white", markeredgewidth=0.6,
                        label=CITY_LABELS[city], zorder=3)
+
+        assert len(hs) == table4_counts[topo], (
+            f"Figure 3 [{topo}] : {len(hs)} point(s) tracé(s), Table 4 en a "
+            f"{table4_counts[topo]} pour cette topologie — un réseau a été "
+            f"silencieusement écarté (cf. CHANGELOG_TABLES.md, incident Madrid)."
+        )
+
         if len(hs) >= 3:
             rho, p = stats.spearmanr(hs, ds)
             r_p, p_p = stats.pearsonr(hs, ds)
+            if topo in table7_coeffs:
+                rho_t7, p_t7 = table7_coeffs[topo]
+                assert abs(rho - rho_t7) < 5e-4 and abs(p - p_t7) < 5e-4, (
+                    f"Figure 3 [{topo}] : Spearman ρ={rho:.4f}/p={p:.4f} tracés, "
+                    f"Table 7 donne ρ={rho_t7:.4f}/p={p_t7:.4f} — divergence."
+                )
             ax.annotate(f"Pearson $r={r_p:+.2f}$ ($p={p_p:.3f}$)\nSpearman $\\rho={rho:+.2f}$",
                        xy=(0.96, 0.95), xycoords="axes fraction", fontsize=FONT_SIZE,
                        va="top", ha="right")
         ax.axhline(0, color="0.75", lw=0.7, zorder=1)
         ax.set_xlabel(r"Spatial heterogeneity index $h(D)$")
         ax.set_title(f"{topo.capitalize()} topology", fontsize=FONT_SIZE)
+    print(f"  points/panneau vérifiés == Table 4 : {table4_counts} ; "
+         f"Spearman ρ/p vérifiés == Table 7 : {table7_coeffs}")
     axes[0].set_ylabel(r"$\Delta R^2$ (GCN $-$ Linear, 3-seed mean)")
     axes[0].legend(frameon=False, loc="lower left", handletextpad=0.4)
     fig.tight_layout()

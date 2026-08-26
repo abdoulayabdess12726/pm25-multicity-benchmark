@@ -26,6 +26,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from scripts.regenerate_tables import load as load_resolved_raw_results  # noqa: E402
 
 # Marge d'équivalence pratique en ΔR², validée par l'utilisateur (2026-08-24)
 # AVANT de lancer cette analyse — engagement pris antérieurement, pas un choix
@@ -115,9 +116,15 @@ def missing_reason(df, city, model, topology):
 
 
 def main():
-    df = pd.read_csv(ROOT / "results" / "raw_results.csv", dtype=str)
-    df["r2"] = pd.to_numeric(df["r2"], errors="coerce")
-    df["k"] = pd.to_numeric(df["k"], errors="coerce")
+    # scripts.regenerate_tables.load() — SOURCE UNIQUE de la vue résolue de
+    # raw_results.csv. Une lecture indépendante ici a fait lire ce script un
+    # doublon d'agrégat/par-station Madrid/correlation non résolu (7 lignes
+    # pré-correctif NaN-sort + 7 lignes du rerun, jamais fusionnées) —
+    # publiait n=7 sur la valeur pré-correctif (-0.3988) ; un rerun naïf
+    # sans ce correctif aurait donné n=14, moyenne des deux graphes mélangés
+    # (trouvé 2026-08-2x, cf. CHANGELOG_TABLES.md). Ne JAMAIS réimplémenter
+    # ce filtrage ici.
+    df = load_resolved_raw_results()
 
     # GCN-Transformer : k=5 uniquement (comparaison canonique, cohérente avec Table 2/4)
     df_gcn = df[(df.model != "GCN-Transformer") | (df.k == 5)]

@@ -24,9 +24,9 @@ n = 46 stations, 4 réseaux (intercept aléatoire).
 
 n = 46 stations, 4 réseaux (intercept aléatoire).
 
-**Effet fixe h_i** : β = -1.1199, SE = 0.6119, IC95% = [-2.3192, +0.0795], p = 0.06723
+**Effet fixe h_i** : β = -1.0732, SE = 0.6276, IC95% = [-2.3034, +0.1569], p = 0.08727
 
-**ICC** (part de variance attribuable au réseau) = 0.410 (var_réseau=0.05780, var_résiduelle=0.08323)
+**ICC** (part de variance attribuable au réseau) = 0.422 (var_réseau=0.06032, var_résiduelle=0.08278)
 
 
 **Spearman intra-réseau** :
@@ -36,4 +36,4 @@ n = 46 stations, 4 réseaux (intercept aléatoire).
 | beijing | 12 | -0.727 | 0.007355 |  |
 | czt | 20 | -0.155 | 0.5144 |  |
 | london | 8 | -0.048 | 0.9108 |  |
-| madrid | 6 | +0.600 | 0.208 | n=6 < 8 — inférence peu fiable, à ne pas sur-interpréter |
+| madrid | 6 | +0.829 | 0.04156 | n=6 < 8 — inférence peu fiable, à ne pas sur-interpréter |

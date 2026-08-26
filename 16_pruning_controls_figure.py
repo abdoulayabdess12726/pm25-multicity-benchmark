@@ -3,9 +3,12 @@
 16_pruning_controls_figure.py — E12 (P5) : figure du contrôle de pruning
 ==========================================================================
 3 courbes par ville (guidé / aléatoire à densité appariée / inverse) +
-niveau Linear-Transformer en pointillés. Lit exclusivement raw_results.csv
-(source unique, REVISION_BRIEF.md). Style sobre, Times New Roman, cohérent
-avec 12_per_station_heterophily.py.
+niveau Linear-Transformer en pointillés. Lit raw_results.csv via
+scripts.regenerate_tables.load() (vue résolue — supersession SUSPECT/doublon
+Madrid appliquée, jamais un pd.read_csv indépendant : c'est le motif exact
+qui a fait perdre Madrid de Figure 3 et fausser Table 1/analysis P9.2,
+cf. CHANGELOG_TABLES.md). Style sobre, Times New Roman, cohérent avec
+12_per_station_heterophily.py.
 
 Usage : python 16_pruning_controls_figure.py
 Sortie : figures/pruning_controls.png
@@ -21,6 +24,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from src.stats import agg_mean_std  # noqa: E402
+from scripts.regenerate_tables import load as load_resolved_raw_results  # noqa: E402
 
 CITIES = ["beijing", "london", "madrid"]
 LEVELS_SHARED = [1.0, 0.0]          # communs aux 3 stratégies (guidé=aléatoire=inverse par construction)
@@ -28,10 +32,8 @@ LEVELS_CONTROLS = [0.75, 0.25]      # niveaux réentraînés pour aléatoire/inv
 
 
 def load():
-    df = pd.read_csv(ROOT / "results" / "raw_results.csv", dtype=str)
-    df["r2"] = pd.to_numeric(df["r2"], errors="coerce")
+    df = load_resolved_raw_results()
     df["keep_frac"] = pd.to_numeric(df["keep_frac"], errors="coerce")
-    df["variant"] = df["variant"].fillna("")
     return df[df.station == "__aggregate__"].copy()
 
 
